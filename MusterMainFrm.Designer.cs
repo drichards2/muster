@@ -45,6 +45,7 @@
             // 
             // roundsTimer
             // 
+            this.roundsTimer.Interval = 271;
             this.roundsTimer.Tick += new System.EventHandler(this.RoundsTimer_Tick);
             // 
             // Muster
