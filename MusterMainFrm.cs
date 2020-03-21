@@ -14,8 +14,9 @@ namespace Muster
     public partial class Muster : Form
     {
         private int nextBell;
+
         private List<WaveOutEvent> bellSounds = new List<WaveOutEvent>();
-        private List<WaveFileReader> bellSamples = new List<WaveFileReader>();
+        private List<CachedWaveFileReader> bellSamples = new List<CachedWaveFileReader>();       
 
         public Muster()
         {
@@ -23,7 +24,7 @@ namespace Muster
 
             for (var i=0; i<8; i++)
             {
-                var wavReader = new WaveFileReader(System.IO.Path.Combine("soundfiles", $"handbell{i + 1}.wav"));
+                var wavReader = new CachedWaveFileReader(System.IO.Path.Combine("soundfiles", $"handbell{i + 1}.wav"));
                 bellSamples.Add(wavReader);
                 var sample = new WaveOutEvent();
                 sample.Init(wavReader);

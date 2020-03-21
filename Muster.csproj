@@ -57,6 +57,7 @@
     </Compile>
     <Compile Include="MusterPgm.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="CachedWaveFileReader.cs" />
     <EmbeddedResource Include="MusterMainFrm.resx">
       <DependentUpon>MusterMainFrm.cs</DependentUpon>
     </EmbeddedResource>
