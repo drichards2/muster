@@ -20,7 +20,6 @@ namespace Muster
             {
                 waveFormat = baseReader.WaveFormat;
 
-
                 const int BLOCK_SIZE = 1000;
                 byte[] workingBlock = new byte[BLOCK_SIZE];
 
