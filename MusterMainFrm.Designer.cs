@@ -51,14 +51,14 @@
             this.holePunchIP.Name = "holePunchIP";
             this.holePunchIP.Size = new System.Drawing.Size(100, 22);
             this.holePunchIP.TabIndex = 1;
-            this.holePunchIP.Text = "63.35.216.228";
+            this.holePunchIP.Text = "54.154.238.252";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
             this.label1.Location = new System.Drawing.Point(103, 229);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(74, 16);
+            this.label1.Size = new System.Drawing.Size(77, 17);
             this.label1.TabIndex = 2;
             this.label1.Text = "HolePunch";
             // 
@@ -68,7 +68,7 @@
             this.GoInternet.Name = "GoInternet";
             this.GoInternet.Size = new System.Drawing.Size(100, 23);
             this.GoInternet.TabIndex = 3;
-            this.GoInternet.Text = "Go Internet";
+            this.GoInternet.Text = "Holepunch";
             this.GoInternet.UseVisualStyleBackColor = true;
             this.GoInternet.Click += new System.EventHandler(this.GoInternet_Click);
             // 
@@ -90,8 +90,10 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.holePunchIP);
             this.Controls.Add(this.GoBells);
+            this.KeyPreview = true;
             this.Name = "Muster";
             this.Text = "Muster";
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
             this.ResumeLayout(false);
             this.PerformLayout();
 

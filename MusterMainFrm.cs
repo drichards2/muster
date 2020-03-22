@@ -66,5 +66,10 @@ namespace Muster
             var sent = _socket.Send(data);                                
 
         }
+
+        private void Muster_KeyDown(object sender, KeyEventArgs e)
+        {
+            Console.WriteLine($"New key: {e.KeyValue}");
+        }
     }
 }
