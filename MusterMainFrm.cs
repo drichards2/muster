@@ -17,9 +17,11 @@ namespace Muster
     public partial class Muster : Form
     {
         private int nextBell;
-        private const int numberOfBells = 8;        
-        
-        private List<SoundPlayer> bellSamples = new List<SoundPlayer>();       
+        private const int numberOfBells = 8;
+        private const int MAX_PEERS = 6;
+
+        private List<SoundPlayer> bellSamples = new List<SoundPlayer>();
+        private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
 
         public Muster()
         {
@@ -35,8 +37,74 @@ namespace Muster
 
         private void Go_Click(object sender, EventArgs e)
         {
-            nextBell = 0;
-            //roundsTimer.Enabled = true;
+            Disconnect();
+
+            Console.WriteLine($"Requesting to connect {connectionList.Rows.Count} peers");
+            if (connectionList.Rows.Count > (MAX_PEERS + 1))
+            {
+                MessageBox.Show($"Can't connect {connectionList.Rows.Count - 1} peers - {MAX_PEERS} is the maximum");
+                return;
+            }
+
+            foreach (DataGridViewRow row in connectionList.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                row.Cells[2].Value = "Not connected";
+                if (IPAddress.TryParse(row.Cells[0].Value.ToString(), out var ipAddr))
+                {
+                    var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
+
+                    byte[] data = Encoding.ASCII.GetBytes("ConnectPlease");
+                    var sent = _socket.Send(data);
+
+                    peerSockets.Add(_socket);
+
+                    if (sent == data.Length)
+                        row.Cells[2].Value = "Set port";
+                    else
+                        row.Cells[2].Value = "Broken";
+                }
+            }
+        }
+
+        private void Connect_Click(object sender, EventArgs e)
+        {
+            if ( (connectionList.Rows.Count-1) != peerSockets.Count)
+            {
+                MessageBox.Show("There seems to be a mismatch between open sockets and peers requested. Abort abort.");
+                return;
+            }
+
+            for (int connectRows = 0; connectRows< connectionList.Rows.Count; connectRows++)
+            {
+                var row = connectionList.Rows[connectRows];
+                if (row.IsNewRow)
+                    continue;
+
+                if (IPAddress.TryParse(row.Cells[0].Value.ToString(), out var ipAddr) &&
+                    int.TryParse(row.Cells[1].Value.ToString(), out var port) )
+                {
+                    peerSockets[connectRows].Connect(ipAddr, port);
+
+                    byte[] data = Encoding.ASCII.GetBytes("OK?");
+                    peerSockets[connectRows].Send(data);
+                }
+            }
+
+
+        }
+
+        private void Disconnect()
+        {
+            foreach (var oldSock in peerSockets)
+            {
+                oldSock.Disconnect(false);
+                oldSock.Dispose();
+            }
+            peerSockets.Clear();
         }
 
         private void RoundsTimer_Tick(object sender, EventArgs e)
@@ -55,16 +123,5 @@ namespace Muster
             }
         }
 
-        private Socket _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
-        private void GoInternet_Click(object sender, EventArgs e)
-        {            
-            _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
-
-            byte[] data = Encoding.ASCII.GetBytes("TestString");
-
-            var sent = _socket.Send(data);                                
-
-        }
     }
 }
