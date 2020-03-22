@@ -104,6 +104,8 @@ namespace Muster
 
                     var newTask = new Task(() =>
                    {
+                       runParameters.srcSocket.ReceiveTimeout = 1000;
+
                        const int BLOCK_SIZE = 1024;
                        byte[] buffer = new byte[BLOCK_SIZE];
                        while (!runParameters.cancellationToken.IsCancellationRequested)
