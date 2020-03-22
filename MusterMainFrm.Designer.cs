@@ -28,35 +28,40 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.GoBells = new System.Windows.Forms.Button();
+            this.Connect = new System.Windows.Forms.Button();
             this.holePunchIP = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.GoInternet = new System.Windows.Forms.Button();
             this.holePunchPort = new System.Windows.Forms.TextBox();
+            this.dataGridView1 = new System.Windows.Forms.DataGridView();
+            this.IP = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Port = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).BeginInit();
             this.SuspendLayout();
             // 
-            // GoBells
+            // Connect
             // 
-            this.GoBells.Location = new System.Drawing.Point(316, 136);
-            this.GoBells.Name = "GoBells";
-            this.GoBells.Size = new System.Drawing.Size(75, 23);
-            this.GoBells.TabIndex = 0;
-            this.GoBells.Text = "Go Bells";
-            this.GoBells.UseVisualStyleBackColor = true;
-            this.GoBells.Click += new System.EventHandler(this.Go_Click);
+            this.Connect.Location = new System.Drawing.Point(480, 302);
+            this.Connect.Name = "Connect";
+            this.Connect.Size = new System.Drawing.Size(75, 23);
+            this.Connect.TabIndex = 0;
+            this.Connect.Text = "Connect";
+            this.Connect.UseVisualStyleBackColor = true;
+            this.Connect.Click += new System.EventHandler(this.Go_Click);
             // 
             // holePunchIP
             // 
-            this.holePunchIP.Location = new System.Drawing.Point(189, 229);
+            this.holePunchIP.Location = new System.Drawing.Point(109, 302);
             this.holePunchIP.Name = "holePunchIP";
             this.holePunchIP.Size = new System.Drawing.Size(100, 22);
             this.holePunchIP.TabIndex = 1;
-            this.holePunchIP.Text = "63.35.216.228";
+            this.holePunchIP.Text = "54.154.238.252";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(103, 229);
+            this.label1.Location = new System.Drawing.Point(23, 302);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(74, 16);
             this.label1.TabIndex = 2;
@@ -64,7 +69,7 @@
             // 
             // GoInternet
             // 
-            this.GoInternet.Location = new System.Drawing.Point(189, 277);
+            this.GoInternet.Location = new System.Drawing.Point(109, 350);
             this.GoInternet.Name = "GoInternet";
             this.GoInternet.Size = new System.Drawing.Size(100, 23);
             this.GoInternet.TabIndex = 3;
@@ -74,17 +79,54 @@
             // 
             // holePunchPort
             // 
-            this.holePunchPort.Location = new System.Drawing.Point(189, 249);
+            this.holePunchPort.Location = new System.Drawing.Point(109, 322);
             this.holePunchPort.Name = "holePunchPort";
             this.holePunchPort.Size = new System.Drawing.Size(100, 22);
             this.holePunchPort.TabIndex = 4;
             this.holePunchPort.Text = "51243";
+            // 
+            // dataGridView1
+            // 
+            this.dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dataGridView1.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.IP,
+            this.Port,
+            this.Status});
+            this.dataGridView1.Location = new System.Drawing.Point(26, 12);
+            this.dataGridView1.Name = "dataGridView1";
+            this.dataGridView1.RowHeadersWidth = 51;
+            this.dataGridView1.RowTemplate.Height = 24;
+            this.dataGridView1.Size = new System.Drawing.Size(745, 204);
+            this.dataGridView1.TabIndex = 5;
+            // 
+            // IP
+            // 
+            this.IP.HeaderText = "IP";
+            this.IP.MinimumWidth = 6;
+            this.IP.Name = "IP";
+            this.IP.Width = 125;
+            // 
+            // Port
+            // 
+            this.Port.HeaderText = "Port";
+            this.Port.MinimumWidth = 6;
+            this.Port.Name = "Port";
+            this.Port.Width = 125;
+            // 
+            // Status
+            // 
+            this.Status.HeaderText = "Status";
+            this.Status.MinimumWidth = 6;
+            this.Status.Name = "Status";
+            this.Status.ReadOnly = true;
+            this.Status.Width = 125;
             // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 450);
+            this.Controls.Add(this.dataGridView1);
             this.Controls.Add(this.holePunchPort);
             this.Controls.Add(this.GoInternet);
             this.Controls.Add(this.label1);
@@ -99,11 +141,15 @@
 
         #endregion
 
-        private System.Windows.Forms.Button GoBells;
+        private System.Windows.Forms.Button Connect;
         private System.Windows.Forms.TextBox holePunchIP;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button GoInternet;
         private System.Windows.Forms.TextBox holePunchPort;
+        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn IP;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Port;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Status;
     }
 }
 
