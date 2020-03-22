@@ -60,7 +60,7 @@ namespace Muster
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                     _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
 
-                    byte[] data = Encoding.ASCII.GetBytes("ConnectPlease");
+                    byte[] data = Encoding.ASCII.GetBytes($"Connect{ipAddr.ToString()}Please");
                     var sent = _socket.Send(data);
 
                     peerSockets.Add(_socket);
@@ -104,27 +104,35 @@ namespace Muster
 
                     var newTask = new Task(() =>
                    {
-                       runParameters.srcSocket.ReceiveTimeout = 1000;
+                       runParameters.srcSocket.ReceiveTimeout = 5000;
 
                        const int BLOCK_SIZE = 1024;
                        byte[] buffer = new byte[BLOCK_SIZE];
                        while (!runParameters.cancellationToken.IsCancellationRequested)
                        {
-                           var bytesReceived = runParameters.srcSocket.Receive(buffer);
-                           for (int i=0; i<bytesReceived; i++)
+                           try
                            {
-                               if (buffer[i]>='1' && buffer[i]<='8')
+                               var bytesReceived = runParameters.srcSocket.Receive(buffer);
+
+                               for (int i = 0; i < bytesReceived; i++)
                                {
-                                   runParameters.BellStrikeEvent?.Invoke(buffer[i]-'1');
+                                   if (buffer[i] >= '1' && buffer[i] <= '8')
+                                   {
+                                       runParameters.BellStrikeEvent?.Invoke(buffer[i] - '1');
+                                   }
+                                   else if (buffer[i] == '?')
+                                   {
+                                       runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                                   }
+                                   else if (buffer[i] == '#')
+                                   {
+                                       runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
+                                   }
                                }
-                               else if (buffer[i]=='?')
-                               {
-                                   runParameters.srcSocket.Send(new byte[] { (byte)'#' });
-                               }
-                               else if (buffer[i]=='#')
-                               {
-                                   runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
-                               }
+                           }
+                           catch (SocketException se)
+                           {
+                               // Probably OK?
                            }
                        }
                    }
