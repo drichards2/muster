@@ -131,7 +131,7 @@
             this.Controls.Add(this.GoInternet);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.holePunchIP);
-            this.Controls.Add(this.GoBells);
+            this.Controls.Add(this.Connect);
             this.Name = "Muster";
             this.Text = "Muster";
             this.ResumeLayout(false);
