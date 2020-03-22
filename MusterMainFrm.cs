@@ -69,7 +69,12 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
-            Console.WriteLine($"New key: {e.KeyValue}");
+            System.Diagnostics.Debug.WriteLine($"New key: {e.KeyValue}");
+            int bellNumber = e.KeyValue - '1';
+            if (bellNumber >= 0 && bellNumber < 8)
+            {
+                bellSamples[bellNumber].Play();
+            } 
         }
     }
 }
