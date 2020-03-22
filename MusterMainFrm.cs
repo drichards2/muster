@@ -140,7 +140,7 @@ namespace Muster
 
                     peerListeners.Add(newTask);
                     newTask.Start();
-                    
+                    TestConnection();
                 }
             }
 
@@ -149,6 +149,7 @@ namespace Muster
         private void SocketEcho(int peerChannel)
         {
             Console.WriteLine($"Received echo request: {peerChannel}");
+            connectionList.Rows[peerChannel].Cells[2].Value = "Connected";
         }
 
         private void BellStrike(int bell)
@@ -218,6 +219,14 @@ namespace Muster
             if (bellNumber >= 0 && bellNumber < 8)
             {
                 bellSamples[bellNumber].Play();
+            }
+        }
+
+        private void TestConnection()
+        {
+            foreach (var sock in peerSockets)
+            {
+                sock.Send(new byte[] { (byte)'?' });
             }
         }
     }
