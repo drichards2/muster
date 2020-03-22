@@ -9,6 +9,7 @@ using System.Media;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -22,6 +23,8 @@ namespace Muster
 
         private List<SoundPlayer> bellSamples = new List<SoundPlayer>();
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
+        private List<Task> peerListeners = new List<Task>(MAX_PEERS);
+        private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
 
         public Muster()
         {
@@ -70,6 +73,7 @@ namespace Muster
             }
         }
 
+
         private void Connect_Click(object sender, EventArgs e)
         {
             if ( (connectionList.Rows.Count-1) != peerSockets.Count)
@@ -89,16 +93,75 @@ namespace Muster
                 {
                     peerSockets[connectRows].Connect(ipAddr, port);
 
-                    byte[] data = Encoding.ASCII.GetBytes("OK?");
+                    var ctokenSource = new CancellationTokenSource();
+                    peerCancellation.Add(ctokenSource);
+                    var runParameters = new ListenerTask.ListenerConfig();
+                    runParameters.cancellationToken = ctokenSource.Token;
+                    runParameters.peerChannel = connectRows;
+                    runParameters.srcSocket = peerSockets[connectRows];
+                    runParameters.BellStrikeEvent = BellStrike;
+                    runParameters.EchoBackEvent = SocketEcho;
+
+                    var newTask = new Task(() =>
+                   {
+                       const int BLOCK_SIZE = 1024;
+                       byte[] buffer = new byte[BLOCK_SIZE];
+                       while (!runParameters.cancellationToken.IsCancellationRequested)
+                       {
+                           var bytesReceived = runParameters.srcSocket.Receive(buffer);
+                           for (int i=0; i<bytesReceived; i++)
+                           {
+                               if (buffer[i]>='1' && buffer[i]<='8')
+                               {
+                                   runParameters.BellStrikeEvent?.Invoke(buffer[i]-'1');
+                               }
+                               else if (buffer[i]=='?')
+                               {
+                                   runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                               }
+                               else if (buffer[i]=='#')
+                               {
+                                   runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
+                               }
+                           }
+                       }
+                   }
+                        );
+                    
+
+                    byte[] data = Encoding.ASCII.GetBytes("?");
                     peerSockets[connectRows].Send(data);
                 }
             }
 
+        }
 
+        private void SocketEcho(int peerChannel)
+        {
+            throw new NotImplementedException();
+        }
+
+        private void BellStrike(int bell)
+        {
+            throw new NotImplementedException();
         }
 
         private void Disconnect()
         {
+            foreach (var cancellationToken in peerCancellation)
+            {
+                cancellationToken.Cancel();
+            }
+            foreach (var peerListener in peerListeners)
+            {
+                peerListener.Wait();
+                peerListener.Dispose();
+            }
+            foreach (var cancellationToken in peerCancellation)
+            {
+                cancellationToken.Dispose();
+            }
+
             foreach (var oldSock in peerSockets)
             {
                 oldSock.Disconnect(false);
@@ -127,10 +190,15 @@ namespace Muster
         {
             System.Diagnostics.Debug.WriteLine($"New key: {e.KeyValue}");
             int bellNumber = e.KeyValue - '1';
+            RingBell(bellNumber);
+        }
+
+        private void RingBell(int bellNumber)
+        {
             if (bellNumber >= 0 && bellNumber < 8)
             {
                 bellSamples[bellNumber].Play();
-            } 
+            }
         }
     }
 }
