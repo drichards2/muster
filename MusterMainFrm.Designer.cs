@@ -134,6 +134,8 @@
             this.Controls.Add(this.Holepunch);
             this.Name = "Muster";
             this.Text = "Muster";
+            this.KeyPreview = true;
+            this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.connectionList)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
