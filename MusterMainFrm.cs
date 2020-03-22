@@ -192,11 +192,16 @@ namespace Muster
         {
             System.Diagnostics.Debug.WriteLine($"New key: {e.KeyValue}");
             int bellNumber = e.KeyValue - '1';
-            var txBytes = new byte[] { (byte)e.KeyValue };
-            foreach (var _socket in peerSockets)
+
+            if ( (e.KeyValue >= '1' && e.KeyValue <= '8') || (e.KeyValue == '?'))
             {
-                Task.Factory.StartNew(() => { _socket.Send(txBytes); });
+                var txBytes = new byte[] { (byte)e.KeyValue };
+                foreach (var _socket in peerSockets)
+                {
+                    Task.Factory.StartNew(() => { _socket.Send(txBytes); });
+                }
             }
+
             RingBell(bellNumber);
         }
 
