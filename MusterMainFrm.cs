@@ -127,10 +127,10 @@ namespace Muster
                        }
                    }
                         );
-                    
 
-                    byte[] data = Encoding.ASCII.GetBytes("?");
-                    peerSockets[connectRows].Send(data);
+                    peerListeners.Add(newTask);
+                    newTask.Start();
+                    
                 }
             }
 
@@ -138,12 +138,12 @@ namespace Muster
 
         private void SocketEcho(int peerChannel)
         {
-            throw new NotImplementedException();
+            Console.WriteLine($"Received echo request: {peerChannel}");
         }
 
         private void BellStrike(int bell)
         {
-            throw new NotImplementedException();
+            RingBell(bell);
         }
 
         private void Disconnect()
