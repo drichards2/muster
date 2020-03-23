@@ -174,7 +174,6 @@ namespace Muster
 
             foreach (var oldSock in peerSockets)
             {
-                oldSock.Disconnect(false);
                 oldSock.Dispose();
             }
             peerSockets.Clear();
