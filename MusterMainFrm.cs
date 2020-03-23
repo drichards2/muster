@@ -38,9 +38,9 @@ namespace Muster
             }
         }
 
-        private void Go_Click(object sender, EventArgs e)
+        private void Holepunch_Click(object sender, EventArgs e)
         {
-            Disconnect();
+            DisconnectAll();
 
             Console.WriteLine($"Requesting to connect {connectionList.Rows.Count} peers");
             if (connectionList.Rows.Count > (MAX_PEERS + 1))
@@ -140,7 +140,6 @@ namespace Muster
 
                     peerListeners.Add(newTask);
                     newTask.Start();
-                    TestConnection();
                 }
             }
 
@@ -157,7 +156,7 @@ namespace Muster
             RingBell(bell);
         }
 
-        private void Disconnect()
+        private void DisconnectAll()
         {
             foreach (var cancellationToken in peerCancellation)
             {
@@ -224,10 +223,27 @@ namespace Muster
 
         private void TestConnection()
         {
+            foreach (DataGridViewRow row in connectionList.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                row.Cells[2].Value = "Waiting for reply";
+            }
             foreach (var sock in peerSockets)
             {
                 sock.Send(new byte[] { (byte)'?' });
             }
+        }
+
+        private void Disconnect_Click(object sender, EventArgs e)
+        {
+            DisconnectAll();
+        }
+
+        private void Test_Click(object sender, EventArgs e)
+        {
+            TestConnection();
         }
     }
 }
