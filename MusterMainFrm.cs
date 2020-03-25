@@ -38,9 +38,9 @@ namespace Muster
             }
         }
 
-        private void Go_Click(object sender, EventArgs e)
+        private void Holepunch_Click(object sender, EventArgs e)
         {
-            Disconnect();
+            DisconnectAll();
 
             Console.WriteLine($"Requesting to connect {connectionList.Rows.Count} peers");
             if (connectionList.Rows.Count > (MAX_PEERS + 1))
@@ -140,7 +140,6 @@ namespace Muster
 
                     peerListeners.Add(newTask);
                     newTask.Start();
-                    
                 }
             }
 
@@ -149,6 +148,7 @@ namespace Muster
         private void SocketEcho(int peerChannel)
         {
             Console.WriteLine($"Received echo request: {peerChannel}");
+            connectionList.Rows[peerChannel].Cells[2].Value = "Connected";
         }
 
         private void BellStrike(int bell)
@@ -156,7 +156,7 @@ namespace Muster
             RingBell(bell);
         }
 
-        private void Disconnect()
+        private void DisconnectAll()
         {
             foreach (var cancellationToken in peerCancellation)
             {
@@ -174,7 +174,6 @@ namespace Muster
 
             foreach (var oldSock in peerSockets)
             {
-                oldSock.Disconnect(false);
                 oldSock.Dispose();
             }
             peerSockets.Clear();
@@ -219,6 +218,31 @@ namespace Muster
             {
                 bellSamples[bellNumber].Play();
             }
+        }
+
+        private void TestConnection()
+        {
+            foreach (DataGridViewRow row in connectionList.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                row.Cells[2].Value = "Waiting for reply";
+            }
+            foreach (var sock in peerSockets)
+            {
+                sock.Send(new byte[] { (byte)'?' });
+            }
+        }
+
+        private void Disconnect_Click(object sender, EventArgs e)
+        {
+            DisconnectAll();
+        }
+
+        private void Test_Click(object sender, EventArgs e)
+        {
+            TestConnection();
         }
     }
 }
