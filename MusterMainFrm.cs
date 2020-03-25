@@ -20,7 +20,7 @@ namespace Muster
     public partial class Muster : Form
     {
         private int nextBell;
-        private const int numberOfBells = 8;
+        private const int numberOfBells = 12;
         private const int MAX_PEERS = 6;
 
         private List<SoundPlayer> bellSamples = new List<SoundPlayer>();
@@ -36,10 +36,10 @@ namespace Muster
 
             FindAbel();
 
-            for(int i = 0; i<12;i++)
+            for(int i = 0; i < numberOfBells; i++)
             {
-                SendKeystroke('A');
-                System.Threading.Thread.Sleep(200);
+                RingBell(i);
+                System.Threading.Thread.Sleep(230);
             }
 
         }
@@ -122,7 +122,7 @@ namespace Muster
 
                                for (int i = 0; i < bytesReceived; i++)
                                {
-                                   if (buffer[i] >= '1' && buffer[i] <= '8')
+                                   if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
                                    {
                                        runParameters.BellStrikeEvent?.Invoke(buffer[i] - '1');
                                    }
@@ -185,28 +185,12 @@ namespace Muster
             peerSockets.Clear();
         }
 
-        private void RoundsTimer_Tick(object sender, EventArgs e)
-        {
-            if (nextBell >= 2 * numberOfBells)
-            {
-                nextBell = 0;
-            }
-            else
-            {
-                var timestamp = DateTime.Now;
-
-                Console.WriteLine($"{nextBell}|{timestamp.Second}|{timestamp.Millisecond}");
-                bellSamples[nextBell % numberOfBells].Play();
-                nextBell = nextBell + 1;
-            }
-        }
-
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
             System.Diagnostics.Debug.WriteLine($"New key: {e.KeyValue}");
-            int bellNumber = e.KeyValue - '1';
+            int bellNumber = e.KeyValue - 'A';
 
-            if ( (e.KeyValue >= '1' && e.KeyValue <= '8') || (e.KeyValue == '?'))
+            if ( (e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
             {
                 var txBytes = new byte[] { (byte)e.KeyValue };
                 foreach (var _socket in peerSockets)
@@ -220,9 +204,9 @@ namespace Muster
 
         private void RingBell(int bellNumber)
         {
-            if (bellNumber >= 0 && bellNumber < 8)
+            if (bellNumber >= 0 && bellNumber < numberOfBells)
             {
-                bellSamples[bellNumber].Play();
+                SendKeystroke(bellNumber);
             }
         }
 
@@ -251,27 +235,18 @@ namespace Muster
             TestConnection();
         }
 
-        [DllImport ("User32.dll")]
-        static extern int SetForegroundWindow(IntPtr point);
-
         [DllImport("user32.dll")]
         static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
         const int WM_KEYDOWN= 0x100;
         const int WM_KEYUP = 0x101;
+        const int WM_CHAR = 0x102;
 
-        private void SendKeystroke(char command)
+        private void SendKeystroke(int bell)
         {
             if (AbelHandle != null)
             {
-                SetForegroundWindow(AbelHandle);
-                SendKeys.SendWait(command.ToString());
-                    
-/*                string newcommand = "A";
-                int c = (int) newcommand[0];
-                bool res = PostMessage(AbelHandle, WM_KEYDOWN, c, 0);
-                 res = PostMessage(AbelHandle, WM_KEYUP, c, 0);
-*/
+                PostMessage(AbelHandle, WM_CHAR, 'A'+bell, 0);
             }
         }
 
@@ -292,8 +267,9 @@ namespace Muster
                     
                     AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, ChildWindow,  "");
                     AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, GrandchildWindow,  "");
-				}
+                }
 			}
         }
     }
 }
+
