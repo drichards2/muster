@@ -124,7 +124,7 @@ namespace Muster
                                {
                                    if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
                                    {
-                                       runParameters.BellStrikeEvent?.Invoke(buffer[i] - '1');
+                                       runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
                                    }
                                    else if (buffer[i] == '?')
                                    {
