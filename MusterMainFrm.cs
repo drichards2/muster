@@ -3,11 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
 using System.Media;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -26,16 +28,20 @@ namespace Muster
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
 
+        private IntPtr AbelHandle;
+
         public Muster()
         {
             InitializeComponent();
 
-            for (var i=0; i<8; i++)
+            FindAbel();
+
+            for(int i = 0; i<12;i++)
             {
-                var soundReader = new SoundPlayer(System.IO.Path.Combine("soundfiles", $"handbell{i + 1}.wav"));
-                soundReader.LoadAsync();
-                bellSamples.Add(soundReader);                
+                SendKeystroke("A");
+                System.Threading.Thread.Sleep(200);
             }
+
         }
 
         private void Holepunch_Click(object sender, EventArgs e)
@@ -243,6 +249,30 @@ namespace Muster
         private void Test_Click(object sender, EventArgs e)
         {
             TestConnection();
+        }
+
+        [DllImport ("User32.dll")]
+        static extern int SetForegroundWindow(IntPtr point);
+
+        private void SendKeystroke(string command)
+        {
+            if (AbelHandle != null)
+            {
+                SetForegroundWindow(AbelHandle);
+                SendKeys.SendWait(command);
+            }
+        }
+
+        private void FindAbel() 
+        {
+			Process[] currentProcesses = Process.GetProcesses();
+			foreach (Process p in currentProcesses)
+			{
+				if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
+				{
+					AbelHandle = p.MainWindowHandle;
+				}
+			}
         }
     }
 }
