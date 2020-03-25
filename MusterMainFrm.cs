@@ -38,7 +38,7 @@ namespace Muster
 
             for(int i = 0; i<12;i++)
             {
-                SendKeystroke("A");
+                SendKeystroke('A');
                 System.Threading.Thread.Sleep(200);
             }
 
@@ -254,14 +254,29 @@ namespace Muster
         [DllImport ("User32.dll")]
         static extern int SetForegroundWindow(IntPtr point);
 
-        private void SendKeystroke(string command)
+        [DllImport("user32.dll")]
+        static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+
+        const int WM_KEYDOWN= 0x100;
+        const int WM_KEYUP = 0x101;
+
+        private void SendKeystroke(char command)
         {
             if (AbelHandle != null)
             {
                 SetForegroundWindow(AbelHandle);
-                SendKeys.SendWait(command);
+                SendKeys.SendWait(command.ToString());
+                    
+/*                string newcommand = "A";
+                int c = (int) newcommand[0];
+                bool res = PostMessage(AbelHandle, WM_KEYDOWN, c, 0);
+                 res = PostMessage(AbelHandle, WM_KEYUP, c, 0);
+*/
             }
         }
+
+		[DllImport("user32.dll")]
+		private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
 
         private void FindAbel() 
         {
@@ -271,6 +286,12 @@ namespace Muster
 				if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
 				{
 					AbelHandle = p.MainWindowHandle;
+
+                    string ChildWindow = "AfxMDIFrame140s";
+                    string GrandchildWindow = "AfxFrameOrView140s";
+                    
+                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, ChildWindow,  "");
+                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, GrandchildWindow,  "");
 				}
 			}
         }
