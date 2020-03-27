@@ -22,11 +22,9 @@ namespace Muster
 {
     public partial class Muster : Form
     {
-        private int nextBell;
         private const int numberOfBells = 12;
         private const int MAX_PEERS = 6;
 
-        private List<SoundPlayer> bellSamples = new List<SoundPlayer>();
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
@@ -34,6 +32,7 @@ namespace Muster
         private IntPtr AbelHandle;
 
         private static readonly HttpClient client = new HttpClient();
+        private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
 
         public Muster()
         {
@@ -50,14 +49,69 @@ namespace Muster
             GetTheBandBackTogether();
         }
 
+        private void MakeNewBand_Click(object sender, EventArgs e)
+        {
+            SendCreateBandRequest();
+        }
+
+        private async Task SendCreateBandRequest()
+        {
+            var response = await client.PostAsync(serverAddress + "bands", new FormUrlEncodedContent(new Dictionary<string, string>()));
+            if ((int)response.StatusCode != 201)
+            {
+                Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
+            }
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            if (responseString.Length > 0)
+            {
+                var newbandID = JsonConvert.DeserializeObject<string>(responseString);
+                Debug.WriteLine("Created new band with ID: " + newbandID);
+                bandID.Text = newbandID;
+            }
+        }
+
+        private void JoinBand_Click(object sender, EventArgs e)
+        {
+            SendJoinBandRequest(bandID.Text);
+        }
+
+        private async Task SendJoinBandRequest(string bandID)
+        {
+            var values = new Dictionary<string, string>
+            {
+                { "bandID", bandID }
+            };
+
+            var content = new FormUrlEncodedContent(values);
+
+            var response = await client.PostAsync(serverAddress + "bands/" + bandID + "/members", content);
+            if ((int)response.StatusCode != 201)
+            {
+                Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
+            }
+
+            var responseString = await response.Content.ReadAsStringAsync();
+            if (responseString.Length > 0)
+            {
+                var addedMember = JsonConvert.DeserializeObject<Member>(responseString);
+                Debug.WriteLine("Successfully added member: " + addedMember.id);
+            }
+
+            GetTheBandBackTogether();
+        }
+
         private async Task GetTheBandBackTogether()
         {
+            Debug.WriteLine("Finding band members in band: " + bandID.Text);
+            connectionList.Rows.Clear();
+
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
 
-            var streamTask = client.GetStringAsync("https://virtserver.swaggerhub.com/drichards2/muster/1.0.0/bands/241aw");
+            var streamTask = client.GetStringAsync(serverAddress + "bands/" + bandID.Text);
             
             var msg = await streamTask;
             var band = JsonConvert.DeserializeObject<Band>(msg);
@@ -71,7 +125,7 @@ namespace Muster
         {
             DisconnectAll();
 
-            Console.WriteLine($"Requesting to connect {connectionList.Rows.Count} peers");
+            Console.WriteLine($"Requesting to connect {connectionList.Rows.Count - 1} peers");
             if (connectionList.Rows.Count > (MAX_PEERS + 1))
             {
                 MessageBox.Show($"Can't connect {connectionList.Rows.Count - 1} peers - {MAX_PEERS} is the maximum");
@@ -89,7 +143,7 @@ namespace Muster
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                     _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
 
-                    byte[] data = Encoding.ASCII.GetBytes($"Connect{ipAddr.ToString()}Please");
+                    byte[] data = Encoding.ASCII.GetBytes($"Connect{ipAddr.ToString()}InBand{bandID.Text}Please");
                     var sent = _socket.Send(data);
 
                     peerSockets.Add(_socket);
@@ -101,7 +155,6 @@ namespace Muster
                 }
             }
         }
-
 
         private void Connect_Click(object sender, EventArgs e)
         {
@@ -171,7 +224,6 @@ namespace Muster
                     newTask.Start();
                 }
             }
-
         }
 
         private void SocketEcho(int peerChannel)
@@ -185,11 +237,43 @@ namespace Muster
             RingBell(bell);
         }
 
+        private void Disconnect_Click(object sender, EventArgs e)
+        {
+            DisconnectAll();
+        }
+
+        private void Test_Click(object sender, EventArgs e)
+        {
+            TestConnection();
+        }
+
+        private void TestConnection()
+        {
+            foreach (DataGridViewRow row in connectionList.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                row.Cells[2].Value = "Waiting for reply";
+            }
+            foreach (var sock in peerSockets)
+            {
+                sock.Send(new byte[] { (byte)'?' });
+            }
+        }
+
         private void DisconnectAll()
         {
             foreach (var cancellationToken in peerCancellation)
             {
-                cancellationToken.Cancel();
+                try
+                {
+                    cancellationToken.Cancel();
+                }
+                catch (ObjectDisposedException ode)
+                {
+                }
+
             }
             foreach (var peerListener in peerListeners)
             {
@@ -233,31 +317,6 @@ namespace Muster
             }
         }
 
-        private void TestConnection()
-        {
-            foreach (DataGridViewRow row in connectionList.Rows)
-            {
-                if (row.IsNewRow)
-                    continue;
-
-                row.Cells[2].Value = "Waiting for reply";
-            }
-            foreach (var sock in peerSockets)
-            {
-                sock.Send(new byte[] { (byte)'?' });
-            }
-        }
-
-        private void Disconnect_Click(object sender, EventArgs e)
-        {
-            DisconnectAll();
-        }
-
-        private void Test_Click(object sender, EventArgs e)
-        {
-            TestConnection();
-        }
-
         [DllImport("user32.dll")]
         static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
@@ -293,7 +352,8 @@ namespace Muster
                 }
             }
         }
-	}
+    }
+
     public class Band
     {
         public Member[] members{ get; set; }

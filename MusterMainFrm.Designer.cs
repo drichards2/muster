@@ -39,13 +39,17 @@
             this.Connect = new System.Windows.Forms.Button();
             this.Disconnect = new System.Windows.Forms.Button();
             this.Test = new System.Windows.Forms.Button();
+            this.bandID = new System.Windows.Forms.TextBox();
+            this.label2 = new System.Windows.Forms.Label();
+            this.JoinBand = new System.Windows.Forms.Button();
+            this.MakeNewBand = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.connectionList)).BeginInit();
             this.SuspendLayout();
             // 
             // Holepunch
             // 
             this.Holepunch.Location = new System.Drawing.Point(176, 245);
-            this.Holepunch.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Holepunch.Margin = new System.Windows.Forms.Padding(2);
             this.Holepunch.Name = "Holepunch";
             this.Holepunch.Size = new System.Drawing.Size(123, 24);
             this.Holepunch.TabIndex = 0;
@@ -56,7 +60,7 @@
             // holePunchIP
             // 
             this.holePunchIP.Location = new System.Drawing.Point(82, 245);
-            this.holePunchIP.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.holePunchIP.Margin = new System.Windows.Forms.Padding(2);
             this.holePunchIP.Name = "holePunchIP";
             this.holePunchIP.Size = new System.Drawing.Size(76, 20);
             this.holePunchIP.TabIndex = 1;
@@ -75,7 +79,7 @@
             // holePunchPort
             // 
             this.holePunchPort.Location = new System.Drawing.Point(82, 262);
-            this.holePunchPort.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.holePunchPort.Margin = new System.Windows.Forms.Padding(2);
             this.holePunchPort.Name = "holePunchPort";
             this.holePunchPort.Size = new System.Drawing.Size(76, 20);
             this.holePunchPort.TabIndex = 4;
@@ -89,7 +93,7 @@
             this.Port,
             this.Status});
             this.connectionList.Location = new System.Drawing.Point(20, 10);
-            this.connectionList.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.connectionList.Margin = new System.Windows.Forms.Padding(2);
             this.connectionList.Name = "connectionList";
             this.connectionList.RowHeadersWidth = 51;
             this.connectionList.RowTemplate.Height = 24;
@@ -121,7 +125,7 @@
             // Connect
             // 
             this.Connect.Location = new System.Drawing.Point(318, 245);
-            this.Connect.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Connect.Margin = new System.Windows.Forms.Padding(2);
             this.Connect.Name = "Connect";
             this.Connect.Size = new System.Drawing.Size(123, 24);
             this.Connect.TabIndex = 6;
@@ -151,11 +155,56 @@
             this.Test.UseVisualStyleBackColor = true;
             this.Test.Click += new System.EventHandler(this.Test_Click);
             // 
+            // bandID
+            // 
+            this.bandID.Location = new System.Drawing.Point(82, 194);
+            this.bandID.Margin = new System.Windows.Forms.Padding(2);
+            this.bandID.Name = "bandID";
+            this.bandID.Size = new System.Drawing.Size(76, 20);
+            this.bandID.TabIndex = 9;
+            this.bandID.Text = "241aw";
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(18, 197);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(46, 13);
+            this.label2.TabIndex = 10;
+            this.label2.Text = "Band ID";
+            // 
+            // JoinBand
+            // 
+            this.JoinBand.Location = new System.Drawing.Point(176, 191);
+            this.JoinBand.Margin = new System.Windows.Forms.Padding(2);
+            this.JoinBand.Name = "JoinBand";
+            this.JoinBand.Size = new System.Drawing.Size(123, 24);
+            this.JoinBand.TabIndex = 11;
+            this.JoinBand.Text = "Join/refresh band";
+            this.JoinBand.UseVisualStyleBackColor = true;
+            this.JoinBand.Click += new System.EventHandler(this.JoinBand_Click);
+            // 
+            // MakeNewBand
+            // 
+            this.MakeNewBand.Location = new System.Drawing.Point(318, 191);
+            this.MakeNewBand.Margin = new System.Windows.Forms.Padding(2);
+            this.MakeNewBand.Name = "MakeNewBand";
+            this.MakeNewBand.Size = new System.Drawing.Size(123, 24);
+            this.MakeNewBand.TabIndex = 12;
+            this.MakeNewBand.Text = "Make new band";
+            this.MakeNewBand.UseVisualStyleBackColor = true;
+            this.MakeNewBand.Click += new System.EventHandler(this.MakeNewBand_Click);
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(600, 366);
+            this.Controls.Add(this.MakeNewBand);
+            this.Controls.Add(this.JoinBand);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.bandID);
             this.Controls.Add(this.Test);
             this.Controls.Add(this.Disconnect);
             this.Controls.Add(this.Connect);
@@ -164,10 +213,10 @@
             this.Controls.Add(this.label1);
             this.Controls.Add(this.holePunchIP);
             this.Controls.Add(this.Holepunch);
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.KeyPreview = true;
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Muster";
             this.Text = "Muster";
-            this.KeyPreview = true;
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
             ((System.ComponentModel.ISupportInitialize)(this.connectionList)).EndInit();
             this.ResumeLayout(false);
@@ -188,5 +237,9 @@
         private System.Windows.Forms.Button Connect;
         private System.Windows.Forms.Button Disconnect;
         private System.Windows.Forms.Button Test;
+        private System.Windows.Forms.TextBox bandID;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Button JoinBand;
+        private System.Windows.Forms.Button MakeNewBand;
     }
 }
