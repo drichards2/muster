@@ -1,4 +1,5 @@
 ﻿using NAudio.Wave;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -8,6 +9,8 @@ using System.Drawing;
 using System.Linq;
 using System.Media;
 using System.Net;
+using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -30,6 +33,8 @@ namespace Muster
 
         private IntPtr AbelHandle;
 
+        private static readonly HttpClient client = new HttpClient();
+
         public Muster()
         {
             InitializeComponent();
@@ -42,6 +47,24 @@ namespace Muster
                 System.Threading.Thread.Sleep(230);
             }
 
+            GetTheBandBackTogether();
+        }
+
+        private async Task GetTheBandBackTogether()
+        {
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+
+            var streamTask = client.GetStringAsync("https://virtserver.swaggerhub.com/drichards2/muster/1.0.0/bands/241aw");
+            
+            var msg = await streamTask;
+            var band = JsonConvert.DeserializeObject<Band>(msg);
+            foreach (var member in band.members)
+            {
+                connectionList.Rows.Add(member.address, member.port);
+            }
         }
 
         private void Holepunch_Click(object sender, EventArgs e)
@@ -109,7 +132,7 @@ namespace Muster
                     runParameters.EchoBackEvent = SocketEcho;
 
                     var newTask = new Task(() =>
-                   {
+                    {
                        runParameters.srcSocket.ReceiveTimeout = 5000;
 
                        const int BLOCK_SIZE = 1024;
@@ -141,8 +164,8 @@ namespace Muster
                                // Probably OK?
                            }
                        }
-                   }
-                        );
+                    }
+                    );
 
                     peerListeners.Add(newTask);
                     newTask.Start();
@@ -268,8 +291,20 @@ namespace Muster
                     AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, ChildWindow,  "");
                     AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, GrandchildWindow,  "");
                 }
-			}
+            }
         }
+	}
+    public class Band
+    {
+        public Member[] members{ get; set; }
+    }
+    public class Member
+    {
+        public string name{ get; set; }
+        public string location{ get; set; }
+        public string id{ get; set; }
+        public string address{ get; set; }
+        public int port{ get; set; }
     }
 }
 
