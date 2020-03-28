@@ -26,8 +26,8 @@ namespace Muster
         private IntPtr AbelHandle;
 
         private static readonly HttpClient client = new HttpClient();
-        //private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
-        private string serverAddress = "http://localhost:5000/v1/";
+        private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        //private string serverAddress = "http://localhost:5000/v1/";
         //private string serverAddress = "http://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
@@ -42,7 +42,7 @@ namespace Muster
                 System.Threading.Thread.Sleep(230);
             }
 
-            GetTheBandBackTogether();
+            GetTheBandBackTogether(bandID.Text);
         }
 
         private void MakeNewBand_Click(object sender, EventArgs e)
@@ -86,11 +86,13 @@ namespace Muster
             {
                 Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
             }
+            
+            GetTheBandBackTogether(bandID);
         }
 
-        private async Task GetTheBandBackTogether()
+        private async Task GetTheBandBackTogether(string bandID)
         {
-            Debug.WriteLine("Finding band members in band: " + bandID.Text);
+            Debug.WriteLine("Finding band members in band: " + bandID);
             connectionList.Rows.Clear();
 
             client.DefaultRequestHeaders.Accept.Clear();
@@ -98,7 +100,7 @@ namespace Muster
                 new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
 
-            var streamTask = client.GetStringAsync(serverAddress + "bands/" + bandID.Text);
+            var streamTask = client.GetStringAsync(serverAddress + "bands/" + bandID);
             
             var msg = await streamTask;
             var band = JsonConvert.DeserializeObject<Band>(msg);
