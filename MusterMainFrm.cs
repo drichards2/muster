@@ -105,13 +105,21 @@ namespace Muster
                 new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
 
-            var streamTask = client.GetStringAsync(serverAddress + "bands/" + bandID);
+            var response = await client.GetAsync(serverAddress + "bands/" + bandID);
 
-            var msg = await streamTask;
-            var band = JsonConvert.DeserializeObject<Band>(msg);
-            foreach (var member in band.members)
+            if ((int)response.StatusCode == 200)
             {
-                connectionList.Rows.Add(member.address, member.port);
+                var band = JsonConvert.DeserializeObject<Band>(await response.Content.ReadAsStringAsync());
+                foreach (var member in band.members)
+                {
+                    connectionList.Rows.Add(member.address, member.port);
+                }
+            }
+            else
+            {
+                MessageBox.Show("No record of band ID '" + bandID + "'");
+                Debug.WriteLine("No record of band ID '" + bandID + "': " + response.ReasonPhrase);
+                return;
             }
         }
 
