@@ -33,9 +33,11 @@
             this.label1 = new System.Windows.Forms.Label();
             this.holePunchPort = new System.Windows.Forms.TextBox();
             this.connectionList = new System.Windows.Forms.DataGridView();
-            this.IP = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Port = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.Status = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.LocationColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.IPColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.PortColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.StatusColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Connect = new System.Windows.Forms.Button();
             this.Disconnect = new System.Windows.Forms.Button();
             this.Test = new System.Windows.Forms.Button();
@@ -43,6 +45,10 @@
             this.label2 = new System.Windows.Forms.Label();
             this.JoinBand = new System.Windows.Forms.Button();
             this.MakeNewBand = new System.Windows.Forms.Button();
+            this.label3 = new System.Windows.Forms.Label();
+            this.nameInput = new System.Windows.Forms.TextBox();
+            this.label4 = new System.Windows.Forms.Label();
+            this.locationInput = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.connectionList)).BeginInit();
             this.SuspendLayout();
             // 
@@ -89,38 +95,53 @@
             // 
             this.connectionList.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.connectionList.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
-            this.IP,
-            this.Port,
-            this.Status});
-            this.connectionList.Location = new System.Drawing.Point(20, 10);
+            this.NameColumn,
+            this.LocationColumn,
+            this.IPColumn,
+            this.PortColumn,
+            this.StatusColumn});
+            this.connectionList.Location = new System.Drawing.Point(11, 11);
             this.connectionList.Margin = new System.Windows.Forms.Padding(2);
             this.connectionList.Name = "connectionList";
             this.connectionList.RowHeadersWidth = 51;
             this.connectionList.RowTemplate.Height = 24;
-            this.connectionList.Size = new System.Drawing.Size(559, 166);
+            this.connectionList.Size = new System.Drawing.Size(653, 166);
             this.connectionList.TabIndex = 5;
             // 
-            // IP
+            // NameColumn
             // 
-            this.IP.HeaderText = "IP";
-            this.IP.MinimumWidth = 6;
-            this.IP.Name = "IP";
-            this.IP.Width = 125;
+            this.NameColumn.HeaderText = "Name";
+            this.NameColumn.MinimumWidth = 6;
+            this.NameColumn.Name = "NameColumn";
+            this.NameColumn.Width = 125;
             // 
-            // Port
+            // LocationColumn
             // 
-            this.Port.HeaderText = "Port";
-            this.Port.MinimumWidth = 6;
-            this.Port.Name = "Port";
-            this.Port.Width = 125;
+            this.LocationColumn.HeaderText = "Location";
+            this.LocationColumn.MinimumWidth = 6;
+            this.LocationColumn.Name = "LocationColumn";
+            this.LocationColumn.Width = 125;
             // 
-            // Status
+            // IPColumn
             // 
-            this.Status.HeaderText = "Status";
-            this.Status.MinimumWidth = 6;
-            this.Status.Name = "Status";
-            this.Status.ReadOnly = true;
-            this.Status.Width = 125;
+            this.IPColumn.HeaderText = "IP";
+            this.IPColumn.MinimumWidth = 6;
+            this.IPColumn.Name = "IPColumn";
+            this.IPColumn.Width = 125;
+            // 
+            // PortColumn
+            // 
+            this.PortColumn.HeaderText = "Port";
+            this.PortColumn.MinimumWidth = 6;
+            this.PortColumn.Name = "PortColumn";
+            // 
+            // StatusColumn
+            // 
+            this.StatusColumn.HeaderText = "Status";
+            this.StatusColumn.MinimumWidth = 6;
+            this.StatusColumn.Name = "StatusColumn";
+            this.StatusColumn.ReadOnly = true;
+            this.StatusColumn.Width = 125;
             // 
             // Connect
             // 
@@ -196,11 +217,55 @@
             this.MakeNewBand.UseVisualStyleBackColor = true;
             this.MakeNewBand.Click += new System.EventHandler(this.MakeNewBand_Click);
             // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(18, 315);
+            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(35, 13);
+            this.label3.TabIndex = 13;
+            this.label3.Text = "Name";
+            // 
+            // nameInput
+            // 
+            this.nameInput.AcceptsTab = true;
+            this.nameInput.Location = new System.Drawing.Point(82, 312);
+            this.nameInput.Margin = new System.Windows.Forms.Padding(2);
+            this.nameInput.Name = "nameInput";
+            this.nameInput.Size = new System.Drawing.Size(76, 20);
+            this.nameInput.TabIndex = 14;
+            this.nameInput.Text = "Frank";
+            // 
+            // label4
+            // 
+            this.label4.AutoSize = true;
+            this.label4.Location = new System.Drawing.Point(18, 342);
+            this.label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(48, 13);
+            this.label4.TabIndex = 15;
+            this.label4.Text = "Location";
+            // 
+            // locationInput
+            // 
+            this.locationInput.AcceptsTab = true;
+            this.locationInput.Location = new System.Drawing.Point(82, 339);
+            this.locationInput.Margin = new System.Windows.Forms.Padding(2);
+            this.locationInput.Name = "locationInput";
+            this.locationInput.Size = new System.Drawing.Size(76, 20);
+            this.locationInput.TabIndex = 16;
+            this.locationInput.Text = "Cambridge";
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(600, 366);
+            this.ClientSize = new System.Drawing.Size(677, 381);
+            this.Controls.Add(this.locationInput);
+            this.Controls.Add(this.label4);
+            this.Controls.Add(this.nameInput);
+            this.Controls.Add(this.label3);
             this.Controls.Add(this.MakeNewBand);
             this.Controls.Add(this.JoinBand);
             this.Controls.Add(this.label2);
@@ -231,9 +296,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox holePunchPort;
         private System.Windows.Forms.DataGridView connectionList;
-        private System.Windows.Forms.DataGridViewTextBoxColumn IP;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Port;
-        private System.Windows.Forms.DataGridViewTextBoxColumn Status;
         private System.Windows.Forms.Button Connect;
         private System.Windows.Forms.Button Disconnect;
         private System.Windows.Forms.Button Test;
@@ -241,5 +303,14 @@
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button JoinBand;
         private System.Windows.Forms.Button MakeNewBand;
+        private System.Windows.Forms.DataGridViewTextBoxColumn NameColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn LocationColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn IPColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn PortColumn;
+        private System.Windows.Forms.DataGridViewTextBoxColumn StatusColumn;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox nameInput;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.TextBox locationInput;
     }
 }

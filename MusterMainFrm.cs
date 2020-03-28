@@ -25,6 +25,8 @@ namespace Muster
 
         private IntPtr AbelHandle;
 
+        private string userID;
+
         private static readonly HttpClient client = new HttpClient();
         private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         //private string serverAddress = "http://localhost:5000/v1/";
@@ -33,6 +35,8 @@ namespace Muster
         public Muster()
         {
             InitializeComponent();
+            userID = GenerateRandomString();
+            Debug.WriteLine(userID);
 
             FindAbel();
 
@@ -70,14 +74,15 @@ namespace Muster
         private void JoinBand_Click(object sender, EventArgs e)
         {
             var member = new Member();
-            member.id = "sdfsdgdf";
-            member.name = "Jonathan";
-            member.location = "Ditton Lane";
+            member.id = userID;
+            member.name = nameInput.Text;
+            member.location = locationInput.Text;
             SendJoinBandRequest(bandID.Text, member);
         }
 
         private async Task SendJoinBandRequest(string bandID, Member member)
-        {  
+        {
+            Debug.WriteLine("Joining band: " + bandID);
             var json = JsonConvert.SerializeObject(member);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
@@ -86,7 +91,7 @@ namespace Muster
             {
                 Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
             }
-            
+
             GetTheBandBackTogether(bandID);
         }
 
@@ -101,7 +106,7 @@ namespace Muster
             client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
 
             var streamTask = client.GetStringAsync(serverAddress + "bands/" + bandID);
-            
+
             var msg = await streamTask;
             var band = JsonConvert.DeserializeObject<Band>(msg);
             foreach (var member in band.members)
@@ -147,20 +152,20 @@ namespace Muster
 
         private void Connect_Click(object sender, EventArgs e)
         {
-            if ( (connectionList.Rows.Count-1) != peerSockets.Count)
+            if ((connectionList.Rows.Count - 1) != peerSockets.Count)
             {
                 MessageBox.Show("There seems to be a mismatch between open sockets and peers requested. Abort abort.");
                 return;
             }
 
-            for (int connectRows = 0; connectRows< connectionList.Rows.Count; connectRows++)
+            for (int connectRows = 0; connectRows < connectionList.Rows.Count; connectRows++)
             {
                 var row = connectionList.Rows[connectRows];
                 if (row.IsNewRow)
                     continue;
 
                 if (IPAddress.TryParse(row.Cells[0].Value.ToString(), out var ipAddr) &&
-                    int.TryParse(row.Cells[1].Value.ToString(), out var port) )
+                    int.TryParse(row.Cells[1].Value.ToString(), out var port))
                 {
                     peerSockets[connectRows].Connect(ipAddr, port);
 
@@ -175,37 +180,37 @@ namespace Muster
 
                     var newTask = new Task(() =>
                     {
-                       runParameters.srcSocket.ReceiveTimeout = 5000;
+                        runParameters.srcSocket.ReceiveTimeout = 5000;
 
-                       const int BLOCK_SIZE = 1024;
-                       byte[] buffer = new byte[BLOCK_SIZE];
-                       while (!runParameters.cancellationToken.IsCancellationRequested)
-                       {
-                           try
-                           {
-                               var bytesReceived = runParameters.srcSocket.Receive(buffer);
+                        const int BLOCK_SIZE = 1024;
+                        byte[] buffer = new byte[BLOCK_SIZE];
+                        while (!runParameters.cancellationToken.IsCancellationRequested)
+                        {
+                            try
+                            {
+                                var bytesReceived = runParameters.srcSocket.Receive(buffer);
 
-                               for (int i = 0; i < bytesReceived; i++)
-                               {
-                                   if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
-                                   {
-                                       runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
-                                   }
-                                   else if (buffer[i] == '?')
-                                   {
-                                       runParameters.srcSocket.Send(new byte[] { (byte)'#' });
-                                   }
-                                   else if (buffer[i] == '#')
-                                   {
-                                       runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
-                                   }
-                               }
-                           }
-                           catch (SocketException se)
-                           {
-                               // Probably OK?
-                           }
-                       }
+                                for (int i = 0; i < bytesReceived; i++)
+                                {
+                                    if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                                    {
+                                        runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                                    }
+                                    else if (buffer[i] == '?')
+                                    {
+                                        runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                                    }
+                                    else if (buffer[i] == '#')
+                                    {
+                                        runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
+                                    }
+                                }
+                            }
+                            catch (SocketException se)
+                            {
+                                // Probably OK?
+                            }
+                        }
                     }
                     );
 
@@ -286,7 +291,7 @@ namespace Muster
             System.Diagnostics.Debug.WriteLine($"New key: {e.KeyValue}");
             int bellNumber = e.KeyValue - 'A';
 
-            if ( (e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
+            if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
             {
                 var txBytes = new byte[] { (byte)e.KeyValue };
                 foreach (var _socket in peerSockets)
@@ -309,7 +314,7 @@ namespace Muster
         [DllImport("user32.dll")]
         static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
-        const int WM_KEYDOWN= 0x100;
+        const int WM_KEYDOWN = 0x100;
         const int WM_KEYUP = 0x101;
         const int WM_CHAR = 0x102;
 
@@ -317,29 +322,45 @@ namespace Muster
         {
             if (AbelHandle != null)
             {
-                PostMessage(AbelHandle, WM_CHAR, 'A'+bell, 0);
+                PostMessage(AbelHandle, WM_CHAR, 'A' + bell, 0);
             }
         }
 
-		[DllImport("user32.dll")]
-		private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
+        [DllImport("user32.dll")]
+        private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
 
-        private void FindAbel() 
+        private void FindAbel()
         {
-			Process[] currentProcesses = Process.GetProcesses();
-			foreach (Process p in currentProcesses)
-			{
-				if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
-				{
-					AbelHandle = p.MainWindowHandle;
+            Process[] currentProcesses = Process.GetProcesses();
+            foreach (Process p in currentProcesses)
+            {
+                if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
+                {
+                    AbelHandle = p.MainWindowHandle;
 
                     string ChildWindow = "AfxMDIFrame140s";
                     string GrandchildWindow = "AfxFrameOrView140s";
-                    
-                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, ChildWindow,  "");
-                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, GrandchildWindow,  "");
+
+                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, ChildWindow, "");
+                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, GrandchildWindow, "");
                 }
             }
+        }
+
+        public static string GenerateRandomString()
+        {
+            var stringLength = 20;
+            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+            var stringChars = new char[stringLength];
+            var random = new Random();
+
+            for (int i = 0; i < stringLength; i++)
+            {
+                stringChars[i] = chars[random.Next(chars.Length)];
+            }
+
+            var finalString = new String(stringChars);
+            return finalString;
         }
     }
 
