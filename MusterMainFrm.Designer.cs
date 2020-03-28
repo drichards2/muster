@@ -28,7 +28,6 @@
         /// </summary>
         private void InitializeComponent()
         {
-            this.Holepunch = new System.Windows.Forms.Button();
             this.holePunchIP = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.holePunchPort = new System.Windows.Forms.TextBox();
@@ -51,17 +50,6 @@
             this.locationInput = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.connectionList)).BeginInit();
             this.SuspendLayout();
-            // 
-            // Holepunch
-            // 
-            this.Holepunch.Location = new System.Drawing.Point(176, 245);
-            this.Holepunch.Margin = new System.Windows.Forms.Padding(2);
-            this.Holepunch.Name = "Holepunch";
-            this.Holepunch.Size = new System.Drawing.Size(123, 24);
-            this.Holepunch.TabIndex = 0;
-            this.Holepunch.Text = "Holepunch";
-            this.Holepunch.UseVisualStyleBackColor = true;
-            this.Holepunch.Click += new System.EventHandler(this.Holepunch_Click);
             // 
             // holePunchIP
             // 
@@ -145,7 +133,7 @@
             // 
             // Connect
             // 
-            this.Connect.Location = new System.Drawing.Point(318, 245);
+            this.Connect.Location = new System.Drawing.Point(176, 245);
             this.Connect.Margin = new System.Windows.Forms.Padding(2);
             this.Connect.Name = "Connect";
             this.Connect.Size = new System.Drawing.Size(123, 24);
@@ -156,7 +144,7 @@
             // 
             // Disconnect
             // 
-            this.Disconnect.Location = new System.Drawing.Point(318, 282);
+            this.Disconnect.Location = new System.Drawing.Point(461, 245);
             this.Disconnect.Margin = new System.Windows.Forms.Padding(2);
             this.Disconnect.Name = "Disconnect";
             this.Disconnect.Size = new System.Drawing.Size(123, 24);
@@ -167,7 +155,7 @@
             // 
             // Test
             // 
-            this.Test.Location = new System.Drawing.Point(462, 245);
+            this.Test.Location = new System.Drawing.Point(318, 245);
             this.Test.Margin = new System.Windows.Forms.Padding(2);
             this.Test.Name = "Test";
             this.Test.Size = new System.Drawing.Size(123, 24);
@@ -277,7 +265,6 @@
             this.Controls.Add(this.holePunchPort);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.holePunchIP);
-            this.Controls.Add(this.Holepunch);
             this.KeyPreview = true;
             this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Muster";
@@ -290,8 +277,6 @@
         }
 
         #endregion
-
-        private System.Windows.Forms.Button Holepunch;
         private System.Windows.Forms.TextBox holePunchIP;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.TextBox holePunchPort;

@@ -19,6 +19,7 @@ namespace Muster
         private const int numberOfBells = 12;
         private const int MAX_PEERS = 6;
 
+        private Socket serverSocket;
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
@@ -36,7 +37,7 @@ namespace Muster
         {
             InitializeComponent();
             userID = GenerateRandomString();
-            Debug.WriteLine(userID);
+            Debug.WriteLine("Generated user ID: " + userID);
 
             FindAbel();
 
@@ -46,15 +47,17 @@ namespace Muster
                 System.Threading.Thread.Sleep(230);
             }
 
-            GetTheBandBackTogether(bandID.Text);
+            GetTheBandBackTogether();
         }
 
         private void MakeNewBand_Click(object sender, EventArgs e)
         {
-            SendCreateBandRequest();
+            var newBandID = SendCreateBandRequest(serverAddress).Result;
+            bandID.Text = newBandID;
+            connectionList.Rows.Clear();
         }
 
-        private async Task SendCreateBandRequest()
+        private static async Task<string> SendCreateBandRequest(string serverAddress)
         {
             var response = await client.PostAsync(serverAddress + "bands", null);
             if ((int)response.StatusCode == 201)
@@ -64,15 +67,17 @@ namespace Muster
                 {
                     var newbandID = JsonConvert.DeserializeObject<string>(responseString);
                     Debug.WriteLine("Created new band with ID: " + newbandID);
-                    bandID.Text = newbandID;
-                    connectionList.Rows.Clear();
+                    return newbandID;
                 }
+                else
+                    // Trust the server to send a sensible band ID
+                    return "";
             }
             else
             {
                 MessageBox.Show("Could not create new band.");
                 Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
-                return;
+                return "";
             }
         }
 
@@ -84,10 +89,17 @@ namespace Muster
                 name = nameInput.Text,
                 location = locationInput.Text
             };
-            SendJoinBandRequest(bandID.Text, member);
+            var didSucceed = SendJoinBandRequest(serverAddress, bandID.Text, member).Result;
+
+            if (didSucceed)
+            {
+                SendUDPMessageToServer();
+            }
+            
+            GetTheBandBackTogether();
         }
 
-        private async Task SendJoinBandRequest(string bandID, Member member)
+        private static async Task<bool> SendJoinBandRequest(string serverAddress, string bandID, Member member)
         {
             Debug.WriteLine("Joining band: " + bandID);
             var json = JsonConvert.SerializeObject(member);
@@ -96,20 +108,48 @@ namespace Muster
             var response = await client.PutAsync(serverAddress + "bands/" + bandID + "/members", content);
             if ((int)response.StatusCode == 204)
             {
-                GetTheBandBackTogether(bandID);
+                return true;
             }
             else
             {
-                MessageBox.Show("No record of band ID '" + bandID + "'");
+                // TODO: Separate these cases out - "refreshing" the band needs to be supported
+                MessageBox.Show("Either you've already joined, or there's no record of band ID '" + bandID + "'");
                 Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
-                return;
+                return false;
             }
         }
 
-        private async Task GetTheBandBackTogether(string bandID)
+        private void SendUDPMessageToServer()
+        {
+            var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
+
+            byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
+            var sent = _socket.Send(data);
+            if (sent != data.Length)
+            {
+                MessageBox.Show("Something's gone wrong.");
+                Debug.WriteLine("Error sending UDP message to server.");
+            }
+            
+            serverSocket = _socket;
+        }
+
+        private void GetTheBandBackTogether()
+        {
+            connectionList.Rows.Clear();
+            var band = FindBandMembers(serverAddress, bandID.Text).Result;
+
+            if (band != null)
+                foreach (var member in band.members)
+                {
+                    connectionList.Rows.Add(member.name, member.location, member.address, member.port, "Disconnected");
+                }
+        }
+
+        private static async Task<Band> FindBandMembers(string serverAddress, string bandID)
         {
             Debug.WriteLine("Finding band members in band: " + bandID);
-            connectionList.Rows.Clear();
 
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
@@ -121,53 +161,16 @@ namespace Muster
             if ((int)response.StatusCode == 200)
             {
                 var band = JsonConvert.DeserializeObject<Band>(await response.Content.ReadAsStringAsync());
-                foreach (var member in band.members)
-                {
-                    connectionList.Rows.Add(member.name, member.location, member.address, member.port);
-                }
+                return band;
             }
             else
             {
                 MessageBox.Show("No record of band ID '" + bandID + "'");
                 Debug.WriteLine("No record of band ID '" + bandID + "': " + response.ReasonPhrase);
-                return;
+                return null;
             }
         }
 
-        private void Holepunch_Click(object sender, EventArgs e)
-        {
-            DisconnectAll();
-
-            Console.WriteLine($"Requesting to connect {connectionList.Rows.Count - 1} peers");
-            if (connectionList.Rows.Count > (MAX_PEERS + 1))
-            {
-                MessageBox.Show($"Can't connect {connectionList.Rows.Count - 1} peers - {MAX_PEERS} is the maximum");
-                return;
-            }
-
-            foreach (DataGridViewRow row in connectionList.Rows)
-            {
-                if (row.IsNewRow)
-                    continue;
-
-                row.Cells[4].Value = "Not connected";
-                if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr))
-                {
-                    var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
-
-                    byte[] data = Encoding.ASCII.GetBytes($"Connect{ipAddr.ToString()}InBand{bandID.Text}Please");
-                    var sent = _socket.Send(data);
-
-                    peerSockets.Add(_socket);
-
-                    if (sent == data.Length)
-                        row.Cells[4].Value = "Set port";
-                    else
-                        row.Cells[4].Value = "Broken";
-                }
-            }
-        }
 
         private void Connect_Click(object sender, EventArgs e)
         {
@@ -182,7 +185,7 @@ namespace Muster
                 {
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                     _socket.Connect(ipAddr, port);
-                    peerSockets.Add(_socket);
+                    peerSockets[connectRows] = _socket;
 
                     row.Cells[4].Value = "Connecting";
                     
@@ -303,6 +306,7 @@ namespace Muster
                 oldSock.Dispose();
             }
             peerSockets.Clear();
+            serverSocket.Dispose();
 
             foreach (DataGridViewRow row in connectionList.Rows)
                 if (!row.IsNewRow)
