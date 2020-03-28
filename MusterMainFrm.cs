@@ -1,13 +1,7 @@
-﻿using NAudio.Wave;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Diagnostics;
-using System.Drawing;
-using System.Linq;
-using System.Media;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -32,7 +26,9 @@ namespace Muster
         private IntPtr AbelHandle;
 
         private static readonly HttpClient client = new HttpClient();
-        private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        //private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        private string serverAddress = "http://localhost:5000/v1/";
+        //private string serverAddress = "http://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
         {
