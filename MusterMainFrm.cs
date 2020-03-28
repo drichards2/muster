@@ -29,9 +29,9 @@ namespace Muster
         private string userID;
 
         private static readonly HttpClient client = new HttpClient();
-        private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        //private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         //private string serverAddress = "http://localhost:5000/v1/";
-        //private string serverAddress = "http://muster.norfolk-st.co.uk/v1/";
+        private string serverAddress = "https://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
         {
@@ -41,43 +41,38 @@ namespace Muster
 
             FindAbel();
 
-            for(int i = 0; i < numberOfBells; i++)
+/*            for(int i = 0; i < numberOfBells; i++)
             {
                 RingBell(i);
                 System.Threading.Thread.Sleep(230);
             }
-
-            GetTheBandBackTogether();
+ */       
         }
 
         private void MakeNewBand_Click(object sender, EventArgs e)
         {
-            var newBandID = SendCreateBandRequest(serverAddress).Result;
-            bandID.Text = newBandID;
+            SendCreateBandRequest();
             connectionList.Rows.Clear();
         }
 
-        private static async Task<string> SendCreateBandRequest(string serverAddress)
+        private async Task SendCreateBandRequest()
         {
-            var response = await client.PostAsync(serverAddress + "bands", null);
+            var content = new FormUrlEncodedContent(new Dictionary<string,string>());
+            var response = await client.PostAsync(serverAddress + "bands", content);
             if ((int)response.StatusCode == 201)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
                 if (responseString.Length > 0)
                 {
-                    var newbandID = JsonConvert.DeserializeObject<string>(responseString);
+                    var newbandID = responseString;
                     Debug.WriteLine("Created new band with ID: " + newbandID);
-                    return newbandID;
+                    bandID.Text = newbandID;
                 }
-                else
-                    // Trust the server to send a sensible band ID
-                    return "";
             }
             else
             {
                 MessageBox.Show("Could not create new band.");
                 Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
-                return "";
             }
         }
 
