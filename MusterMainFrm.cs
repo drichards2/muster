@@ -116,7 +116,7 @@ namespace Muster
                 var band = JsonConvert.DeserializeObject<Band>(await response.Content.ReadAsStringAsync());
                 foreach (var member in band.members)
                 {
-                    connectionList.Rows.Add(member.address, member.port);
+                    connectionList.Rows.Add(member.name, member.location, member.address, member.port);
                 }
             }
             else
@@ -144,7 +144,7 @@ namespace Muster
                     continue;
 
                 row.Cells[2].Value = "Not connected";
-                if (IPAddress.TryParse(row.Cells[0].Value.ToString(), out var ipAddr))
+                if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr))
                 {
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                     _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
@@ -155,9 +155,9 @@ namespace Muster
                     peerSockets.Add(_socket);
 
                     if (sent == data.Length)
-                        row.Cells[2].Value = "Set port";
+                        row.Cells[4].Value = "Set port";
                     else
-                        row.Cells[2].Value = "Broken";
+                        row.Cells[4].Value = "Broken";
                 }
             }
         }
@@ -176,8 +176,8 @@ namespace Muster
                 if (row.IsNewRow)
                     continue;
 
-                if (IPAddress.TryParse(row.Cells[0].Value.ToString(), out var ipAddr) &&
-                    int.TryParse(row.Cells[1].Value.ToString(), out var port))
+                if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr) &&
+                    int.TryParse(row.Cells[3].Value.ToString(), out var port))
                 {
                     peerSockets[connectRows].Connect(ipAddr, port);
 
@@ -235,7 +235,7 @@ namespace Muster
         private void SocketEcho(int peerChannel)
         {
             Console.WriteLine($"Received echo request: {peerChannel}");
-            connectionList.Rows[peerChannel].Cells[2].Value = "Connected";
+            connectionList.Rows[peerChannel].Cells[4].Value = "Connected";
         }
 
         private void BellStrike(int bell)
