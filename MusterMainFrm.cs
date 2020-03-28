@@ -29,9 +29,9 @@ namespace Muster
         private string userID;
 
         private static readonly HttpClient client = new HttpClient();
-        //private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         //private string serverAddress = "http://localhost:5000/v1/";
-        private string serverAddress = "https://muster.norfolk-st.co.uk/v1/";
+        //private string serverAddress = "https://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
         {
@@ -49,9 +49,9 @@ namespace Muster
 */
         }
 
-        private void MakeNewBand_Click(object sender, EventArgs e)
+        private async void MakeNewBand_Click(object sender, EventArgs e)
         {
-            var newBandID = SendCreateBandRequest(serverAddress).Result;
+            var newBandID = await SendCreateBandRequest(serverAddress);
             bandID.Text = newBandID;
             connectionList.Rows.Clear();
         }
@@ -59,7 +59,7 @@ namespace Muster
         private static async Task<string> SendCreateBandRequest(string serverAddress)
         {
             // Avoid deadlock: https://stackoverflow.com/questions/14435520/why-use-httpclient-for-synchronous-connection
-            var response = Task.Run(() => client.PostAsync(serverAddress + "bands", null)).Result;
+            var response = await client.PostAsync(serverAddress + "bands", null);
             
             if ((int)response.StatusCode == 201)
             {
@@ -83,7 +83,7 @@ namespace Muster
             }
         }
 
-        private void JoinBand_Click(object sender, EventArgs e)
+        private async void JoinBand_Click(object sender, EventArgs e)
         {
             var member = new Member
             {
@@ -91,14 +91,14 @@ namespace Muster
                 name = nameInput.Text,
                 location = locationInput.Text
             };
-            var didSucceed = SendJoinBandRequest(serverAddress, bandID.Text, member).Result;
+            var didSucceed = await SendJoinBandRequest(serverAddress, bandID.Text, member);
 
             if (didSucceed)
             {
                 SendUDPMessageToServer();
             }
             
-            GetTheBandBackTogether();
+            await GetTheBandBackTogether();
         }
 
         private static async Task<bool> SendJoinBandRequest(string serverAddress, string bandID, Member member)
@@ -107,7 +107,7 @@ namespace Muster
             var json = JsonConvert.SerializeObject(member);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = Task.Run(() => client.PutAsync(serverAddress + "bands/" + bandID + "/members", content)).Result;
+            var response = await client.PutAsync(serverAddress + "bands/" + bandID + "/members", content);
             if ((int)response.StatusCode == 204)
             {
                 return true;
@@ -137,10 +137,10 @@ namespace Muster
             serverSocket = _socket;
         }
 
-        private void GetTheBandBackTogether()
+        private async Task GetTheBandBackTogether()
         {
             connectionList.Rows.Clear();
-            var band = FindBandMembers(serverAddress, bandID.Text).Result;
+            var band = await FindBandMembers(serverAddress, bandID.Text);
 
             if (band != null)
                 foreach (var member in band.members)
@@ -158,7 +158,7 @@ namespace Muster
                 new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
 
-            var response = Task.Run(() => client.GetAsync(serverAddress + "bands/" + bandID)).Result;
+            var response = await client.GetAsync(serverAddress + "bands/" + bandID);
 
             if ((int)response.StatusCode == 200)
             {
