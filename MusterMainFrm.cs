@@ -67,6 +67,7 @@ namespace Muster
                 if (responseString.Length > 0)
                 {
                     var newbandID = responseString;
+                    newbandID = newbandID.Replace("\"", ""); //swaggerhub includes double quotes at start and end
                     Debug.WriteLine("Created new band with ID: " + newbandID);
                     return newbandID;
                 }
