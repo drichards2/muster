@@ -87,12 +87,16 @@ namespace Muster
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
             var response = await client.PutAsync(serverAddress + "bands/" + bandID + "/members", content);
-            if ((int)response.StatusCode != 204)
+            if ((int)response.StatusCode == 204)
             {
-                Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
+                GetTheBandBackTogether(bandID);
             }
-
-            GetTheBandBackTogether(bandID);
+            else
+            {
+                MessageBox.Show("No record of band ID '" + bandID + "'");
+                Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
+                return;
+            }
         }
 
         private async Task GetTheBandBackTogether(string bandID)
