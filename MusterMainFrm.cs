@@ -41,24 +41,26 @@ namespace Muster
 
             FindAbel();
 
-/*            for(int i = 0; i < numberOfBells; i++)
+  /*          for(int i = 0; i < numberOfBells; i++)
             {
                 RingBell(i);
                 System.Threading.Thread.Sleep(230);
             }
- */       
+*/
         }
 
         private void MakeNewBand_Click(object sender, EventArgs e)
         {
-            SendCreateBandRequest();
+            var newBandID = SendCreateBandRequest(serverAddress).Result;
+            bandID.Text = newBandID;
             connectionList.Rows.Clear();
         }
 
-        private async Task SendCreateBandRequest()
+        private static async Task<string> SendCreateBandRequest(string serverAddress)
         {
-            var content = new FormUrlEncodedContent(new Dictionary<string,string>());
-            var response = await client.PostAsync(serverAddress + "bands", content);
+            // Avoid deadlock: https://stackoverflow.com/questions/14435520/why-use-httpclient-for-synchronous-connection
+            var response = Task.Run(() => client.PostAsync(serverAddress + "bands", null)).Result;
+            
             if ((int)response.StatusCode == 201)
             {
                 var responseString = await response.Content.ReadAsStringAsync();
@@ -66,13 +68,17 @@ namespace Muster
                 {
                     var newbandID = responseString;
                     Debug.WriteLine("Created new band with ID: " + newbandID);
-                    bandID.Text = newbandID;
+                    return newbandID;
                 }
+                else
+                    // Trust the server to send a sensible band ID
+                    return "";
             }
             else
             {
                 MessageBox.Show("Could not create new band.");
                 Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
+                return "";
             }
         }
 
@@ -100,7 +106,7 @@ namespace Muster
             var json = JsonConvert.SerializeObject(member);
             var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var response = await client.PutAsync(serverAddress + "bands/" + bandID + "/members", content);
+            var response = Task.Run(() => client.PutAsync(serverAddress + "bands/" + bandID + "/members", content)).Result;
             if ((int)response.StatusCode == 204)
             {
                 return true;
@@ -151,7 +157,7 @@ namespace Muster
                 new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
 
-            var response = await client.GetAsync(serverAddress + "bands/" + bandID);
+            var response = Task.Run(() => client.GetAsync(serverAddress + "bands/" + bandID)).Result;
 
             if ((int)response.StatusCode == 200)
             {
