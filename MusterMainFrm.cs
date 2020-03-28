@@ -56,27 +56,34 @@ namespace Muster
 
         private async Task SendCreateBandRequest()
         {
-            var response = await client.PostAsync(serverAddress + "bands", new FormUrlEncodedContent(new Dictionary<string, string>()));
-            if ((int)response.StatusCode != 201)
+            var response = await client.PostAsync(serverAddress + "bands", null);
+            if ((int)response.StatusCode == 201)
             {
-                Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
+                var responseString = await response.Content.ReadAsStringAsync();
+                if (responseString.Length > 0)
+                {
+                    var newbandID = JsonConvert.DeserializeObject<string>(responseString);
+                    Debug.WriteLine("Created new band with ID: " + newbandID);
+                    bandID.Text = newbandID;
+                    connectionList.Rows.Clear();
+                }
             }
-
-            var responseString = await response.Content.ReadAsStringAsync();
-            if (responseString.Length > 0)
+            else
             {
-                var newbandID = JsonConvert.DeserializeObject<string>(responseString);
-                Debug.WriteLine("Created new band with ID: " + newbandID);
-                bandID.Text = newbandID;
+                MessageBox.Show("Could not create new band.");
+                Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
+                return;
             }
         }
 
         private void JoinBand_Click(object sender, EventArgs e)
         {
-            var member = new Member();
-            member.id = userID;
-            member.name = nameInput.Text;
-            member.location = locationInput.Text;
+            var member = new Member
+            {
+                id = userID,
+                name = nameInput.Text,
+                location = locationInput.Text
+            };
             SendJoinBandRequest(bandID.Text, member);
         }
 
@@ -143,7 +150,7 @@ namespace Muster
                 if (row.IsNewRow)
                     continue;
 
-                row.Cells[2].Value = "Not connected";
+                row.Cells[4].Value = "Not connected";
                 if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr))
                 {
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -164,12 +171,6 @@ namespace Muster
 
         private void Connect_Click(object sender, EventArgs e)
         {
-            if ((connectionList.Rows.Count - 1) != peerSockets.Count)
-            {
-                MessageBox.Show("There seems to be a mismatch between open sockets and peers requested. Abort abort.");
-                return;
-            }
-
             for (int connectRows = 0; connectRows < connectionList.Rows.Count; connectRows++)
             {
                 var row = connectionList.Rows[connectRows];
@@ -179,16 +180,22 @@ namespace Muster
                 if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr) &&
                     int.TryParse(row.Cells[3].Value.ToString(), out var port))
                 {
-                    peerSockets[connectRows].Connect(ipAddr, port);
+                    var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    _socket.Connect(ipAddr, port);
+                    peerSockets.Add(_socket);
 
+                    row.Cells[4].Value = "Connecting";
+                    
                     var ctokenSource = new CancellationTokenSource();
                     peerCancellation.Add(ctokenSource);
-                    var runParameters = new ListenerTask.ListenerConfig();
-                    runParameters.cancellationToken = ctokenSource.Token;
-                    runParameters.peerChannel = connectRows;
-                    runParameters.srcSocket = peerSockets[connectRows];
-                    runParameters.BellStrikeEvent = BellStrike;
-                    runParameters.EchoBackEvent = SocketEcho;
+                    var runParameters = new ListenerTask.ListenerConfig
+                    {
+                        cancellationToken = ctokenSource.Token,
+                        peerChannel = connectRows,
+                        srcSocket = peerSockets[connectRows],
+                        BellStrikeEvent = BellStrike,
+                        EchoBackEvent = SocketEcho
+                    };
 
                     var newTask = new Task(() =>
                     {
@@ -260,7 +267,7 @@ namespace Muster
                 if (row.IsNewRow)
                     continue;
 
-                row.Cells[2].Value = "Waiting for reply";
+                row.Cells[4].Value = "Waiting for reply";
             }
             foreach (var sock in peerSockets)
             {
@@ -296,6 +303,10 @@ namespace Muster
                 oldSock.Dispose();
             }
             peerSockets.Clear();
+
+            foreach (DataGridViewRow row in connectionList.Rows)
+                if (!row.IsNewRow)
+                    row.Cells[4].Value = "Disconnected";
         }
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
