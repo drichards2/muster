@@ -73,32 +73,23 @@ namespace Muster
 
         private void JoinBand_Click(object sender, EventArgs e)
         {
-            SendJoinBandRequest(bandID.Text);
+            var member = new Member();
+            member.id = "sdfsdgdf";
+            member.name = "Jonathan";
+            member.location = "Ditton Lane";
+            SendJoinBandRequest(bandID.Text, member);
         }
 
-        private async Task SendJoinBandRequest(string bandID)
-        {
-            var values = new Dictionary<string, string>
-            {
-                { "bandID", bandID }
-            };
+        private async Task SendJoinBandRequest(string bandID, Member member)
+        {  
+            var json = JsonConvert.SerializeObject(member);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
 
-            var content = new FormUrlEncodedContent(values);
-
-            var response = await client.PostAsync(serverAddress + "bands/" + bandID + "/members", content);
-            if ((int)response.StatusCode != 201)
+            var response = await client.PutAsync(serverAddress + "bands/" + bandID + "/members", content);
+            if ((int)response.StatusCode != 204)
             {
                 Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
             }
-
-            var responseString = await response.Content.ReadAsStringAsync();
-            if (responseString.Length > 0)
-            {
-                var addedMember = JsonConvert.DeserializeObject<Member>(responseString);
-                Debug.WriteLine("Successfully added member: " + addedMember.id);
-            }
-
-            GetTheBandBackTogether();
         }
 
         private async Task GetTheBandBackTogether()
