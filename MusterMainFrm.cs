@@ -191,9 +191,9 @@ namespace Muster
                 if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr) &&
                     int.TryParse(row.Cells[3].Value.ToString(), out var port))
                 {
-                    var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    _socket.Connect(ipAddr, port);
-                    peerSockets.Add(_socket);
+                    //var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    serverSocket.Connect(ipAddr, port);
+                    peerSockets.Add(serverSocket);
 
                     row.Cells[4].Value = "Connecting";
                     
@@ -203,7 +203,7 @@ namespace Muster
                     {
                         cancellationToken = ctokenSource.Token,
                         peerChannel = connectRows,
-                        srcSocket = peerSockets[connectRows],
+                        srcSocket = serverSocket,
                         BellStrikeEvent = BellStrike,
                         EchoBackEvent = SocketEcho
                     };
