@@ -19,10 +19,11 @@ namespace Muster
         private const int numberOfBells = 12;
         private const int MAX_PEERS = 6;
 
-        private Socket serverSocket;
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
-        private List<Task> peerListeners = new List<Task>(MAX_PEERS);
-        private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
+
+        private Socket serverSocket;
+        private Task listenerTask;
+        private CancellationTokenSource cancellationTokenSource;
 
         private IntPtr AbelHandle;
 
@@ -180,8 +181,26 @@ namespace Muster
             SendUDPMessageToServer();
         }
 
+
         private void Connect_Click(object sender, EventArgs e)
         {
+            SetupIncomingSocket();
+            SetupOutgoingSockets();
+        }
+
+        private void ClosePeerSockets()
+        {
+            foreach (var peerSocket in peerSockets)
+            {
+                peerSocket?.Dispose();
+            }
+            peerSockets.Clear();
+        }
+
+        private void SetupOutgoingSockets()
+        {
+            ClosePeerSockets();
+
             for (int connectRows = 0; connectRows < connectionList.Rows.Count; connectRows++)
             {
                 var row = connectionList.Rows[connectRows];
@@ -191,69 +210,90 @@ namespace Muster
                 if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr) &&
                     int.TryParse(row.Cells[3].Value.ToString(), out var port))
                 {
-                    //var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    serverSocket.Connect(ipAddr, port);
-                    peerSockets.Add(serverSocket);
+                    var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    _socket.Connect(ipAddr, port);
+                    peerSockets.Add(_socket);
 
                     row.Cells[4].Value = "Connecting";
-                    
-                    var ctokenSource = new CancellationTokenSource();
-                    peerCancellation.Add(ctokenSource);
-                    var runParameters = new ListenerTask.ListenerConfig
-                    {
-                        cancellationToken = ctokenSource.Token,
-                        peerChannel = connectRows,
-                        srcSocket = serverSocket,
-                        BellStrikeEvent = BellStrike,
-                        EchoBackEvent = SocketEcho
-                    };
-
-                    var newTask = new Task(() =>
-                    {
-                        runParameters.srcSocket.ReceiveTimeout = 5000;
-
-                        const int BLOCK_SIZE = 1024;
-                        byte[] buffer = new byte[BLOCK_SIZE];
-                        while (!runParameters.cancellationToken.IsCancellationRequested)
-                        {
-                            try
-                            {
-                                var bytesReceived = runParameters.srcSocket.Receive(buffer);
-
-                                for (int i = 0; i < bytesReceived; i++)
-                                {
-                                    if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
-                                    {
-                                        runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
-                                    }
-                                    else if (buffer[i] == '?')
-                                    {
-                                        runParameters.srcSocket.Send(new byte[] { (byte)'#' });
-                                    }
-                                    else if (buffer[i] == '#')
-                                    {
-                                        runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
-                                    }
-                                }
-                            }
-                            catch (SocketException se)
-                            {
-                                // Probably OK?
-                            }
-                        }
-                    }
-                    );
-
-                    peerListeners.Add(newTask);
-                    newTask.Start();
                 }
             }
         }
 
-        private void SocketEcho(int peerChannel)
+        private void DisconnectListener()
         {
-            Console.WriteLine($"Received echo request: {peerChannel}");
-            connectionList.Rows[peerChannel].Cells[4].Value = "Connected";
+            cancellationTokenSource?.Cancel();
+            listenerTask?.Wait();
+            listenerTask?.Dispose();
+            cancellationTokenSource?.Dispose();
+
+            cancellationTokenSource = null;
+            listenerTask = null;
+        }
+
+        private void SetupIncomingSocket()
+        {
+            if (serverSocket == null)
+                return;
+
+            DisconnectListener();
+
+            cancellationTokenSource = new CancellationTokenSource();
+            var runParameters = new ListenerTask.ListenerConfig
+            {
+                cancellationToken = cancellationTokenSource.Token,
+                srcSocket = serverSocket,
+                BellStrikeEvent = BellStrike,
+                EchoBackEvent = SocketEcho
+            };
+
+            listenerTask = new Task(() =>
+            {
+                runParameters.srcSocket.ReceiveTimeout = 5000;
+
+                const int BLOCK_SIZE = 1024;
+                byte[] buffer = new byte[BLOCK_SIZE];
+                while (!runParameters.cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        var bytesReceived = runParameters.srcSocket.Receive(buffer);
+
+                        for (int i = 0; i < bytesReceived; i++)
+                        {
+                            if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                            {
+                                runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                            }
+                            else if (buffer[i] == '?')
+                            {
+                                runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                            }
+                            else if (buffer[i] == '#')
+                            {
+                                //runParameters.EchoBackEvent?.Invoke();
+                            }
+                        }
+                    }
+                    catch (SocketException se)
+                    {
+                        // Probably OK?
+                    }
+                }
+            }
+            );
+
+            listenerTask.Start();
+
+        }
+
+        private void SocketEcho()
+        {
+            /*
+            for (var socket in peerSockets)
+            {
+                connectionList.Rows[peerChannel].Cells[4].Value = "Connected";
+            }
+            */
         }
 
         private void BellStrike(int bell)
@@ -288,32 +328,8 @@ namespace Muster
 
         private void DisconnectAll()
         {
-            foreach (var cancellationToken in peerCancellation)
-            {
-                try
-                {
-                    cancellationToken.Cancel();
-                }
-                catch (ObjectDisposedException ode)
-                {
-                }
-
-            }
-            foreach (var peerListener in peerListeners)
-            {
-                peerListener.Wait();
-                peerListener.Dispose();
-            }
-            foreach (var cancellationToken in peerCancellation)
-            {
-                cancellationToken.Dispose();
-            }
-
-            foreach (var oldSock in peerSockets)
-            {
-                oldSock.Dispose();
-            }
-            peerSockets.Clear();
+            DisconnectListener();
+            ClosePeerSockets();
             serverSocket.Dispose();
 
             foreach (DataGridViewRow row in connectionList.Rows)
