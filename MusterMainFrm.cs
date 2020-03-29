@@ -39,6 +39,7 @@ namespace Muster
             userID = GenerateRandomString();
             Debug.WriteLine("Generated user ID: " + userID);
 
+            //TODO: Add "Find Abel" button in case it's not launched before this app is started
             FindAbel();
 
   /*          for(int i = 0; i < numberOfBells; i++)
@@ -192,7 +193,7 @@ namespace Muster
                 {
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                     _socket.Connect(ipAddr, port);
-                    peerSockets[connectRows] = _socket;
+                    peerSockets.Add(_socket);
 
                     row.Cells[4].Value = "Connecting";
                     
