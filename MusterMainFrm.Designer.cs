@@ -45,9 +45,10 @@
             this.JoinBand = new System.Windows.Forms.Button();
             this.MakeNewBand = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
-            this.nameInput = new System.Windows.Forms.TextBox();
+            this.NameInput = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.locationInput = new System.Windows.Forms.TextBox();
+            this.LocationInput = new System.Windows.Forms.TextBox();
+            this.ContactServer = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.connectionList)).BeginInit();
             this.SuspendLayout();
             // 
@@ -171,7 +172,7 @@
             this.bandID.Name = "bandID";
             this.bandID.Size = new System.Drawing.Size(76, 20);
             this.bandID.TabIndex = 9;
-            this.bandID.Text = "241aw";
+            this.bandID.Text = "";
             // 
             // label2
             // 
@@ -215,15 +216,15 @@
             this.label3.TabIndex = 13;
             this.label3.Text = "Name";
             // 
-            // nameInput
+            // NameInput
             // 
-            this.nameInput.AcceptsTab = true;
-            this.nameInput.Location = new System.Drawing.Point(82, 312);
-            this.nameInput.Margin = new System.Windows.Forms.Padding(2);
-            this.nameInput.Name = "nameInput";
-            this.nameInput.Size = new System.Drawing.Size(76, 20);
-            this.nameInput.TabIndex = 14;
-            this.nameInput.Text = "Frank";
+            this.NameInput.AcceptsTab = true;
+            this.NameInput.Location = new System.Drawing.Point(82, 312);
+            this.NameInput.Margin = new System.Windows.Forms.Padding(2);
+            this.NameInput.Name = "NameInput";
+            this.NameInput.Size = new System.Drawing.Size(76, 20);
+            this.NameInput.TabIndex = 14;
+            this.NameInput.Text = "Frank";
             // 
             // label4
             // 
@@ -235,24 +236,36 @@
             this.label4.TabIndex = 15;
             this.label4.Text = "Location";
             // 
-            // locationInput
+            // LocationInput
             // 
-            this.locationInput.AcceptsTab = true;
-            this.locationInput.Location = new System.Drawing.Point(82, 339);
-            this.locationInput.Margin = new System.Windows.Forms.Padding(2);
-            this.locationInput.Name = "locationInput";
-            this.locationInput.Size = new System.Drawing.Size(76, 20);
-            this.locationInput.TabIndex = 16;
-            this.locationInput.Text = "Cambridge";
+            this.LocationInput.AcceptsTab = true;
+            this.LocationInput.Location = new System.Drawing.Point(82, 339);
+            this.LocationInput.Margin = new System.Windows.Forms.Padding(2);
+            this.LocationInput.Name = "LocationInput";
+            this.LocationInput.Size = new System.Drawing.Size(76, 20);
+            this.LocationInput.TabIndex = 16;
+            this.LocationInput.Text = "Cambridge";
+            // 
+            // ContactServer
+            // 
+            this.ContactServer.Location = new System.Drawing.Point(461, 190);
+            this.ContactServer.Margin = new System.Windows.Forms.Padding(2);
+            this.ContactServer.Name = "ContactServer";
+            this.ContactServer.Size = new System.Drawing.Size(123, 24);
+            this.ContactServer.TabIndex = 17;
+            this.ContactServer.Text = "Contact server";
+            this.ContactServer.UseVisualStyleBackColor = true;
+            this.ContactServer.Click += new System.EventHandler(this.ContactServer_Click);
             // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(677, 381);
-            this.Controls.Add(this.locationInput);
+            this.Controls.Add(this.ContactServer);
+            this.Controls.Add(this.LocationInput);
             this.Controls.Add(this.label4);
-            this.Controls.Add(this.nameInput);
+            this.Controls.Add(this.NameInput);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.MakeNewBand);
             this.Controls.Add(this.JoinBand);
@@ -294,8 +307,9 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn PortColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn StatusColumn;
         private System.Windows.Forms.Label label3;
-        private System.Windows.Forms.TextBox nameInput;
+        private System.Windows.Forms.TextBox NameInput;
         private System.Windows.Forms.Label label4;
-        private System.Windows.Forms.TextBox locationInput;
+        private System.Windows.Forms.TextBox LocationInput;
+        private System.Windows.Forms.Button ContactServer;
     }
 }

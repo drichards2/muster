@@ -29,9 +29,9 @@ namespace Muster
         private string userID;
 
         private static readonly HttpClient client = new HttpClient();
-        private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        //private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         //private string serverAddress = "http://localhost:5000/v1/";
-        //private string serverAddress = "https://muster.norfolk-st.co.uk/v1/";
+        private string serverAddress = "https://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
         {
@@ -88,8 +88,8 @@ namespace Muster
             var member = new Member
             {
                 id = userID,
-                name = nameInput.Text,
-                location = locationInput.Text
+                name = NameInput.Text,
+                location = LocationInput.Text
             };
             var didSucceed = await SendJoinBandRequest(serverAddress, bandID.Text, member);
 
@@ -115,7 +115,7 @@ namespace Muster
             else
             {
                 // TODO: Separate these cases out - "refreshing" the band needs to be supported
-                MessageBox.Show("Either you've already joined, or there's no record of band ID '" + bandID + "'");
+                MessageBox.Show("Either you've already joined, or there's no record of band ID '" + bandID + "'. Will now refresh the band.");
                 Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
                 return false;
             }
@@ -144,9 +144,8 @@ namespace Muster
 
             if (band != null)
                 foreach (var member in band.members)
-                {
-                    connectionList.Rows.Add(member.name, member.location, member.address, member.port, "Disconnected");
-                }
+                    if (member.id != userID)
+                        connectionList.Rows.Add(member.name, member.location, member.address, member.port, "Disconnected");
         }
 
         private static async Task<Band> FindBandMembers(string serverAddress, string bandID)
@@ -173,6 +172,12 @@ namespace Muster
             }
         }
 
+        private void ContactServer_Click(object sender, EventArgs e)
+        {
+            // Resend UDP message to server in case of emergency
+            // TODO: Only allow this to be used when user has already joined a band
+            SendUDPMessageToServer();
+        }
 
         private void Connect_Click(object sender, EventArgs e)
         {
