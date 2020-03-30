@@ -128,9 +128,9 @@ namespace Muster
         private void SendUDPMessageToServer()
         {
             udpClient = new UdpClient();
-
+            udpClient.Connect(IPAddress.Parse(holePunchIP.Text).ToString(), int.Parse(holePunchPort.Text));
             byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
-            var sent = udpClient.Send(data, data.Length, IPAddress.Parse(holePunchIP.Text).ToString(),  int.Parse(holePunchPort.Text));
+            var sent = udpClient.Send(data, data.Length);
             if (sent != data.Length)
             {
                 MessageBox.Show("Something's gone wrong.");
@@ -198,7 +198,7 @@ namespace Muster
 
         private void SetupOutgoingSockets()
         {
-            ClosePeerSockets();
+/*            ClosePeerSockets();
 
             for (int connectRows = 0; connectRows < connectionList.Rows.Count; connectRows++)
             {
@@ -216,6 +216,7 @@ namespace Muster
                     row.Cells[4].Value = "Connecting";
                 }
             }
+*/
         }
 
         private void DisconnectListener()
@@ -273,7 +274,7 @@ namespace Muster
                             }
                             else if (bytesReceived[i] == '?')
                             {
-                                udpClient.Send(new byte[] { (byte)'#' }, 1);
+                                //udpClient.Send(new byte[] { (byte)'#' }, 1);
                             }
                             else if (bytesReceived[i] == '#')
                             {
@@ -348,11 +349,8 @@ namespace Muster
 
             if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
             {
-                var txBytes = new byte[] { (byte)e.KeyValue };
-                foreach (var _socket in peerSockets)
-                {
-                    Task.Factory.StartNew(() => { _socket.Send(txBytes); });
-                }
+                var txBytes = Encoding.ASCII.GetBytes($"{bandID.Text}!{e.KeyCode}");
+                Task.Factory.StartNew(() => { udpClient.Send(txBytes, txBytes.Length); });
             }
 
             RingBell(bellNumber);
