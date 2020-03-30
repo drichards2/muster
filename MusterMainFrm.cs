@@ -234,9 +234,12 @@ namespace Muster
             if (udpClient == null)
                 return;
             
+            string port = udpClient.Client.LocalEndPoint.ToString();
+            port = port.Split(':')[1];
+
              //Creates an IPEndPoint to record the IP Address and port number of the sender. 
              // The IPEndPoint will allow you to read datagrams sent from any source.
-             IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+             IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, int.Parse(port));
 
             DisconnectListener();
 
