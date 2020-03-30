@@ -352,7 +352,7 @@ namespace Muster
             if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
             {
                 var txBytes = Encoding.ASCII.GetBytes($"{bandID.Text}!{e.KeyCode}");
-                Task.Factory.StartNew(() => { udpClient.Send(txBytes, txBytes.Length); });
+                udpClient?.Send(txBytes, txBytes.Length);
             }
 
             RingBell(bellNumber);
