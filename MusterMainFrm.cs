@@ -234,13 +234,13 @@ namespace Muster
         {
             if (udpClient == null)
                 return;
-            
-            string port = udpClient.Client.LocalEndPoint.ToString();
-            port = port.Split(':')[1];
 
-             //Creates an IPEndPoint to record the IP Address and port number of the sender. 
-             // The IPEndPoint will allow you to read datagrams sent from any source.
-             IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, int.Parse(port));
+            var localEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
+            var port = localEndpoint.Port;
+
+            //Creates an IPEndPoint to record the IP Address and port number of the sender. 
+            // The IPEndPoint will allow you to read datagrams sent from any source.
+            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, port);
 
             DisconnectListener();
 
@@ -252,6 +252,8 @@ namespace Muster
                 BellStrikeEvent = BellStrike,
                 EchoBackEvent = SocketEcho
             };
+
+            udpClient.Client.ReceiveTimeout = 5000;
 
             listenerTask = new Task(() => {
                 while (!runParameters.cancellationToken.IsCancellationRequested)
