@@ -16,7 +16,7 @@ namespace Muster
             public delegate void BellStrike(int bell);
 
             public CancellationToken cancellationToken;
-            public Socket srcSocket;
+            public UdpClient srcSocket;
             public int peerChannel;
             public BroadcastAlive EchoBackEvent;
             public BellStrike BellStrikeEvent;

@@ -127,12 +127,10 @@ namespace Muster
 
         private void SendUDPMessageToServer()
         {
-            // TOOD: Don't necessarily use a fixed port here
-            udpClient = new UdpClient(int.Parse(holePunchPort.Text));
-            udpClient.Connect(IPAddress.Parse(holePunchIP.Text),  int.Parse(holePunchPort.Text));        
+            udpClient = new UdpClient();
 
             byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
-            var sent = udpClient.Send(data, data.Length);
+            var sent = udpClient.Send(data, data.Length, IPAddress.Parse(holePunchIP.Text).ToString(),  int.Parse(holePunchPort.Text));
             if (sent != data.Length)
             {
                 MessageBox.Show("Something's gone wrong.");
@@ -233,78 +231,48 @@ namespace Muster
 
         private void SetupIncomingSocket()
         {
- //           if (serverSocket == null)
-  //              return;
+            if (udpClient == null)
+                return;
             
-            //Find out the local port used to holepunch
-            string port = udpClient.Client.LocalEndPoint.ToString();
-            string[] res = port.Split(':');
-            port = res[1];
-             
-            //Creates a UdpClient for reading incoming data.
-             udpClient.Dispose();
-             UdpClient receivingUdpClient = new UdpClient(int.Parse(port));
-
              //Creates an IPEndPoint to record the IP Address and port number of the sender. 
              // The IPEndPoint will allow you to read datagrams sent from any source.
              IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
 
-            listenerTask = new Task(() => {
-                while (true)
-                     try{
-
-                         // Blocks until a message returns on this socket from a remote host.
-                         Byte[] receiveBytes = receivingUdpClient.Receive(ref RemoteIpEndPoint); 
-
-                         string returnData = Encoding.ASCII.GetString(receiveBytes);
- 
-                         Debug.WriteLine("This is the message you received " +
-                                                   returnData.ToString());
-                         Debug.WriteLine("This message was sent from " +
-                                                     RemoteIpEndPoint.Address.ToString() +
-                                                     " on their port number " +
-                                                     RemoteIpEndPoint.Port.ToString());
-                     }
-                     catch ( Exception e ){
-                         Debug.WriteLine(e.ToString()); 
-                     }
-            });
-            listenerTask.Start();
-
-/*            DisconnectListener();
+            DisconnectListener();
 
             cancellationTokenSource = new CancellationTokenSource();
             var runParameters = new ListenerTask.ListenerConfig
             {
                 cancellationToken = cancellationTokenSource.Token,
-                srcSocket = serverSocket,
+                srcSocket = null,
                 BellStrikeEvent = BellStrike,
                 EchoBackEvent = SocketEcho
             };
 
-/*            listenerTask = new Task(() =>
-            {
-                runParameters.srcSocket.ReceiveTimeout = 5000;
-
-                const int BLOCK_SIZE = 1024;
-                byte[] buffer = new byte[BLOCK_SIZE];
-                while (true) // !runParameters.cancellationToken.IsCancellationRequested)
-                {
-                    try
+            listenerTask = new Task(() => {
+                while (!runParameters.cancellationToken.IsCancellationRequested)
                     {
-                        var bytesReceived = await serverSocket.BeginReceive(buffer);
+                     try{
+                         // Blocks until a message returns on this socket from a remote host.
+                         var bytesReceived = udpClient.Receive(ref RemoteIpEndPoint); 
+                         Debug.WriteLine("This is the message you received " +
+                                                   String.Join("", bytesReceived));
+                         Debug.WriteLine("This message was sent from " +
+                                                     RemoteIpEndPoint.Address.ToString() +
+                                                     " on their port number " +
+                                                     RemoteIpEndPoint.Port.ToString());
 
-                        for (int i = 0; i < bytesReceived; i++)
+                        for (int i = 0; i < bytesReceived.Length; i++)
                         {
-                            if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                            if (bytesReceived[i] >= 'A' && bytesReceived[i] < 'A' + numberOfBells)
                             {
-                                runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                                runParameters.BellStrikeEvent?.Invoke(bytesReceived[i] - 'A');
                             }
-                            else if (buffer[i] == '?')
+                            else if (bytesReceived[i] == '?')
                             {
-                                runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                                udpClient.Send(new byte[] { (byte)'#' }, 1);
                             }
-                            else if (buffer[i] == '#')
+                            else if (bytesReceived[i] == '#')
                             {
                                 //runParameters.EchoBackEvent?.Invoke();
                             }
@@ -314,13 +282,10 @@ namespace Muster
                     {
                         // Probably OK?
                     }
-                }
-         //   }
-  //          );
-
- //           listenerTask.Start();
-
- */       }
+                 }
+                });
+            listenerTask.Start();
+        }
 
         private void SocketEcho()
         {
