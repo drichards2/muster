@@ -21,7 +21,9 @@ namespace Muster
 
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
 
-        private Socket serverSocket;
+//        private Socket serverSocket;
+        private UdpClient udpClient;
+
         private Task listenerTask;
         private CancellationTokenSource cancellationTokenSource;
 
@@ -125,18 +127,17 @@ namespace Muster
 
         private void SendUDPMessageToServer()
         {
-            var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-            _socket.Connect(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
+            // TOOD: Don't necessarily use a fixed port here
+            udpClient = new UdpClient(int.Parse(holePunchPort.Text));
+            udpClient.Connect(IPAddress.Parse(holePunchIP.Text),  int.Parse(holePunchPort.Text));        
 
             byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
-            var sent = _socket.Send(data);
+            var sent = udpClient.Send(data, data.Length);
             if (sent != data.Length)
             {
                 MessageBox.Show("Something's gone wrong.");
                 Debug.WriteLine("Error sending UDP message to server.");
             }
-            
-            serverSocket = _socket;
         }
 
         private async Task GetTheBandBackTogether()
@@ -232,10 +233,45 @@ namespace Muster
 
         private void SetupIncomingSocket()
         {
-            if (serverSocket == null)
-                return;
+ //           if (serverSocket == null)
+  //              return;
+            
+            //Find out the local port used to holepunch
+            string port = udpClient.Client.LocalEndPoint.ToString();
+            string[] res = port.Split(':');
+            port = res[1];
+             
+            //Creates a UdpClient for reading incoming data.
+             udpClient.Dispose();
+             UdpClient receivingUdpClient = new UdpClient(int.Parse(port));
 
-            DisconnectListener();
+             //Creates an IPEndPoint to record the IP Address and port number of the sender. 
+             // The IPEndPoint will allow you to read datagrams sent from any source.
+             IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
+
+            listenerTask = new Task(() => {
+                while (true)
+                     try{
+
+                         // Blocks until a message returns on this socket from a remote host.
+                         Byte[] receiveBytes = receivingUdpClient.Receive(ref RemoteIpEndPoint); 
+
+                         string returnData = Encoding.ASCII.GetString(receiveBytes);
+ 
+                         Debug.WriteLine("This is the message you received " +
+                                                   returnData.ToString());
+                         Debug.WriteLine("This message was sent from " +
+                                                     RemoteIpEndPoint.Address.ToString() +
+                                                     " on their port number " +
+                                                     RemoteIpEndPoint.Port.ToString());
+                     }
+                     catch ( Exception e ){
+                         Debug.WriteLine(e.ToString()); 
+                     }
+            });
+            listenerTask.Start();
+
+/*            DisconnectListener();
 
             cancellationTokenSource = new CancellationTokenSource();
             var runParameters = new ListenerTask.ListenerConfig
@@ -246,17 +282,17 @@ namespace Muster
                 EchoBackEvent = SocketEcho
             };
 
-            listenerTask = new Task(() =>
+/*            listenerTask = new Task(() =>
             {
                 runParameters.srcSocket.ReceiveTimeout = 5000;
 
                 const int BLOCK_SIZE = 1024;
                 byte[] buffer = new byte[BLOCK_SIZE];
-                while (!runParameters.cancellationToken.IsCancellationRequested)
+                while (true) // !runParameters.cancellationToken.IsCancellationRequested)
                 {
                     try
                     {
-                        var bytesReceived = runParameters.srcSocket.Receive(buffer);
+                        var bytesReceived = await serverSocket.BeginReceive(buffer);
 
                         for (int i = 0; i < bytesReceived; i++)
                         {
@@ -279,12 +315,12 @@ namespace Muster
                         // Probably OK?
                     }
                 }
-            }
-            );
+         //   }
+  //          );
 
-            listenerTask.Start();
+ //           listenerTask.Start();
 
-        }
+ */       }
 
         private void SocketEcho()
         {
@@ -330,7 +366,7 @@ namespace Muster
         {
             DisconnectListener();
             ClosePeerSockets();
-            serverSocket.Dispose();
+//            serverSocket.Dispose();
 
             foreach (DataGridViewRow row in connectionList.Rows)
                 if (!row.IsNewRow)
