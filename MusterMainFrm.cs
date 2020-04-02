@@ -181,7 +181,7 @@ namespace Muster
                 if (row.IsNewRow)
                     continue;
 
-                row.Cells[2].Value = "Not connected";
+                row.Cells[4].Value = "Not connected";
                 
                 byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
                 IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
@@ -199,9 +199,9 @@ namespace Muster
                 peerSockets.Add(_socket);
 
                 if (sent == data.Length)
-                    row.Cells[2].Value = "Set port";
+                    row.Cells[4].Value = "Set port";
                 else
-                    row.Cells[2].Value = "Broken";
+                    row.Cells[4].Value = "Broken";
             }
         }
 
