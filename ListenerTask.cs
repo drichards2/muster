@@ -12,11 +12,11 @@ namespace Muster
     {
         internal class ListenerConfig
         {
-            public delegate void BroadcastAlive();
+            public delegate void BroadcastAlive(int peerChannel);
             public delegate void BellStrike(int bell);
 
             public CancellationToken cancellationToken;
-            public UdpClient srcSocket;
+            public Socket srcSocket;
             public int peerChannel;
             public BroadcastAlive EchoBackEvent;
             public BellStrike BellStrikeEvent;

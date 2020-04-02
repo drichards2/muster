@@ -20,12 +20,8 @@ namespace Muster
         private const int MAX_PEERS = 6;
 
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
-
-//        private Socket serverSocket;
-        private UdpClient udpClient;
-
-        private Task listenerTask;
-        private CancellationTokenSource cancellationTokenSource;
+        private List<Task> peerListeners = new List<Task>(MAX_PEERS);
+        private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
 
         private IntPtr AbelHandle;
 
@@ -97,11 +93,6 @@ namespace Muster
             };
             var didSucceed = await SendJoinBandRequest(serverAddress, bandID.Text, member);
 
-            if (didSucceed)
-            {
-                SendUDPMessageToServer();
-            }
-            
             await GetTheBandBackTogether();
         }
 
@@ -122,19 +113,6 @@ namespace Muster
                 MessageBox.Show("Either you've already joined, or there's no record of band ID '" + bandID + "'. Will now refresh the band.");
                 Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
                 return false;
-            }
-        }
-
-        private void SendUDPMessageToServer()
-        {
-            udpClient = new UdpClient();
-            udpClient.Connect(IPAddress.Parse(holePunchIP.Text).ToString(), int.Parse(holePunchPort.Text));
-            byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
-            var sent = udpClient.Send(data, data.Length);
-            if (sent != data.Length)
-            {
-                MessageBox.Show("Something's gone wrong.");
-                Debug.WriteLine("Error sending UDP message to server.");
             }
         }
 
@@ -175,31 +153,68 @@ namespace Muster
 
         private void ContactServer_Click(object sender, EventArgs e)
         {
+            Debug.WriteLine("Doing nothing.");
             // Resend UDP message to server in case of emergency
             // TODO: Only allow this to be used when user has already joined a band
-            SendUDPMessageToServer();
+            // TODO: Probably remove this button
+            // SendUDPMessagesToServer();
         }
-
 
         private void Connect_Click(object sender, EventArgs e)
         {
-            SetupIncomingSocket();
-            SetupOutgoingSockets();
+            SetupPeerSockets();
         }
 
-        private void ClosePeerSockets()
+        private void SendUDPMessagesToServer()
         {
-            foreach (var peerSocket in peerSockets)
+            DisconnectAll();
+
+            Console.WriteLine($"Requesting to connect {connectionList.Rows.Count} peers");
+            if (connectionList.Rows.Count - 1 > MAX_PEERS)
             {
-                peerSocket?.Dispose();
+                MessageBox.Show($"Can't connect {connectionList.Rows.Count - 1} peers - {MAX_PEERS} is the maximum");
+                return;
             }
-            peerSockets.Clear();
+
+            foreach (DataGridViewRow row in connectionList.Rows)
+            {
+                if (row.IsNewRow)
+                    continue;
+
+                row.Cells[2].Value = "Not connected";
+                
+                byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
+                IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
+
+                var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                var sent = _socket.SendTo(data,  endPoint);
+                if (sent != data.Length)
+                {
+                    MessageBox.Show("Something's gone wrong.");
+                    Debug.WriteLine("Error sending UDP message to server.");
+                }
+
+                // TODO: Listen for reply from server
+
+                peerSockets.Add(_socket);
+
+                if (sent == data.Length)
+                    row.Cells[2].Value = "Set port";
+                else
+                    row.Cells[2].Value = "Broken";
+            }
         }
 
-        private void SetupOutgoingSockets()
+        private void SetupPeerSockets()
         {
-/*            ClosePeerSockets();
-
+            SendUDPMessagesToServer();
+            
+            if ( (connectionList.Rows.Count-1) != peerSockets.Count)
+            {
+                MessageBox.Show("There seems to be a mismatch between open sockets and peers requested. Abort abort.");
+                return;
+            }
+            
             for (int connectRows = 0; connectRows < connectionList.Rows.Count; connectRows++)
             {
                 var row = connectionList.Rows[connectRows];
@@ -209,98 +224,66 @@ namespace Muster
                 if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr) &&
                     int.TryParse(row.Cells[3].Value.ToString(), out var port))
                 {
-                    var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    var _socket = peerSockets[connectRows];
                     _socket.Connect(ipAddr, port);
-                    peerSockets.Add(_socket);
-
                     row.Cells[4].Value = "Connecting";
+
+                    var ctokenSource = new CancellationTokenSource();
+                    peerCancellation.Add(ctokenSource);
+
+                    var runParameters = new ListenerTask.ListenerConfig
+                    {
+                        cancellationToken = ctokenSource.Token,
+                        peerChannel = connectRows,
+                        srcSocket = peerSockets[connectRows],
+                        BellStrikeEvent = BellStrike,
+                        EchoBackEvent = SocketEcho
+                    };
+
+                    var listenerTask = new Task(() => {
+                        runParameters.srcSocket.ReceiveTimeout = 5000;
+
+                        const int BLOCK_SIZE = 1024;
+                        byte[] buffer = new byte[BLOCK_SIZE];
+                        while (!runParameters.cancellationToken.IsCancellationRequested)
+                        {
+                            try
+                            {
+                                // Blocks until a message returns on this socket from a remote host.
+                                var bytesReceived = runParameters.srcSocket.Receive(buffer); 
+                                Debug.WriteLine("Received message " + String.Join("", buffer));
+
+                                for (int i = 0; i < bytesReceived; i++)
+                                {
+                                    if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                                    {
+                                        runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                                    }
+                                    else if (buffer[i] == '?')
+                                    {
+                                        runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                                    }
+                                    else if (buffer[i] == '#')
+                                    {
+                                    runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
+                                    }
+                                }
+                            }
+                            catch (SocketException se)
+                            {
+                                // Probably OK?
+                            }
+                         }
+                        });
+                    listenerTask.Start();
                 }
             }
-*/
         }
 
-        private void DisconnectListener()
+        private void SocketEcho(int peerChannel)
         {
-            cancellationTokenSource?.Cancel();
-            listenerTask?.Wait();
-            listenerTask?.Dispose();
-            cancellationTokenSource?.Dispose();
-
-            cancellationTokenSource = null;
-            listenerTask = null;
-        }
-
-        private void SetupIncomingSocket()
-        {
-            if (udpClient == null)
-                return;
-
-            var localEndpoint = udpClient.Client.LocalEndPoint as IPEndPoint;
-            var port = localEndpoint.Port;
-
-            //Creates an IPEndPoint to record the IP Address and port number of the sender. 
-            // The IPEndPoint will allow you to read datagrams sent from any source.
-            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, port);
-
-            DisconnectListener();
-
-            cancellationTokenSource = new CancellationTokenSource();
-            var runParameters = new ListenerTask.ListenerConfig
-            {
-                cancellationToken = cancellationTokenSource.Token,
-                srcSocket = null,
-                BellStrikeEvent = BellStrike,
-                EchoBackEvent = SocketEcho
-            };
-
-            udpClient.Client.ReceiveTimeout = 5000;
-
-            listenerTask = new Task(() => {
-                while (!runParameters.cancellationToken.IsCancellationRequested)
-                    {
-                     try{
-                         // Blocks until a message returns on this socket from a remote host.
-                         var bytesReceived = udpClient.Receive(ref RemoteIpEndPoint); 
-                         Debug.WriteLine("This is the message you received " +
-                                                   String.Join("", bytesReceived));
-                         Debug.WriteLine("This message was sent from " +
-                                                     RemoteIpEndPoint.Address.ToString() +
-                                                     " on their port number " +
-                                                     RemoteIpEndPoint.Port.ToString());
-
-                        for (int i = 0; i < bytesReceived.Length; i++)
-                        {
-                            if (bytesReceived[i] >= 'A' && bytesReceived[i] < 'A' + numberOfBells)
-                            {
-                                runParameters.BellStrikeEvent?.Invoke(bytesReceived[i] - 'A');
-                            }
-                            else if (bytesReceived[i] == '?')
-                            {
-                                //udpClient.Send(new byte[] { (byte)'#' }, 1);
-                            }
-                            else if (bytesReceived[i] == '#')
-                            {
-                                //runParameters.EchoBackEvent?.Invoke();
-                            }
-                        }
-                    }
-                    catch (SocketException se)
-                    {
-                        // Probably OK?
-                    }
-                 }
-                });
-            listenerTask.Start();
-        }
-
-        private void SocketEcho()
-        {
-            /*
-            for (var socket in peerSockets)
-            {
-                connectionList.Rows[peerChannel].Cells[4].Value = "Connected";
-            }
-            */
+            Debug.WriteLine($"Received echo request: {peerChannel}");
+            connectionList.Rows[peerChannel].Cells[4].Value = "Connected";
         }
 
         private void BellStrike(int bell)
@@ -333,11 +316,30 @@ namespace Muster
             }
         }
 
+        private void ClosePeerSockets()
+        {
+            foreach (var peerSocket in peerSockets)
+            {
+                peerSocket?.Dispose();
+            }
+            peerSockets.Clear();
+        }
+
         private void DisconnectAll()
         {
-            DisconnectListener();
+            foreach (var cancellationToken in peerCancellation)
+            {
+                cancellationToken.Cancel();
+                cancellationToken.Dispose();
+            }
+
+            foreach (var peerListener in peerListeners)
+            {
+                peerListener.Wait();
+                peerListener.Dispose();
+            }
+
             ClosePeerSockets();
-//            serverSocket.Dispose();
 
             foreach (DataGridViewRow row in connectionList.Rows)
                 if (!row.IsNewRow)
@@ -346,13 +348,17 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
-            System.Diagnostics.Debug.WriteLine($"New key: {e.KeyValue}");
+            Debug.WriteLine($"New key: {e.KeyValue}");
             int bellNumber = e.KeyValue - 'A';
 
             if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
             {
                 var txBytes = Encoding.ASCII.GetBytes($"{bandID.Text}!{e.KeyCode}");
-                udpClient?.Send(txBytes, txBytes.Length);
+                foreach (var _socket in peerSockets)
+                {
+                    Debug.WriteLine($"Sending message to: {_socket.RemoteEndPoint.ToString()}");
+                    Task.Factory.StartNew(() => { _socket.Send(txBytes); });
+                }
             }
 
             RingBell(bellNumber);
@@ -404,7 +410,7 @@ namespace Muster
 
         public static string GenerateRandomString()
         {
-            var stringLength = 20;
+			var stringLength = 10;
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             var stringChars = new char[stringLength];
             var random = new Random();
