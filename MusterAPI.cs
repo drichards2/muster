@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -38,16 +39,6 @@ namespace Muster
         public string APIEndpoint { get; set; } = "https://muster.norfolk-st.co.uk/v1/";
 
         private static readonly HttpClient client = new HttpClient();
-
-        public async Task<int> GetUDPPort()
-        {
-            var config = await GetServerConfig();
-            var port = config?.UdpPort;
-            if (port.HasValue)
-                return port.Value;
-            else
-                return 0;
-        }
 
 
         public async Task<ServerConfig> GetServerConfig()
