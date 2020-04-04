@@ -32,7 +32,7 @@ namespace Muster
 
         public class Endpoint
         {
-            public string targetId {get; set;}
+            public string target_id {get; set;}
             public string ip {get; set;}
             public int port {get; set;}
         }
