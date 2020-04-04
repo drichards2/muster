@@ -101,7 +101,7 @@ namespace Muster
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync(APIEndpoint + "bands/" + bandID + "/members", content);
-            if ((int)response.StatusCode == 204)
+            if ((int)response.StatusCode == 201)
             {
                 var clientID = await ReadStringResponse(response);
                 Debug.WriteLine("Joined band with client ID: " + clientID);
