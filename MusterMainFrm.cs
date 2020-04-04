@@ -26,6 +26,8 @@ namespace Muster
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
 
         private IntPtr AbelHandle;
+        private IPEndPoint UdpEndPoint => UdpEndPointResolver.Result;
+        private Task<IPEndPoint> UdpEndPointResolver;
 
         private string clientId;
         private MusterAPI.Band currentBand;
@@ -42,6 +44,8 @@ namespace Muster
 
             api.APIEndpoint = endpointAddress;
             NameInput.Text = Environment.UserName;
+
+            UdpEndPointResolver = api.GetUDPEndPoint();
 
             FindAbel();
 
@@ -143,10 +147,9 @@ namespace Muster
                 if (peer.id != clientId)
                 {
                     byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{clientId}:{peer.id}");
-                    IPEndPoint endPoint = api.GetUDPEndPoint().Result;
 
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    var sent = _socket.SendTo(data, endPoint);
+                    var sent = _socket.SendTo(data, UdpEndPoint);
                     if (sent != data.Length)
                     {
                         MessageBox.Show("Something's gone wrong.");
