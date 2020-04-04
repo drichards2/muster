@@ -32,9 +32,9 @@ namespace Muster
         private List<MusterAPI.Endpoint> peerEndpoints = new List<MusterAPI.Endpoint>(MAX_PEERS);
 
         private static readonly HttpClient client = new HttpClient();
-        private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         //private string endpointAddress = "http://localhost:5000/v1/";
-        ///private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
+        private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
         {
@@ -58,7 +58,7 @@ namespace Muster
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
 
-            bandDetails.Text = "";
+            bandDetails.Items.Clear();
         }
 
 
@@ -153,7 +153,13 @@ namespace Muster
                         Debug.WriteLine("Error sending UDP message to server.");
                     }
 
-                    // TODO: Listen for reply from server
+                    byte[] buffer = new byte[1024];
+                    var numBytesReceived = _socket.Receive(buffer);
+
+                    if (numBytesReceived == 0 || buffer[0] != '+')
+                    {
+                        Debug.WriteLine("Did not receive reply from server.");
+                    }
 
                     peerSockets.Add(_socket);
                 }
