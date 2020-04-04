@@ -103,7 +103,7 @@ namespace Muster
             var json = JsonConvert.SerializeObject(member);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-            var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/members", content);
+            var response = await client.PostAsync(APIEndpoint + "bands/" + bandID + "/members", content);
             if ((int)response.StatusCode == 204)
             {
                 var clientID = await ReadStringResponse(response);
