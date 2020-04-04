@@ -20,7 +20,7 @@ namespace Muster
         private const int numberOfBells = 12;
         private const int MAX_PEERS = 6;
 
-        private readonly MusterAPI api = new MusterAPI();
+        private readonly MusterAPIExtended api = new MusterAPIExtended();
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
@@ -30,6 +30,7 @@ namespace Muster
         private string userID;
         private string clientId;
         private MusterAPI.Band currentBand;
+        private List<MusterAPI.Endpoint> peerEndpoints = new List<MusterAPI.Endpoint>(MAX_PEERS);
 
         private static readonly HttpClient client = new HttpClient();
         private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
@@ -85,10 +86,7 @@ namespace Muster
 
                 currentBand = await GetTheBandBackTogether();
 
-                foreach (var member in currentBand.members)
-                {
-
-                }
+                SetupPeerSockets();
             }
         }
 
@@ -124,24 +122,19 @@ namespace Muster
         private void SendUDPMessagesToServer()
         {
             DisconnectAll();
-            /*
-            Console.WriteLine($"Requesting to connect {connectionList.Rows.Count} peers");
-            if (connectionList.Rows.Count - 1 > MAX_PEERS)
+            
+            Debug.WriteLine($"Requesting to connect {peerEndpoints.Count} peers");
+            if (peerEndpoints.Count  > MAX_PEERS)
             {
-                MessageBox.Show($"Can't connect {connectionList.Rows.Count - 1} peers - {MAX_PEERS} is the maximum");
+                MessageBox.Show($"Can't connect {peerEndpoints.Count} peers - {MAX_PEERS} is the maximum");
                 return;
             }
 
-            foreach (DataGridViewRow row in connectionList.Rows)
+            for (int i = 0; i < peerEndpoints.Count; i++)
             {
-                if (row.IsNewRow)
-                    continue;
-
-                row.Cells[4].Value = "Not connected";
-                
                 byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
-                IPEndPoint endPoint = new IPEndPoint(IPAddress.Parse(holePunchIP.Text), int.Parse(holePunchPort.Text));
-
+                IPEndPoint endPoint = api.GetUDPEndPoint().Result;
+                
                 var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
                 var sent = _socket.SendTo(data,  endPoint);
                 if (sent != data.Length)
@@ -153,19 +146,79 @@ namespace Muster
                 // TODO: Listen for reply from server
 
                 peerSockets.Add(_socket);
-
-                if (sent == data.Length)
-                    row.Cells[4].Value = "Set port";
-                else
-                    row.Cells[4].Value = "Broken";
             }
-            */
         }
 
         private void SetupPeerSockets()
         {
             SendUDPMessagesToServer();
             
+            foreach (var peer in currentBand.members)
+                {
+                    if (peer.id != userID)
+                    {
+                        var _endpoint = api.GetEndpointsForBand(bandID.Text, peer.id).Result;
+                        if (_endpoint != null)
+                            peerEndpoints.Add(_endpoint);
+                    }
+                }
+
+            for (int idx = 0; idx < peerEndpoints.Count; idx++)
+            {
+                var _socket = peerSockets[idx];
+                _socket.Connect(peerEndpoints[idx].ip, peerEndpoints[idx].port);
+
+                    var ctokenSource = new CancellationTokenSource();
+                    peerCancellation.Add(ctokenSource);
+
+                    var runParameters = new ListenerTask.ListenerConfig
+                    {
+                        cancellationToken = ctokenSource.Token,
+                        peerChannel = idx,
+                        srcSocket = peerSockets[idx],
+                        BellStrikeEvent = BellStrike,
+                        EchoBackEvent = SocketEcho
+                    };
+
+                    var listenerTask = new Task(() => {
+                        runParameters.srcSocket.ReceiveTimeout = 5000;
+
+                        const int BLOCK_SIZE = 1024;
+                        byte[] buffer = new byte[BLOCK_SIZE];
+                        while (!runParameters.cancellationToken.IsCancellationRequested)
+                        {
+                            try
+                            {
+                                // Blocks until a message returns on this socket from a remote host.
+                                var bytesReceived = runParameters.srcSocket.Receive(buffer); 
+                                Debug.WriteLine("Received message " + String.Join("", buffer));
+
+                                for (int i = 0; i < bytesReceived; i++)
+                                {
+                                    if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                                    {
+                                        runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                                    }
+                                    else if (buffer[i] == '?')
+                                    {
+                                        runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                                    }
+                                    else if (buffer[i] == '#')
+                                    {
+                                    runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
+                                    }
+                                }
+                            }
+                            catch (SocketException se)
+                            {
+                                // Probably OK?
+                            }
+                         }
+                        });
+                    listenerTask.Start();
+
+            }
+
             /*
             if ( (connectionList.Rows.Count-1) != peerSockets.Count)
             {
@@ -173,6 +226,7 @@ namespace Muster
                 return;
             }
             
+
             for (int connectRows = 0; connectRows < connectionList.Rows.Count; connectRows++)
             {
                 var row = connectionList.Rows[connectRows];
