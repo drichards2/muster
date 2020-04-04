@@ -48,12 +48,12 @@ namespace Muster
 
             FindAbel();
 
-  /*          for(int i = 0; i < numberOfBells; i++)
-            {
-                RingBell(i);
-                System.Threading.Thread.Sleep(230);
-            }
-*/
+            /*          for(int i = 0; i < numberOfBells; i++)
+                      {
+                          RingBell(i);
+                          System.Threading.Thread.Sleep(230);
+                      }
+          */
         }
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
@@ -122,7 +122,7 @@ namespace Muster
         private void SendUDPMessagesToServer()
         {
             DisconnectAll();
-            
+
             int numPeers = currentBand.members.Length - 1;
             Debug.WriteLine($"Requesting to connect {numPeers} peers");
             if (numPeers > MAX_PEERS)
@@ -133,12 +133,12 @@ namespace Muster
 
             foreach (var peer in currentBand.members)
                 if (peer.id != clientId)
-                {   
+                {
                     byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{clientId}:{peer.id}");
                     IPEndPoint endPoint = api.GetUDPEndPoint().Result;
-                
+
                     var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                    var sent = _socket.SendTo(data,  endPoint);
+                    var sent = _socket.SendTo(data, endPoint);
                     if (sent != data.Length)
                     {
                         MessageBox.Show("Something's gone wrong.");
@@ -154,70 +154,71 @@ namespace Muster
         private void SetupPeerSockets()
         {
             SendUDPMessagesToServer();
-            
+
             foreach (var peer in currentBand.members)
+            {
+                if (peer.id != clientId)
                 {
-                    if (peer.id != clientId)
-                    {
-                        var _endpoint = api.GetEndpointsForBand(bandID.Text, peer.id).Result;
-                        if (_endpoint != null)
-                            peerEndpoints.Add(_endpoint);
-                    }
+                    var _endpoint = api.GetEndpointsForBand(bandID.Text, peer.id).Result;
+                    if (_endpoint != null)
+                        peerEndpoints.Add(_endpoint);
                 }
+            }
 
             for (int idx = 0; idx < peerEndpoints.Count; idx++)
             {
                 var _socket = peerSockets[idx];
                 _socket.Connect(peerEndpoints[idx].ip, peerEndpoints[idx].port);
 
-                    var ctokenSource = new CancellationTokenSource();
-                    peerCancellation.Add(ctokenSource);
+                var ctokenSource = new CancellationTokenSource();
+                peerCancellation.Add(ctokenSource);
 
-                    var runParameters = new ListenerTask.ListenerConfig
+                var runParameters = new ListenerTask.ListenerConfig
+                {
+                    cancellationToken = ctokenSource.Token,
+                    peerChannel = idx,
+                    srcSocket = peerSockets[idx],
+                    BellStrikeEvent = BellStrike,
+                    EchoBackEvent = SocketEcho
+                };
+
+                var listenerTask = new Task(() =>
+                {
+                    runParameters.srcSocket.ReceiveTimeout = 5000;
+
+                    const int BLOCK_SIZE = 1024;
+                    byte[] buffer = new byte[BLOCK_SIZE];
+                    while (!runParameters.cancellationToken.IsCancellationRequested)
                     {
-                        cancellationToken = ctokenSource.Token,
-                        peerChannel = idx,
-                        srcSocket = peerSockets[idx],
-                        BellStrikeEvent = BellStrike,
-                        EchoBackEvent = SocketEcho
-                    };
-
-                    var listenerTask = new Task(() => {
-                        runParameters.srcSocket.ReceiveTimeout = 5000;
-
-                        const int BLOCK_SIZE = 1024;
-                        byte[] buffer = new byte[BLOCK_SIZE];
-                        while (!runParameters.cancellationToken.IsCancellationRequested)
+                        try
                         {
-                            try
-                            {
-                                // Blocks until a message returns on this socket from a remote host.
-                                var bytesReceived = runParameters.srcSocket.Receive(buffer); 
-                                Debug.WriteLine("Received message " + String.Join("", buffer));
+                            // Blocks until a message returns on this socket from a remote host.
+                            var bytesReceived = runParameters.srcSocket.Receive(buffer);
+                            Debug.WriteLine("Received message " + String.Join("", buffer));
 
-                                for (int i = 0; i < bytesReceived; i++)
+                            for (int i = 0; i < bytesReceived; i++)
+                            {
+                                if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
                                 {
-                                    if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
-                                    {
-                                        runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
-                                    }
-                                    else if (buffer[i] == '?')
-                                    {
-                                        runParameters.srcSocket.Send(new byte[] { (byte)'#' });
-                                    }
-                                    else if (buffer[i] == '#')
-                                    {
+                                    runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                                }
+                                else if (buffer[i] == '?')
+                                {
+                                    runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                                }
+                                else if (buffer[i] == '#')
+                                {
                                     runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
-                                    }
                                 }
                             }
-                            catch (SocketException se)
-                            {
-                                // Probably OK?
-                            }
-                         }
-                        });
-                    listenerTask.Start();
+                        }
+                        catch (SocketException se)
+                        {
+                            // Probably OK?
+                        }
+                    }
+                });
+                listenerTask.Start();
 
             }
 
@@ -453,7 +454,7 @@ namespace Muster
 
         public static string GenerateRandomString()
         {
-			var stringLength = 10;
+            var stringLength = 10;
             var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
             var stringChars = new char[stringLength];
             var random = new Random();
