@@ -168,7 +168,7 @@ namespace Muster
                 }
         }
 
-        private void SetupPeerSockets()
+        private async void SetupPeerSockets()
         {
             SendUDPMessagesToServer();
 
@@ -176,7 +176,7 @@ namespace Muster
             {
                 if (peer.id != clientId)
                 {
-                    var _endpoint = api.GetEndpointsForBand(bandID.Text, peer.id).Result;
+                    var _endpoint = await api.GetEndpointsForBand(bandID.Text, peer.id);
                     if (_endpoint != null)
                         peerEndpoints.Add(_endpoint);
                 }
