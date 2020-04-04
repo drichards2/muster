@@ -131,23 +131,24 @@ namespace Muster
                 return;
             }
 
-            for (int i = 0; i < numPeers; i++)
-            {
-                byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
-                IPEndPoint endPoint = api.GetUDPEndPoint().Result;
+            foreach (var peer in currentBand.members)
+                if (peer.id != clientId)
+                {   
+                    byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{clientId}:{peer.id}");
+                    IPEndPoint endPoint = api.GetUDPEndPoint().Result;
                 
-                var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-                var sent = _socket.SendTo(data,  endPoint);
-                if (sent != data.Length)
-                {
-                    MessageBox.Show("Something's gone wrong.");
-                    Debug.WriteLine("Error sending UDP message to server.");
+                    var _socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+                    var sent = _socket.SendTo(data,  endPoint);
+                    if (sent != data.Length)
+                    {
+                        MessageBox.Show("Something's gone wrong.");
+                        Debug.WriteLine("Error sending UDP message to server.");
+                    }
+
+                    // TODO: Listen for reply from server
+
+                    peerSockets.Add(_socket);
                 }
-
-                // TODO: Listen for reply from server
-
-                peerSockets.Add(_socket);
-            }
         }
 
         private void SetupPeerSockets()
@@ -156,7 +157,7 @@ namespace Muster
             
             foreach (var peer in currentBand.members)
                 {
-                    if (peer.id != userID)
+                    if (peer.id != clientId)
                     {
                         var _endpoint = api.GetEndpointsForBand(bandID.Text, peer.id).Result;
                         if (_endpoint != null)
