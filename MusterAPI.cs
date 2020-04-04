@@ -13,6 +13,11 @@ namespace Muster
     internal class MusterAPI
     {
 
+        public class ServerConfig
+        {
+            public int UdpPort;
+        }
+
         public class Band
         {
             public Member[] members { get; set; }
@@ -29,9 +34,38 @@ namespace Muster
 
         }
 
+        public string APIServer { get; set; } = "muster.norfolk-st.co.uk";
         public string APIEndpoint { get; set; } = "https://muster.norfolk-st.co.uk/v1/";
 
         private static readonly HttpClient client = new HttpClient();
+
+        public async Task<int> GetUDPPort()
+        {
+            var config = await GetServerConfig();
+            var port = config?.UdpPort;
+            if (port.HasValue)
+                return port.Value;
+            else
+                return 0;
+        }
+
+
+        public async Task<ServerConfig> GetServerConfig()
+        {
+
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+
+            var response = await client.GetAsync(APIEndpoint + "config");
+
+            if ((int)response.StatusCode == 200)
+            {
+                return JsonConvert.DeserializeObject<ServerConfig>(await response.Content.ReadAsStringAsync());
+            }
+            return null;
+        }
 
         public async Task<string> CreateBand()
         {
