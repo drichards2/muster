@@ -172,15 +172,7 @@ namespace Muster
         {
             SendUDPMessagesToServer();
 
-            foreach (var peer in currentBand.members)
-            {
-                if (peer.id != clientId)
-                {
-                    var _endpoint = await api.GetEndpointsForBand(bandID.Text, peer.id);
-                    if (_endpoint != null)
-                        peerEndpoints.Add(_endpoint);
-                }
-            }
+            var peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
             for (int idx = 0; idx < peerEndpoints.Count; idx++)
             {

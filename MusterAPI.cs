@@ -178,7 +178,7 @@ namespace Muster
             }
         }
 
-        public async Task<Endpoint> GetEndpointsForBand(string bandID, string clientID)
+        public async Task<List<Endpoint>> GetEndpointsForBand(string bandID, string clientID)
         {
             Debug.WriteLine("Getting endpoints for band " + bandID + " for client " + clientID);
 
@@ -188,8 +188,8 @@ namespace Muster
 
             if ((int)response.StatusCode == 200)
             {
-                var connection = JsonConvert.DeserializeObject<Endpoint>(await response.Content.ReadAsStringAsync());
-                return connection;
+                var endpoints = JsonConvert.DeserializeObject<List<Endpoint>>(await response.Content.ReadAsStringAsync());
+                return endpoints;
             }
             else
             {
