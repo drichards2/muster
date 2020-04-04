@@ -32,7 +32,9 @@ namespace Muster
 
         public class Endpoint
         {
-
+            public string targetId {get; set;}
+            public string ip {get; set;}
+            public int port {get; set;}
         }
 
         public class Connection
@@ -175,6 +177,29 @@ namespace Muster
             {
                 Debug.WriteLine("Error setting connection status for band " + bandID + ": " + response.ReasonPhrase);
                 return false;
+            }
+        }
+
+        public async Task<Endpoint> GetEndpointsForBand(string bandID, string clientID)
+        {
+            Debug.WriteLine("Getting endpoints for band " + bandID + " for client " + clientID);
+
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+
+            var response = await client.GetAsync(APIEndpoint + "bands/" + bandID + "/endpoints/" + clientID);
+
+            if ((int)response.StatusCode == 200)
+            {
+                var connection = JsonConvert.DeserializeObject<Endpoint>(await response.Content.ReadAsStringAsync());
+                return connection;
+            }
+            else
+            {
+                Debug.WriteLine("Could not get endpoints for '" + bandID + "' for client '" + clientID + "' : " + response.ReasonPhrase);
+                return null;
             }
         }
     }
