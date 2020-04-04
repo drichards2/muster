@@ -392,7 +392,7 @@ namespace Muster
 
             if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
             {
-                var txBytes = Encoding.ASCII.GetBytes($"{bandID.Text}!{e.KeyCode}");
+                var txBytes = Encoding.ASCII.GetBytes($"{e.KeyCode}");
                 foreach (var _socket in peerSockets)
                 {
                     Debug.WriteLine($"Sending message to: {_socket.RemoteEndPoint.ToString()}");
