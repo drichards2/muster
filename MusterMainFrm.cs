@@ -84,6 +84,11 @@ namespace Muster
 
                 currentBand = await GetTheBandBackTogether();
 
+                foreach (var peer in currentBand.members)
+                {
+                    bandDetails.Items.Add($"{peer.name}\t{peer.location}\t{peer.id}");
+                }
+
                 SetupPeerSockets();
             }
         }
@@ -114,7 +119,12 @@ namespace Muster
 
         private async void Connect_Click(object sender, EventArgs e)
         {
-            await api.SetConnectionStatus(bandID.Text);
+            var success = await api.SetConnectionStatus(bandID.Text);
+            if (!success)
+            {
+                MessageBox.Show("Try clicking 'Connect' again.");
+                Debug.WriteLine("Could not set connection status.");
+            }
         }
 
         private void SendUDPMessagesToServer()
