@@ -27,7 +27,6 @@ namespace Muster
 
         private IntPtr AbelHandle;
 
-        private string userID;
         private string clientId;
         private MusterAPI.Band currentBand;
         private List<MusterAPI.Endpoint> peerEndpoints = new List<MusterAPI.Endpoint>(MAX_PEERS);
@@ -40,8 +39,6 @@ namespace Muster
         public Muster()
         {
             InitializeComponent();
-            userID = GenerateRandomString();
-            Debug.WriteLine("Generated user ID: " + userID);
 
             api.APIEndpoint = endpointAddress;
             NameInput.Text = Environment.UserName;
@@ -60,7 +57,8 @@ namespace Muster
         {
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
-            //connectionList.Rows.Clear();
+
+            bandDetails.Text = "";
         }
 
 
@@ -68,7 +66,7 @@ namespace Muster
         {
             var member = new MusterAPI.Member
             {
-                id = userID,
+                id = null,
                 name = NameInput.Text,
                 location = LocationInput.Text
             };
@@ -114,9 +112,9 @@ namespace Muster
             // SendUDPMessagesToServer();
         }
 
-        private void Connect_Click(object sender, EventArgs e)
+        private async void Connect_Click(object sender, EventArgs e)
         {
-            api.SetConnectionStatus(bandID.Text);
+            await api.SetConnectionStatus(bandID.Text);
         }
 
         private void SendUDPMessagesToServer()
@@ -450,22 +448,6 @@ namespace Muster
                 abelConnectLabel.ForeColor = Color.CadetBlue;
                 abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Regular);
             }
-        }
-
-        public static string GenerateRandomString()
-        {
-            var stringLength = 10;
-            var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-            var stringChars = new char[stringLength];
-            var random = new Random();
-
-            for (int i = 0; i < stringLength; i++)
-            {
-                stringChars[i] = chars[random.Next(chars.Length)];
-            }
-
-            var finalString = new String(stringChars);
-            return finalString;
         }
 
         private void AbelConnect_Tick(object sender, EventArgs e)
