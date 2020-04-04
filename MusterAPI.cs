@@ -39,7 +39,6 @@ namespace Muster
 
         public class Connection
         {
-            //TODO: Ask REST API to use _ rather than -
             public bool request_client_connect {get; set;}
         }
 
