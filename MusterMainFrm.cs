@@ -330,6 +330,7 @@ namespace Muster
 
         private void FindAbel()
         {
+            // Inspired by the Abel connection in Graham John's Handbell Manager (https://github.com/GACJ/handbellmanager)
             Process[] currentProcesses = Process.GetProcesses();
             foreach (Process p in currentProcesses)
             {
@@ -342,6 +343,8 @@ namespace Muster
 
                     AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, ChildWindow, "");
                     AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, GrandchildWindow, "");
+                    if (AbelHandle != IntPtr.Zero)
+                        break;
                 }
             }
         }
