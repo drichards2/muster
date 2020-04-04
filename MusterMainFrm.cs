@@ -19,6 +19,7 @@ namespace Muster
         private const int numberOfBells = 12;
         private const int MAX_PEERS = 6;
 
+        private readonly MusterAPI api = new MusterAPI();
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
@@ -28,15 +29,17 @@ namespace Muster
         private string userID;
 
         private static readonly HttpClient client = new HttpClient();
-        //private string serverAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
-        //private string serverAddress = "http://localhost:5000/v1/";
-        private string serverAddress = "https://muster.norfolk-st.co.uk/v1/";
+        //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        //private string endpointAddress = "http://localhost:5000/v1/";
+        private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
         {
             InitializeComponent();
             userID = GenerateRandomString();
             Debug.WriteLine("Generated user ID: " + userID);
+
+            api.APIEndpoint = endpointAddress;
 
             //TODO: Add "Find Abel" button in case it's not launched before this app is started
             FindAbel();
@@ -51,105 +54,39 @@ namespace Muster
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
         {
-            var newBandID = await SendCreateBandRequest(serverAddress);
+            var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
             connectionList.Rows.Clear();
         }
 
-        private static async Task<string> SendCreateBandRequest(string serverAddress)
-        {
-            // Avoid deadlock: https://stackoverflow.com/questions/14435520/why-use-httpclient-for-synchronous-connection
-            var response = await client.PostAsync(serverAddress + "bands", null);
-            
-            if ((int)response.StatusCode == 201)
-            {
-                var responseString = await response.Content.ReadAsStringAsync();
-                if (responseString.Length > 0)
-                {
-                    var newbandID = responseString;
-                    newbandID = newbandID.Replace("\"", ""); //swaggerhub includes double quotes at start and end
-                    Debug.WriteLine("Created new band with ID: " + newbandID);
-                    return newbandID;
-                }
-                else
-                    // Trust the server to send a sensible band ID
-                    return "";
-            }
-            else
-            {
-                MessageBox.Show("Could not create new band.");
-                Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
-                return "";
-            }
-        }
 
         private async void JoinBand_Click(object sender, EventArgs e)
         {
-            var member = new Member
+            var member = new MusterAPI.Member
             {
                 id = userID,
                 name = NameInput.Text,
                 location = LocationInput.Text
             };
-            var didSucceed = await SendJoinBandRequest(serverAddress, bandID.Text, member);
+            var didSucceed = await api.SendJoinBandRequest(bandID.Text, member);
 
             await GetTheBandBackTogether();
         }
 
-        private static async Task<bool> SendJoinBandRequest(string serverAddress, string bandID, Member member)
-        {
-            Debug.WriteLine("Joining band: " + bandID);
-            var json = JsonConvert.SerializeObject(member);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
-
-            var response = await client.PutAsync(serverAddress + "bands/" + bandID + "/members", content);
-            if ((int)response.StatusCode == 204)
-            {
-                return true;
-            }
-            else
-            {
-                // TODO: Separate these cases out - "refreshing" the band needs to be supported
-                MessageBox.Show("Either you've already joined, or there's no record of band ID '" + bandID + "'. Will now refresh the band.");
-                Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
-                return false;
-            }
-        }
 
         private async Task GetTheBandBackTogether()
         {
             connectionList.Rows.Clear();
-            var band = await FindBandMembers(serverAddress, bandID.Text);
+            var band = await api.GetBand(bandID.Text);
 
+            /*
             if (band != null)
                 foreach (var member in band.members)
                     if (member.id != userID)
                         connectionList.Rows.Add(member.name, member.location, member.address, member.port, "Disconnected");
+            */
         }
 
-        private static async Task<Band> FindBandMembers(string serverAddress, string bandID)
-        {
-            Debug.WriteLine("Finding band members in band: " + bandID);
-
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
-
-            var response = await client.GetAsync(serverAddress + "bands/" + bandID);
-
-            if ((int)response.StatusCode == 200)
-            {
-                var band = JsonConvert.DeserializeObject<Band>(await response.Content.ReadAsStringAsync());
-                return band;
-            }
-            else
-            {
-                MessageBox.Show("No record of band ID '" + bandID + "'");
-                Debug.WriteLine("No record of band ID '" + bandID + "': " + response.ReasonPhrase);
-                return null;
-            }
-        }
 
         private void ContactServer_Click(object sender, EventArgs e)
         {
@@ -425,17 +362,5 @@ namespace Muster
         }
     }
 
-    public class Band
-    {
-        public Member[] members{ get; set; }
-    }
-    public class Member
-    {
-        public string name{ get; set; }
-        public string location{ get; set; }
-        public string id{ get; set; }
-        public string address{ get; set; }
-        public int port{ get; set; }
-    }
 }
 

@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ListenerTask.cs" />
+    <Compile Include="MusterAPI.cs" />
     <Compile Include="MusterMainFrm.cs">
       <SubType>Form</SubType>
     </Compile>
