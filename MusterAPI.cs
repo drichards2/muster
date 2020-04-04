@@ -51,11 +51,7 @@ namespace Muster
 
         public async Task<ServerConfig> GetServerConfig()
         {
-
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+            AcceptJson();
 
             var response = await client.GetAsync(APIEndpoint + "config");
 
@@ -119,14 +115,20 @@ namespace Muster
             }
         }
 
-        public async Task<Band> GetBand(string bandID)
+        private void AcceptJson()
         {
-            Debug.WriteLine("Finding band members in band: " + bandID);
-
+            client.DefaultRequestHeaders.Clear();
             client.DefaultRequestHeaders.Accept.Clear();
             client.DefaultRequestHeaders.Accept.Add(
                 new MediaTypeWithQualityHeaderValue("application/json"));
             client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+        }
+
+        public async Task<Band> GetBand(string bandID)
+        {
+            Debug.WriteLine("Finding band members in band: " + bandID);
+
+            AcceptJson();
 
             var response = await client.GetAsync(APIEndpoint + "bands/" + bandID);
 
@@ -146,10 +148,7 @@ namespace Muster
         {
             Debug.WriteLine("Getting status for band: " + bandID);
 
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+            AcceptJson();
 
             var response = await client.GetAsync(APIEndpoint + "bands/" + bandID + "/connection");
 
@@ -184,10 +183,7 @@ namespace Muster
         {
             Debug.WriteLine("Getting endpoints for band " + bandID + " for client " + clientID);
 
-            client.DefaultRequestHeaders.Accept.Clear();
-            client.DefaultRequestHeaders.Accept.Add(
-                new MediaTypeWithQualityHeaderValue("application/json"));
-            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+            AcceptJson();
 
             var response = await client.GetAsync(APIEndpoint + "bands/" + bandID + "/endpoints/" + clientID);
 
