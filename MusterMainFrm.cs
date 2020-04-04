@@ -28,11 +28,13 @@ namespace Muster
         private IntPtr AbelHandle;
 
         private string userID;
+        private string clientId;
+        private MusterAPI.Band currentBand;
 
         private static readonly HttpClient client = new HttpClient();
-        //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         //private string endpointAddress = "http://localhost:5000/v1/";
-        private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
+        ///private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
         {
@@ -69,16 +71,32 @@ namespace Muster
                 name = NameInput.Text,
                 location = LocationInput.Text
             };
-            var didSucceed = await api.SendJoinBandRequest(bandID.Text, member);
+            clientId = await api.SendJoinBandRequest(bandID.Text, member);
 
-            await GetTheBandBackTogether();
+            if (clientId != null)
+            {
+                bool timeToConnect = false;
+                while (!timeToConnect)
+                {
+                    var connectionStatus = await api.GetConnectionStatus(bandID.Text);
+                    timeToConnect = connectionStatus.request_client_connect;
+                    Thread.Sleep(1000);
+                }
+
+                currentBand = await GetTheBandBackTogether();
+
+                foreach (var member in currentBand.members)
+                {
+
+                }
+            }
         }
 
 
-        private async Task GetTheBandBackTogether()
+        private async Task<MusterAPI.Band> GetTheBandBackTogether()
         {
             //connectionList.Rows.Clear();
-            var band = await api.GetBand(bandID.Text);
+            return await api.GetBand(bandID.Text);
 
             /*
             if (band != null)

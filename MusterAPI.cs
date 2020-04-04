@@ -80,7 +80,7 @@ namespace Muster
             else
             {
                 Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
-                return "";
+                return null;
             }
         }
 
@@ -115,7 +115,7 @@ namespace Muster
             else
             {
                 Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
-                return "";
+                return null;
             }
         }
 
