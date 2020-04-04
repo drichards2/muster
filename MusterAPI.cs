@@ -35,6 +35,12 @@ namespace Muster
 
         }
 
+        public class Connection
+        {
+            //TODO: Ask REST API to use _ rather than -
+            public bool request_client_connect {get; set;}
+        }
+
         public string APIServer { get; set; } = "muster.norfolk-st.co.uk";
         public string APIEndpoint { get; set; } = "https://muster.norfolk-st.co.uk/v1/";
 
@@ -65,7 +71,9 @@ namespace Muster
 
             if ((int)response.StatusCode == 201)
             {
-                return await ReadStringResponse(response);
+                var newbandID = await ReadStringResponse(response);
+                Debug.WriteLine("Created new band with ID: " + newbandID);
+                return newbandID;
             }
             else
             {
@@ -81,7 +89,6 @@ namespace Muster
             {
                 var newbandID = responseString;
                 newbandID = newbandID.Replace("\"", ""); //swaggerhub includes double quotes at start and end
-                Debug.WriteLine("Created new band with ID: " + newbandID);
                 return newbandID;
             }
             else
@@ -99,7 +106,9 @@ namespace Muster
             var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/members", content);
             if ((int)response.StatusCode == 204)
             {
-                return await ReadStringResponse(response);
+                var clientID = await ReadStringResponse(response);
+                Debug.WriteLine("Joined band with client ID: " + clientID);
+                return clientID;
             }
             else
             {
@@ -128,6 +137,44 @@ namespace Muster
             {
                 Debug.WriteLine("No record of band ID '" + bandID + "': " + response.ReasonPhrase);
                 return null;
+            }
+        }
+
+        public async Task<Connection> GetConnectionStatus(string bandID)
+        {
+            Debug.WriteLine("Getting status for band: " + bandID);
+
+            client.DefaultRequestHeaders.Accept.Clear();
+            client.DefaultRequestHeaders.Accept.Add(
+                new MediaTypeWithQualityHeaderValue("application/json"));
+            client.DefaultRequestHeaders.Add("User-Agent", "Muster Client");
+
+            var response = await client.GetAsync(APIEndpoint + "bands/" + bandID + "/connection");
+
+            if ((int)response.StatusCode == 200)
+            {
+                var connection = JsonConvert.DeserializeObject<Connection>(await response.Content.ReadAsStringAsync());
+                return connection;
+            }
+            else
+            {
+                Debug.WriteLine("Could not get connection status of '" + bandID + "': " + response.ReasonPhrase);
+                return null;
+            }
+        }
+
+        public async Task<bool> SetConnectionStatus(string bandID)
+        {
+            Debug.WriteLine("Setting connection status for band: " + bandID);
+            var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/members", null);
+            if ((int)response.StatusCode == 201)
+            {
+                return true;
+            }
+            else
+            {
+                Debug.WriteLine("Error setting connection status for band " + bandID + ": " + response.ReasonPhrase);
+                return false;
             }
         }
     }
