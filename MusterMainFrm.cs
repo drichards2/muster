@@ -40,6 +40,7 @@ namespace Muster
             Debug.WriteLine("Generated user ID: " + userID);
 
             api.APIEndpoint = endpointAddress;
+            NameInput.Text = Environment.UserName;
 
             //TODO: Add "Find Abel" button in case it's not launched before this app is started
             FindAbel();
