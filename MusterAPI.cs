@@ -167,7 +167,7 @@ namespace Muster
         {
             Debug.WriteLine("Setting connection status for band: " + bandID);
             var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/connection", null);
-            if ((int)response.StatusCode == 201)
+            if ((int)response.StatusCode == 200)
             {
                 return true;
             }
