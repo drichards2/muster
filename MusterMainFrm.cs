@@ -123,14 +123,15 @@ namespace Muster
         {
             DisconnectAll();
             
-            Debug.WriteLine($"Requesting to connect {peerEndpoints.Count} peers");
-            if (peerEndpoints.Count  > MAX_PEERS)
+            int numPeers = currentBand.members.Length - 1;
+            Debug.WriteLine($"Requesting to connect {numPeers} peers");
+            if (numPeers > MAX_PEERS)
             {
-                MessageBox.Show($"Can't connect {peerEndpoints.Count} peers - {MAX_PEERS} is the maximum");
+                MessageBox.Show($"Can't connect {numPeers} peers - {MAX_PEERS} is the maximum");
                 return;
             }
 
-            for (int i = 0; i < peerEndpoints.Count; i++)
+            for (int i = 0; i < numPeers; i++)
             {
                 byte[] data = Encoding.ASCII.GetBytes($"{bandID.Text}:{userID}");
                 IPEndPoint endPoint = api.GetUDPEndPoint().Result;
