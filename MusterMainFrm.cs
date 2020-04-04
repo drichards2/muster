@@ -116,7 +116,7 @@ namespace Muster
 
         private void Connect_Click(object sender, EventArgs e)
         {
-            SetupPeerSockets();
+            api.SetConnectionStatus(bandID.Text);
         }
 
         private void SendUDPMessagesToServer()
