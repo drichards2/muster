@@ -28,6 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
+            this.components = new System.ComponentModel.Container();
             this.Connect = new System.Windows.Forms.Button();
             this.Disconnect = new System.Windows.Forms.Button();
             this.Test = new System.Windows.Forms.Button();
@@ -41,6 +42,8 @@
             this.LocationInput = new System.Windows.Forms.TextBox();
             this.ContactServer = new System.Windows.Forms.Button();
             this.bandDetails = new System.Windows.Forms.ListBox();
+            this.abelConnect = new System.Windows.Forms.Timer(this.components);
+            this.abelConnectLabel = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // Connect
@@ -118,7 +121,7 @@
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(14, 180);
+            this.label3.Location = new System.Drawing.Point(14, 69);
             this.label3.Name = "label3";
             this.label3.Size = new System.Drawing.Size(45, 17);
             this.label3.TabIndex = 13;
@@ -127,7 +130,7 @@
             // NameInput
             // 
             this.NameInput.AcceptsTab = true;
-            this.NameInput.Location = new System.Drawing.Point(99, 176);
+            this.NameInput.Location = new System.Drawing.Point(99, 65);
             this.NameInput.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.NameInput.Name = "NameInput";
             this.NameInput.Size = new System.Drawing.Size(100, 22);
@@ -137,7 +140,7 @@
             // label4
             // 
             this.label4.AutoSize = true;
-            this.label4.Location = new System.Drawing.Point(14, 213);
+            this.label4.Location = new System.Drawing.Point(14, 102);
             this.label4.Name = "label4";
             this.label4.Size = new System.Drawing.Size(62, 17);
             this.label4.TabIndex = 15;
@@ -146,12 +149,11 @@
             // LocationInput
             // 
             this.LocationInput.AcceptsTab = true;
-            this.LocationInput.Location = new System.Drawing.Point(99, 209);
+            this.LocationInput.Location = new System.Drawing.Point(99, 98);
             this.LocationInput.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
             this.LocationInput.Name = "LocationInput";
             this.LocationInput.Size = new System.Drawing.Size(100, 22);
             this.LocationInput.TabIndex = 16;
-            this.LocationInput.Text = "Cambridge";
             // 
             // ContactServer
             // 
@@ -174,11 +176,27 @@
             this.bandDetails.Size = new System.Drawing.Size(538, 228);
             this.bandDetails.TabIndex = 18;
             // 
+            // abelConnect
+            // 
+            this.abelConnect.Enabled = true;
+            this.abelConnect.Interval = 1000;
+            this.abelConnect.Tick += new System.EventHandler(this.AbelConnect_Tick);
+            // 
+            // abelConnectLabel
+            // 
+            this.abelConnectLabel.AutoSize = true;
+            this.abelConnectLabel.Location = new System.Drawing.Point(233, 70);
+            this.abelConnectLabel.Name = "abelConnectLabel";
+            this.abelConnectLabel.Size = new System.Drawing.Size(46, 17);
+            this.abelConnectLabel.TabIndex = 19;
+            this.abelConnectLabel.Text = "label1";
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(8F, 16F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(903, 571);
+            this.Controls.Add(this.abelConnectLabel);
             this.Controls.Add(this.bandDetails);
             this.Controls.Add(this.ContactServer);
             this.Controls.Add(this.LocationInput);
@@ -216,5 +234,7 @@
         private System.Windows.Forms.TextBox LocationInput;
         private System.Windows.Forms.Button ContactServer;
         private System.Windows.Forms.ListBox bandDetails;
+        private System.Windows.Forms.Timer abelConnect;
+        private System.Windows.Forms.Label abelConnectLabel;
     }
 }

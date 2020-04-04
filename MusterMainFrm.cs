@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -42,7 +43,6 @@ namespace Muster
             api.APIEndpoint = endpointAddress;
             NameInput.Text = Environment.UserName;
 
-            //TODO: Add "Find Abel" button in case it's not launched before this app is started
             FindAbel();
 
   /*          for(int i = 0; i < numberOfBells; i++)
@@ -57,7 +57,7 @@ namespace Muster
         {
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
-            connectionList.Rows.Clear();
+            //connectionList.Rows.Clear();
         }
 
 
@@ -77,7 +77,7 @@ namespace Muster
 
         private async Task GetTheBandBackTogether()
         {
-            connectionList.Rows.Clear();
+            //connectionList.Rows.Clear();
             var band = await api.GetBand(bandID.Text);
 
             /*
@@ -106,7 +106,7 @@ namespace Muster
         private void SendUDPMessagesToServer()
         {
             DisconnectAll();
-
+            /*
             Console.WriteLine($"Requesting to connect {connectionList.Rows.Count} peers");
             if (connectionList.Rows.Count - 1 > MAX_PEERS)
             {
@@ -141,12 +141,14 @@ namespace Muster
                 else
                     row.Cells[4].Value = "Broken";
             }
+            */
         }
 
         private void SetupPeerSockets()
         {
             SendUDPMessagesToServer();
             
+            /*
             if ( (connectionList.Rows.Count-1) != peerSockets.Count)
             {
                 MessageBox.Show("There seems to be a mismatch between open sockets and peers requested. Abort abort.");
@@ -216,12 +218,15 @@ namespace Muster
                     listenerTask.Start();
                 }
             }
+            */
         }
 
         private void SocketEcho(int peerChannel)
         {
+            /*
             Debug.WriteLine($"Received echo request: {peerChannel}");
             connectionList.Rows[peerChannel].Cells[4].Value = "Connected";
+            */
         }
 
         private void BellStrike(int bell)
@@ -241,6 +246,7 @@ namespace Muster
 
         private void TestConnection()
         {
+            /*
             foreach (DataGridViewRow row in connectionList.Rows)
             {
                 if (row.IsNewRow)
@@ -248,6 +254,7 @@ namespace Muster
 
                 row.Cells[4].Value = "Waiting for reply";
             }
+            */
             foreach (var sock in peerSockets)
             {
                 sock.Send(new byte[] { (byte)'?' });
@@ -279,9 +286,11 @@ namespace Muster
 
             ClosePeerSockets();
 
+            /*
             foreach (DataGridViewRow row in connectionList.Rows)
                 if (!row.IsNewRow)
                     row.Cells[4].Value = "Disconnected";
+            */
         }
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
@@ -330,22 +339,41 @@ namespace Muster
 
         private void FindAbel()
         {
+            var foundHandle = IntPtr.Zero;
             // Inspired by the Abel connection in Graham John's Handbell Manager (https://github.com/GACJ/handbellmanager)
             Process[] currentProcesses = Process.GetProcesses();
             foreach (Process p in currentProcesses)
             {
                 if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
                 {
-                    AbelHandle = p.MainWindowHandle;
+                    foundHandle = p.MainWindowHandle;
 
                     string ChildWindow = "AfxMDIFrame140s";
                     string GrandchildWindow = "AfxFrameOrView140s";
 
-                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, ChildWindow, "");
-                    AbelHandle = FindWindowEx(AbelHandle, IntPtr.Zero, GrandchildWindow, "");
-                    if (AbelHandle != IntPtr.Zero)
+                    foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, ChildWindow, "");
+                    foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, GrandchildWindow, "");
+                    if (foundHandle != IntPtr.Zero)
                         break;
                 }
+            }
+
+            if (foundHandle != AbelHandle)
+            {
+                AbelHandle = foundHandle;
+            }
+
+            if (AbelHandle == IntPtr.Zero)
+            {
+                abelConnectLabel.Text = "Abel: Not connected";
+                abelConnectLabel.ForeColor = Color.DarkOrange;
+                abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Bold);
+            }
+            else
+            {
+                abelConnectLabel.Text = "Abel: Connected";
+                abelConnectLabel.ForeColor = Color.CadetBlue;
+                abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Regular);
             }
         }
 
@@ -363,6 +391,11 @@ namespace Muster
 
             var finalString = new String(stringChars);
             return finalString;
+        }
+
+        private void AbelConnect_Tick(object sender, EventArgs e)
+        {
+            FindAbel();
         }
     }
 
