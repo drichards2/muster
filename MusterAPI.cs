@@ -166,7 +166,7 @@ namespace Muster
         public async Task<bool> SetConnectionStatus(string bandID)
         {
             Debug.WriteLine("Setting connection status for band: " + bandID);
-            var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/members", null);
+            var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/connection", null);
             if ((int)response.StatusCode == 201)
             {
                 return true;
