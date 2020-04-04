@@ -94,7 +94,7 @@ namespace Muster
         {
             Debug.WriteLine("Joining band: " + bandID);
             var json = JsonConvert.SerializeObject(member);
-            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/members", content);
             if ((int)response.StatusCode == 204)
