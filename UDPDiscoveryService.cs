@@ -45,6 +45,11 @@ namespace Muster
             listener.SendTo(broadcastPacket, broadcastAddress);
         }
 
+        public void ClearLocalClients()
+        {
+            _clients.Clear();
+        }
+
         public UDPDiscoveryService()
         {
             listener = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
