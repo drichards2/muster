@@ -53,6 +53,7 @@ namespace Muster
         public UDPDiscoveryService()
         {
             listener = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+            listener.EnableBroadcast = true;
 
             IPEndPoint groupEP = new IPEndPoint(IPAddress.Any, NETWORK_LISTEN_PORT);
             listener.Bind(groupEP);
