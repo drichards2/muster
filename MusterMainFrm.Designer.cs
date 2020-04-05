@@ -190,23 +190,22 @@
             this.bandDetails.RowHeadersVisible = false;
             this.bandDetails.Size = new System.Drawing.Size(403, 206);
             this.bandDetails.TabIndex = 20;
-            this.bandDetails.AllowUserToAddRows = false;
             // 
-            // Name
+            // NameColumn
             // 
             this.NameColumn.HeaderText = "Name";
             this.NameColumn.Name = "NameColumn";
             this.NameColumn.ReadOnly = true;
             this.NameColumn.Width = 130;
             // 
-            // Location
+            // LocationColumn
             // 
             this.LocationColumn.HeaderText = "Location";
             this.LocationColumn.Name = "LocationColumn";
             this.LocationColumn.ReadOnly = true;
             this.LocationColumn.Width = 150;
             // 
-            // Status
+            // StatusColumn
             // 
             this.StatusColumn.HeaderText = "Status";
             this.StatusColumn.Name = "StatusColumn";
