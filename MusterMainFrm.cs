@@ -62,7 +62,7 @@ namespace Muster
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
 
-            bandDetails.Items.Clear();
+            bandDetails.Rows.Clear();
         }
 
 
@@ -81,6 +81,15 @@ namespace Muster
                 bool timeToConnect = false;
                 while (!timeToConnect)
                 {
+
+                    currentBand = await GetTheBandBackTogether();
+
+                    bandDetails.Rows.Clear();
+                    foreach (var peer in currentBand.members)
+                    {
+                        bandDetails.Rows.Add(peer.name, peer.location, "Waiting to start");
+                    }
+
                     var connectionStatus = await api.GetConnectionStatus(bandID.Text);
                     timeToConnect = connectionStatus.request_client_connect;
                     await Task.Delay(1000); // don't block GUIb
@@ -88,9 +97,10 @@ namespace Muster
 
                 currentBand = await GetTheBandBackTogether();
 
+                bandDetails.Rows.Clear();
                 foreach (var peer in currentBand.members)
                 {
-                    bandDetails.Items.Add($"{peer.name}\t{peer.location}\t{peer.id}");
+                    bandDetails.Rows.Add(peer.name, peer.location, "Connecting");
                 }
 
                 SetupPeerSockets();
@@ -99,15 +109,7 @@ namespace Muster
 
         private async Task<MusterAPI.Band> GetTheBandBackTogether()
         {
-            //connectionList.Rows.Clear();
             return await api.GetBand(bandID.Text);
-
-            /*
-            if (band != null)
-                foreach (var member in band.members)
-                    if (member.id != userID)
-                        connectionList.Rows.Add(member.name, member.location, member.address, member.port, "Disconnected");
-            */
         }
 
 
@@ -395,6 +397,5 @@ namespace Muster
             FindAbel();
         }
     }
-
 }
 
