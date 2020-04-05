@@ -205,6 +205,7 @@ namespace Muster
             }
 
             var localClients = localUDPDiscoveryService.LocalClients;
+            var otherBandMembers = GetOtherBandMembers();
 
             for (int idx = 0; idx < peerSockets.Count; idx++)
             {
@@ -215,7 +216,7 @@ namespace Muster
                 int _targetPort = 0;
                 foreach (var ep in peerEndpoints)
                 {
-                    if (ep.target_id == currentBand.members[idx].id)
+                    if (ep.target_id == otherBandMembers[idx].id)
                     {
                         _targetId = ep.target_id;
                         _targetIp = ep.ip;
@@ -296,6 +297,18 @@ namespace Muster
             }
 
             TestConnection();
+        }
+
+        private List<MusterAPI.Member> GetOtherBandMembers()
+        {
+            var members = currentBand.members;
+            var peers = new List<MusterAPI.Member>();
+            foreach (var member in members)
+            {
+                if (member.id != clientId)
+                    peers.Add(member);
+            }
+            return peers;
         }
 
         private void SocketEcho(int peerChannel)
