@@ -101,7 +101,7 @@ namespace Muster
                         bandDetails.Rows.Add(peer.name, peer.location, "Waiting to start");
                     }
 
-                    timeToConnect = await api.ConnectionPhaseAnyResponse(bandID.Text, MusterAPIExtended.ConnectionPhases.CONNECT);                    
+                    timeToConnect = await api.ConnectionPhaseAnyResponse(bandID.Text, MusterAPIExtended.ConnectionPhases.CONNECT);
                     await Task.Delay(1000); // don't block GUI
                 }
 
@@ -195,10 +195,29 @@ namespace Muster
                 return;
             }
 
+            var localClients = discoveryService.LocalClients;
+
             for (int idx = 0; idx < peerEndpoints.Count; idx++)
             {
                 var _socket = peerSockets[idx];
-                _socket.Connect(peerEndpoints[idx].ip, peerEndpoints[idx].port);
+
+                //Use client's local network if local peer
+                bool isLocal = false;
+                foreach (var localEP in localClients)
+                    if (peerEndpoints[idx].target_id == localEP.client_id)
+                    {
+                        isLocal = true;
+                        Debug.WriteLine($"Connecting to {peerEndpoints[idx].target_id} over local network using address {localEP.address}:{localEP.port}.");
+                        _socket.Connect(localEP.address, localEP.port);
+                        break;
+                    }
+
+                // Otherwise, connect over the internet
+                if (!isLocal)
+                {
+                    Debug.WriteLine($"Connecting to {peerEndpoints[idx].target_id} over internet.");
+                    _socket.Connect(peerEndpoints[idx].ip, peerEndpoints[idx].port);
+                }
 
                 var ctokenSource = new CancellationTokenSource();
                 peerCancellation.Add(ctokenSource);
