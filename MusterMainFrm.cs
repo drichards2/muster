@@ -49,12 +49,12 @@ namespace Muster
 
             FindAbel();
 
-            /*          for(int i = 0; i < numberOfBells; i++)
-                      {
-                          RingBell(i);
-                          System.Threading.Thread.Sleep(230);
-                      }
-          */
+            var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
+            for (int i = 0; i < numberOfBells; i++)
+            {
+                RingBell(bellOrder[i] - 1);
+                System.Threading.Thread.Sleep(150);
+            }
         }
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
@@ -62,19 +62,30 @@ namespace Muster
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
 
+            currentBand = null;
             bandDetails.Rows.Clear();
         }
 
 
         private async void JoinBand_Click(object sender, EventArgs e)
         {
-            var member = new MusterAPI.Member
+            var shouldJoin = clientId == null || currentBand == null;
+            if (shouldJoin)
             {
-                id = null,
-                name = NameInput.Text,
-                location = LocationInput.Text
-            };
-            clientId = await api.SendJoinBandRequest(bandID.Text, member);
+                var member = new MusterAPI.Member
+                {
+                    id = null,
+                    name = NameInput.Text,
+                    location = LocationInput.Text
+                };
+                clientId = await api.SendJoinBandRequest(bandID.Text, member);
+
+                if (clientId == null)
+                {
+                    MessageBox.Show("Could not join band. Check the band ID is correct and try clicking 'Join/refresh band' again.");
+                    return;
+                }
+            }
 
             if (clientId != null)
             {
@@ -143,7 +154,7 @@ namespace Muster
                     var sent = _socket.SendTo(data, UdpEndPoint);
                     if (sent != data.Length)
                     {
-                        MessageBox.Show("Something's gone wrong.");
+                        MessageBox.Show("Error connecting to server. Try clicking 'Join/refresh band' again.");
                         Debug.WriteLine("Error sending UDP message to server.");
                     }
 
@@ -169,7 +180,7 @@ namespace Muster
 
             if (peerEndpoints == null || peerEndpoints.Count != peerSockets.Count)
             {
-                MessageBox.Show("Try clicking 'Join/refresh band' again.");
+                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");
                 Debug.WriteLine("Did not receive the expected number of endpoints.");
                 return;
             }
@@ -260,6 +271,7 @@ namespace Muster
         private void Disconnect_Click(object sender, EventArgs e)
         {
             DisconnectAll();
+            bandDetails.Rows.Clear();
         }
 
         private void Test_Click(object sender, EventArgs e)
@@ -304,8 +316,11 @@ namespace Muster
 
             ClosePeerSockets();
 
-            foreach (DataGridViewRow row in bandDetails.Rows)
-                row.Cells[2].Value = "Disconnected";
+            for (int idx = 0; idx < currentBand.members.Length; idx++)
+            {
+                var message = currentBand.members[idx].id == clientId ? "Waiting to start" : "Disconnected";
+                bandDetails.Rows[idx].Cells[2].Value = message;
+            }
         }
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
@@ -318,8 +333,11 @@ namespace Muster
                 var txBytes = Encoding.ASCII.GetBytes($"{e.KeyCode}");
                 foreach (var _socket in peerSockets)
                 {
-                    Debug.WriteLine($"Sending message to: {_socket.RemoteEndPoint.ToString()}");
-                    Task.Factory.StartNew(() => { _socket.Send(txBytes); });
+                    if (_socket.Connected)
+                    {
+                        Debug.WriteLine($"Sending message to: {_socket.RemoteEndPoint.ToString()}");
+                        Task.Factory.StartNew(() => { _socket.Send(txBytes); });
+                    }
                 }
             }
 

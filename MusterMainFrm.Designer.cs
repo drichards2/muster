@@ -56,7 +56,7 @@
             this.Connect.Name = "Connect";
             this.Connect.Size = new System.Drawing.Size(123, 24);
             this.Connect.TabIndex = 6;
-            this.Connect.Text = "Connect";
+            this.Connect.Text = "Start ringing";
             this.Connect.UseVisualStyleBackColor = true;
             this.Connect.Click += new System.EventHandler(this.Connect_Click);
             // 
@@ -67,7 +67,7 @@
             this.Disconnect.Name = "Disconnect";
             this.Disconnect.Size = new System.Drawing.Size(123, 24);
             this.Disconnect.TabIndex = 7;
-            this.Disconnect.Text = "Disconnect";
+            this.Disconnect.Text = "Quit the band";
             this.Disconnect.UseVisualStyleBackColor = true;
             this.Disconnect.Click += new System.EventHandler(this.Disconnect_Click);
             // 
