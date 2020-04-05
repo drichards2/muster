@@ -83,7 +83,7 @@ namespace Muster
                 {
                     var connectionStatus = await api.GetConnectionStatus(bandID.Text);
                     timeToConnect = connectionStatus.request_client_connect;
-                    Thread.Sleep(1000);
+                    await Task.Delay(1000); // don't block GUIb
                 }
 
                 currentBand = await GetTheBandBackTogether();
@@ -96,7 +96,6 @@ namespace Muster
                 SetupPeerSockets();
             }
         }
-
 
         private async Task<MusterAPI.Band> GetTheBandBackTogether()
         {
@@ -205,7 +204,9 @@ namespace Muster
                         {
                             // Blocks until a message returns on this socket from a remote host.
                             var bytesReceived = runParameters.srcSocket.Receive(buffer);
-                            Debug.WriteLine("Received message " + String.Join("", buffer));
+
+                            var message = Encoding.UTF8.GetString(buffer,0,bytesReceived);
+                            Debug.WriteLine("Received message " + message);
 
                             for (int i = 0; i < bytesReceived; i++)
                             {
