@@ -32,6 +32,7 @@ namespace Muster
         private string clientId;
         private MusterAPI.Band currentBand;
         private List<MusterAPI.Endpoint> peerEndpoints = new List<MusterAPI.Endpoint>(MAX_PEERS);
+        private UDPDiscoveryService discoveryService;
 
         private static readonly HttpClient client = new HttpClient();
         //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
@@ -63,6 +64,7 @@ namespace Muster
 
             currentBand = null;
             bandDetails.Rows.Clear();
+            discoveryService = new UDPDiscoveryService();
         }
 
 
@@ -166,6 +168,15 @@ namespace Muster
                     }
 
                     peerSockets.Add(_socket);
+
+                    // Broadcast to local network that this client is hoping to receive messages on this entry point
+                    var localEndpoint = _socket.LocalEndPoint as IPEndPoint;
+                    discoveryService.BroadcastClientAvailable(new UDPDiscoveryService.LocalNetworkClientDetail
+                    {
+                        client_id = clientId,
+                        address = localEndpoint.Address.ToString(),
+                        port = localEndpoint.Port
+                    });
                 }
         }
 
