@@ -35,5 +35,21 @@ namespace Muster
             else
                 return 0;
         }
+
+        public async Task<bool> ConnectionPhaseAnyResponse(string bandID, string phase)
+        {
+            var connection = await GetConnectionPhase(bandID, phase);
+            return connection.Count > 0;
+        }
+        public async Task<bool> ConnectionPhaseAllResponded(Band workingBand, string bandID, string phase)
+        {
+            var connection = await GetConnectionPhase(bandID, phase);
+            foreach (var member in workingBand.members)
+            {
+                if (!connection.Contains(member.id))
+                    return false;
+            }
+            return true;
+        }
     }
 }

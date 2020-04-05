@@ -37,11 +37,6 @@ namespace Muster
             public int port {get; set;}
         }
 
-        public class Connection
-        {
-            public bool request_client_connect {get; set;}
-        }
-
         public string APIServer { get; set; } = "muster.norfolk-st.co.uk";
         public string APIEndpoint { get; set; } = "https://muster.norfolk-st.co.uk/v1/";
 
@@ -80,17 +75,15 @@ namespace Muster
         }
 
         private async Task<string> ReadStringResponse(HttpResponseMessage response)
-        {
+        {            
             var responseString = await response.Content.ReadAsStringAsync();
             if (responseString.Length > 0)
             {
-                var newbandID = responseString;
-                newbandID = newbandID.Replace("\"", ""); //swaggerhub includes double quotes at start and end
-                return newbandID;
+                return JsonConvert.DeserializeObject<string>(responseString);
             }
             else
             {
-                return "";
+                return null;
             }
         }
 
@@ -143,30 +136,34 @@ namespace Muster
             }
         }
 
-        public async Task<Connection> GetConnectionStatus(string bandID)
+        public async Task<List<string>> GetConnectionPhase(string bandID, string phase)
         {
-            Debug.WriteLine("Getting status for band: " + bandID);
+            Debug.WriteLine($"Getting status for band >{bandID}< at phase >{phase}<");
 
             AcceptJson();
 
-            var response = await client.GetAsync(APIEndpoint + "bands/" + bandID + "/connection");
+            var response = await client.GetAsync($"{APIEndpoint}bands/{bandID}/connection/{phase}";
 
             if ((int)response.StatusCode == 200)
             {
-                var connection = JsonConvert.DeserializeObject<Connection>(await response.Content.ReadAsStringAsync());
+                var connection = JsonConvert.DeserializeObject<List<string>>(await response.Content.ReadAsStringAsync());
                 return connection;
             }
             else
             {
-                Debug.WriteLine("Could not get connection status of '" + bandID + "': " + response.ReasonPhrase);
+                Debug.WriteLine($"Could not get connection status of '{bandID}/{phase}': {response.ReasonPhrase}");
                 return null;
             }
         }
 
-        public async Task<bool> SetConnectionStatus(string bandID)
+        public async Task<bool> SetConnectionStatus(string bandID, string phase, string clientID)
         {
             Debug.WriteLine("Setting connection status for band: " + bandID);
-            var response = await client.PutAsync(APIEndpoint + "bands/" + bandID + "/connection", null);
+
+            var json = JsonConvert.SerializeObject(clientID);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await client.PutAsync($"{APIEndpoint}bands/{bandID}/connection/{phase}", content);
             if ((int)response.StatusCode == 200)
             {
                 return true;
