@@ -40,7 +40,6 @@
             this.NameInput = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
             this.LocationInput = new System.Windows.Forms.TextBox();
-            this.ContactServer = new System.Windows.Forms.Button();
             this.abelConnect = new System.Windows.Forms.Timer(this.components);
             this.abelConnectLabel = new System.Windows.Forms.Label();
             this.bandDetails = new System.Windows.Forms.DataGridView();
@@ -52,8 +51,8 @@
             // 
             // Connect
             // 
-            this.Connect.Location = new System.Drawing.Point(220, 196);
-            this.Connect.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Connect.Location = new System.Drawing.Point(30, 179);
+            this.Connect.Margin = new System.Windows.Forms.Padding(2);
             this.Connect.Name = "Connect";
             this.Connect.Size = new System.Drawing.Size(123, 24);
             this.Connect.TabIndex = 6;
@@ -63,8 +62,8 @@
             // 
             // Disconnect
             // 
-            this.Disconnect.Location = new System.Drawing.Point(500, 196);
-            this.Disconnect.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Disconnect.Location = new System.Drawing.Point(310, 179);
+            this.Disconnect.Margin = new System.Windows.Forms.Padding(2);
             this.Disconnect.Name = "Disconnect";
             this.Disconnect.Size = new System.Drawing.Size(123, 24);
             this.Disconnect.TabIndex = 7;
@@ -74,8 +73,8 @@
             // 
             // Test
             // 
-            this.Test.Location = new System.Drawing.Point(360, 196);
-            this.Test.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Test.Location = new System.Drawing.Point(170, 179);
+            this.Test.Margin = new System.Windows.Forms.Padding(2);
             this.Test.Name = "Test";
             this.Test.Size = new System.Drawing.Size(123, 24);
             this.Test.TabIndex = 8;
@@ -86,7 +85,7 @@
             // bandID
             // 
             this.bandID.Location = new System.Drawing.Point(74, 25);
-            this.bandID.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.bandID.Margin = new System.Windows.Forms.Padding(2);
             this.bandID.Name = "bandID";
             this.bandID.Size = new System.Drawing.Size(76, 20);
             this.bandID.TabIndex = 9;
@@ -104,7 +103,7 @@
             // JoinBand
             // 
             this.JoinBand.Location = new System.Drawing.Point(169, 22);
-            this.JoinBand.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.JoinBand.Margin = new System.Windows.Forms.Padding(2);
             this.JoinBand.Name = "JoinBand";
             this.JoinBand.Size = new System.Drawing.Size(123, 24);
             this.JoinBand.TabIndex = 11;
@@ -115,7 +114,7 @@
             // MakeNewBand
             // 
             this.MakeNewBand.Location = new System.Drawing.Point(310, 22);
-            this.MakeNewBand.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.MakeNewBand.Margin = new System.Windows.Forms.Padding(2);
             this.MakeNewBand.Name = "MakeNewBand";
             this.MakeNewBand.Size = new System.Drawing.Size(123, 24);
             this.MakeNewBand.TabIndex = 12;
@@ -137,7 +136,7 @@
             // 
             this.NameInput.AcceptsTab = true;
             this.NameInput.Location = new System.Drawing.Point(74, 53);
-            this.NameInput.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.NameInput.Margin = new System.Windows.Forms.Padding(2);
             this.NameInput.Name = "NameInput";
             this.NameInput.Size = new System.Drawing.Size(76, 20);
             this.NameInput.TabIndex = 14;
@@ -157,21 +156,10 @@
             // 
             this.LocationInput.AcceptsTab = true;
             this.LocationInput.Location = new System.Drawing.Point(74, 80);
-            this.LocationInput.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.LocationInput.Margin = new System.Windows.Forms.Padding(2);
             this.LocationInput.Name = "LocationInput";
             this.LocationInput.Size = new System.Drawing.Size(76, 20);
             this.LocationInput.TabIndex = 16;
-            // 
-            // ContactServer
-            // 
-            this.ContactServer.Location = new System.Drawing.Point(454, 21);
-            this.ContactServer.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            this.ContactServer.Name = "ContactServer";
-            this.ContactServer.Size = new System.Drawing.Size(123, 24);
-            this.ContactServer.TabIndex = 17;
-            this.ContactServer.Text = "Contact server";
-            this.ContactServer.UseVisualStyleBackColor = true;
-            this.ContactServer.Click += new System.EventHandler(this.ContactServer_Click);
             // 
             // abelConnect
             // 
@@ -191,12 +179,13 @@
             // 
             // bandDetails
             // 
+            this.bandDetails.AllowUserToAddRows = false;
             this.bandDetails.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.bandDetails.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.NameColumn,
             this.LocationColumn,
             this.StatusColumn});
-            this.bandDetails.Location = new System.Drawing.Point(220, 233);
+            this.bandDetails.Location = new System.Drawing.Point(30, 216);
             this.bandDetails.Name = "bandDetails";
             this.bandDetails.RowHeadersVisible = false;
             this.bandDetails.Size = new System.Drawing.Size(403, 206);
@@ -206,21 +195,21 @@
             // Name
             // 
             this.NameColumn.HeaderText = "Name";
-            this.NameColumn.Name = "Name";
+            this.NameColumn.Name = "NameColumn";
             this.NameColumn.ReadOnly = true;
             this.NameColumn.Width = 130;
             // 
             // Location
             // 
             this.LocationColumn.HeaderText = "Location";
-            this.LocationColumn.Name = "Location";
+            this.LocationColumn.Name = "LocationColumn";
             this.LocationColumn.ReadOnly = true;
             this.LocationColumn.Width = 150;
             // 
             // Status
             // 
             this.StatusColumn.HeaderText = "Status";
-            this.StatusColumn.Name = "Status";
+            this.StatusColumn.Name = "StatusColumn";
             this.StatusColumn.ReadOnly = true;
             this.StatusColumn.Width = 120;
             // 
@@ -228,10 +217,9 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(677, 464);
+            this.ClientSize = new System.Drawing.Size(476, 464);
             this.Controls.Add(this.bandDetails);
             this.Controls.Add(this.abelConnectLabel);
-            this.Controls.Add(this.ContactServer);
             this.Controls.Add(this.LocationInput);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.NameInput);
@@ -244,7 +232,7 @@
             this.Controls.Add(this.Disconnect);
             this.Controls.Add(this.Connect);
             this.KeyPreview = true;
-            this.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            this.Margin = new System.Windows.Forms.Padding(2);
             this.Name = "Muster";
             this.Text = "Muster";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
@@ -265,7 +253,6 @@
         private System.Windows.Forms.TextBox NameInput;
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox LocationInput;
-        private System.Windows.Forms.Button ContactServer;
         private System.Windows.Forms.Timer abelConnect;
         private System.Windows.Forms.Label abelConnectLabel;
         private System.Windows.Forms.DataGridView bandDetails;

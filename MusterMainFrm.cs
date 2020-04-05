@@ -112,16 +112,6 @@ namespace Muster
             return await api.GetBand(bandID.Text);
         }
 
-
-        private void ContactServer_Click(object sender, EventArgs e)
-        {
-            Debug.WriteLine("Doing nothing.");
-            // Resend UDP message to server in case of emergency
-            // TODO: Only allow this to be used when user has already joined a band
-            // TODO: Probably remove this button
-            // SendUDPMessagesToServer();
-        }
-
         private async void Connect_Click(object sender, EventArgs e)
         {
             var success = await api.SetConnectionStatus(bandID.Text);
