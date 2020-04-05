@@ -159,6 +159,7 @@ namespace Muster
                     }
 
                     byte[] buffer = new byte[1024];
+                    _socket.ReceiveTimeout = 5000;
                     var numBytesReceived = _socket.Receive(buffer);
 
                     if (numBytesReceived == 0 || buffer[0] != '+')
@@ -318,7 +319,7 @@ namespace Muster
 
             for (int idx = 0; idx < currentBand.members.Length; idx++)
             {
-                var message = currentBand.members[idx].id == clientId ? "Waiting to start" : "Disconnected";
+                var message = currentBand.members[idx].id == clientId ? "Need to rejoin" : "Disconnected";
                 bandDetails.Rows[idx].Cells[2].Value = message;
             }
         }
