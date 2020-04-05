@@ -172,6 +172,8 @@ namespace Muster
         {
             SendUDPMessagesToServer();
 
+            Thread.Sleep(1000);
+
             var peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
             for (int idx = 0; idx < peerEndpoints.Count; idx++)
@@ -228,81 +230,7 @@ namespace Muster
                     }
                 });
                 listenerTask.Start();
-
             }
-
-            /*
-            if ( (connectionList.Rows.Count-1) != peerSockets.Count)
-            {
-                MessageBox.Show("There seems to be a mismatch between open sockets and peers requested. Abort abort.");
-                return;
-            }
-            
-
-            for (int connectRows = 0; connectRows < connectionList.Rows.Count; connectRows++)
-            {
-                var row = connectionList.Rows[connectRows];
-                if (row.IsNewRow)
-                    continue;
-
-                if (IPAddress.TryParse(row.Cells[2].Value.ToString(), out var ipAddr) &&
-                    int.TryParse(row.Cells[3].Value.ToString(), out var port))
-                {
-                    var _socket = peerSockets[connectRows];
-                    _socket.Connect(ipAddr, port);
-                    row.Cells[4].Value = "Connecting";
-
-                    var ctokenSource = new CancellationTokenSource();
-                    peerCancellation.Add(ctokenSource);
-
-                    var runParameters = new ListenerTask.ListenerConfig
-                    {
-                        cancellationToken = ctokenSource.Token,
-                        peerChannel = connectRows,
-                        srcSocket = peerSockets[connectRows],
-                        BellStrikeEvent = BellStrike,
-                        EchoBackEvent = SocketEcho
-                    };
-
-                    var listenerTask = new Task(() => {
-                        runParameters.srcSocket.ReceiveTimeout = 5000;
-
-                        const int BLOCK_SIZE = 1024;
-                        byte[] buffer = new byte[BLOCK_SIZE];
-                        while (!runParameters.cancellationToken.IsCancellationRequested)
-                        {
-                            try
-                            {
-                                // Blocks until a message returns on this socket from a remote host.
-                                var bytesReceived = runParameters.srcSocket.Receive(buffer); 
-                                Debug.WriteLine("Received message " + String.Join("", buffer));
-
-                                for (int i = 0; i < bytesReceived; i++)
-                                {
-                                    if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
-                                    {
-                                        runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
-                                    }
-                                    else if (buffer[i] == '?')
-                                    {
-                                        runParameters.srcSocket.Send(new byte[] { (byte)'#' });
-                                    }
-                                    else if (buffer[i] == '#')
-                                    {
-                                    runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
-                                    }
-                                }
-                            }
-                            catch (SocketException se)
-                            {
-                                // Probably OK?
-                            }
-                         }
-                        });
-                    listenerTask.Start();
-                }
-            }
-            */
         }
 
         private void SocketEcho(int peerChannel)

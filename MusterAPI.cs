@@ -188,7 +188,8 @@ namespace Muster
 
             if ((int)response.StatusCode == 200)
             {
-                var endpoints = JsonConvert.DeserializeObject<List<Endpoint>>(await response.Content.ReadAsStringAsync());
+                var raw = await response.Content.ReadAsStringAsync();
+                var endpoints = JsonConvert.DeserializeObject<List<Endpoint>>(raw);
                 return endpoints;
             }
             else
