@@ -279,9 +279,9 @@ namespace Muster
                     }
                 });
                 listenerTask.Start();
-
-                TestConnection();
             }
+
+            TestConnection();
         }
 
         private void SocketEcho(int peerChannel)
