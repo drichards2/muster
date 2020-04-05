@@ -76,6 +76,7 @@ namespace Muster
                         try
                         {
                             string jsonRepr = Encoding.ASCII.GetString(buffer.Take(bytesReceived).ToArray());
+                            Debug.WriteLine(jsonRepr);
                             var clientDetail = JsonConvert.DeserializeObject<LocalNetworkClientDetail>(jsonRepr);
                             queue.Enqueue(clientDetail);
                         }

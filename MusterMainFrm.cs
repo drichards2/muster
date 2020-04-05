@@ -145,6 +145,15 @@ namespace Muster
                 return;
             }
 
+            // Find local IP address for broadcasting to local network
+            string _localIP;
+            using (Socket socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0))
+            {
+                socket.Connect("8.8.8.8", 65530);
+                IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
+                _localIP = endPoint.Address.ToString();
+            }
+
             foreach (var peer in currentBand.members)
                 if (peer.id != clientId)
                 {
@@ -174,7 +183,7 @@ namespace Muster
                     localUDPDiscoveryService.BroadcastClientAvailable(new UDPDiscoveryService.LocalNetworkClientDetail
                     {
                         client_id = clientId,
-                        address = localEndpoint.Address.ToString(),
+                        address = _localIP,
                         port = localEndpoint.Port
                     });
                 }
@@ -277,18 +286,19 @@ namespace Muster
 
         private void SocketEcho(int peerChannel)
         {
-            Debug.WriteLine($"Received echo request from peer: {peerChannel}");
-            int countPeers = -1;
+            Debug.WriteLine($"Received echo request from peer index: {peerChannel}");
+            int countPeers = 0;
             foreach (var member in currentBand.members)
             {
-                if (member.id != clientId)
-                    countPeers++;
-
-                if (countPeers == peerChannel)
+                if (countPeers == peerChannel && member.id != clientId)
                 {
                     bandDetails.Rows[countPeers].Cells[2].Value = "Connected";
                     return;
                 }
+
+                if (member.id != clientId)
+                    countPeers++;
+
             }
         }
 
