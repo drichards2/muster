@@ -142,7 +142,7 @@ namespace Muster
 
             AcceptJson();
 
-            var response = await client.GetAsync($"{APIEndpoint}bands/{bandID}/connection/{phase}";
+            var response = await client.GetAsync($"{APIEndpoint}bands/{bandID}/connection/{phase}");
 
             if ((int)response.StatusCode == 200)
             {

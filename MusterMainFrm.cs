@@ -99,8 +99,7 @@ namespace Muster
                         bandDetails.Rows.Add(peer.name, peer.location, "Waiting to start");
                     }
 
-                    var connectionStatus = await api.GetConnectionStatus(bandID.Text);
-                    timeToConnect = connectionStatus.request_client_connect;
+                    timeToConnect = await api.ConnectionPhaseAnyResponse(bandID.Text, MusterAPIExtended.ConnectionPhases.CONNECT);                    
                     await Task.Delay(1000); // don't block GUI
                 }
 
@@ -124,7 +123,7 @@ namespace Muster
 
         private async void Connect_Click(object sender, EventArgs e)
         {
-            var success = await api.SetConnectionStatus(bandID.Text);
+            var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.CONNECT, clientId);
             if (!success)
             {
                 MessageBox.Show("Try clicking 'Connect' again.");

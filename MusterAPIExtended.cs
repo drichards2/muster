@@ -10,6 +10,14 @@ namespace Muster
     class MusterAPIExtended : MusterAPI
     {
 
+        public class ConnectionPhases
+        {
+            static public string CONNECT => "connect";
+            static public string ENDPOINTS_REGISTERED => "epreg";
+            static public string LOCAL_DISCOVERY_DONE => "discdone";
+            static public string BINDING_DONE => "binddone";
+        }
+
         public async Task<IPEndPoint> GetUDPEndPoint()
         {
             var addresses = Dns.GetHostAddresses(APIServer);
