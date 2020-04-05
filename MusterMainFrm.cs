@@ -195,7 +195,7 @@ namespace Muster
 
             Thread.Sleep(1000);
 
-            var peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
+            peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
             if (peerEndpoints == null || peerEndpoints.Count != peerSockets.Count)
             {
@@ -206,17 +206,31 @@ namespace Muster
 
             var localClients = localUDPDiscoveryService.LocalClients;
 
-            for (int idx = 0; idx < peerEndpoints.Count; idx++)
+            for (int idx = 0; idx < peerSockets.Count; idx++)
             {
                 var _socket = peerSockets[idx];
+
+                string _targetId = "";
+                string _targetIp = "";
+                int _targetPort = 0;
+                foreach (var ep in peerEndpoints)
+                {
+                    if (ep.target_id == currentBand.members[idx].id)
+                    {
+                        _targetId = ep.target_id;
+                        _targetIp = ep.ip;
+                        _targetPort = ep.port;
+                        break;
+                    }
+                }
 
                 //Use client's local network if local peer
                 bool isLocal = false;
                 foreach (var localEP in localClients)
-                    if (peerEndpoints[idx].target_id == localEP.client_id)
+                    if (_targetId == localEP.client_id)
                     {
                         isLocal = true;
-                        Debug.WriteLine($"Connecting to {peerEndpoints[idx].target_id} over local network using address {localEP.address}:{localEP.port}.");
+                        Debug.WriteLine($"Connecting to {_targetId} over local network using address {localEP.address}:{localEP.port}.");
                         _socket.Connect(localEP.address, localEP.port);
                         break;
                     }
@@ -224,8 +238,8 @@ namespace Muster
                 // Otherwise, connect over the internet
                 if (!isLocal)
                 {
-                    Debug.WriteLine($"Connecting to {peerEndpoints[idx].target_id} over internet.");
-                    _socket.Connect(peerEndpoints[idx].ip, peerEndpoints[idx].port);
+                    Debug.WriteLine($"Connecting to {_targetId} over internet.");
+                    _socket.Connect(_targetIp, _targetPort);
                 }
 
                 var ctokenSource = new CancellationTokenSource();
