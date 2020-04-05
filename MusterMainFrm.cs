@@ -35,7 +35,6 @@ namespace Muster
 
         private static readonly HttpClient client = new HttpClient();
         //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
-        //private string endpointAddress = "http://localhost:5000/v1/";
         private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
         public Muster()
