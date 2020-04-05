@@ -81,7 +81,6 @@ namespace Muster
                 bool timeToConnect = false;
                 while (!timeToConnect)
                 {
-
                     currentBand = await GetTheBandBackTogether();
 
                     bandDetails.Rows.Clear();
@@ -92,7 +91,7 @@ namespace Muster
 
                     var connectionStatus = await api.GetConnectionStatus(bandID.Text);
                     timeToConnect = connectionStatus.request_client_connect;
-                    await Task.Delay(1000); // don't block GUIb
+                    await Task.Delay(1000); // don't block GUI
                 }
 
                 currentBand = await GetTheBandBackTogether();
@@ -100,7 +99,8 @@ namespace Muster
                 bandDetails.Rows.Clear();
                 foreach (var peer in currentBand.members)
                 {
-                    bandDetails.Rows.Add(peer.name, peer.location, "Connecting");
+                    var status = peer.id != clientId ? "Connecting" : "Ready";
+                    bandDetails.Rows.Add(peer.name, peer.location, status);
                 }
 
                 SetupPeerSockets();
@@ -167,6 +167,13 @@ namespace Muster
 
             var peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
+            if (peerEndpoints == null || peerEndpoints.Count != peerSockets.Count)
+            {
+                MessageBox.Show("Try clicking 'Join/refresh band' again.");
+                Debug.WriteLine("Did not receive the expected number of endpoints.");
+                return;
+            }
+
             for (int idx = 0; idx < peerEndpoints.Count; idx++)
             {
                 var _socket = peerSockets[idx];
@@ -197,7 +204,7 @@ namespace Muster
                             // Blocks until a message returns on this socket from a remote host.
                             var bytesReceived = runParameters.srcSocket.Receive(buffer);
 
-                            var message = Encoding.UTF8.GetString(buffer,0,bytesReceived);
+                            var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
                             Debug.WriteLine("Received message " + message);
 
                             for (int i = 0; i < bytesReceived; i++)
@@ -223,15 +230,26 @@ namespace Muster
                     }
                 });
                 listenerTask.Start();
+
+                TestConnection();
             }
         }
 
         private void SocketEcho(int peerChannel)
         {
-            /*
-            Debug.WriteLine($"Received echo request: {peerChannel}");
-            connectionList.Rows[peerChannel].Cells[4].Value = "Connected";
-            */
+            Debug.WriteLine($"Received echo request from peer: {peerChannel}");
+            int countPeers = -1;
+            foreach (var member in currentBand.members)
+            {
+                if (member.id != clientId)
+                    countPeers++;
+
+                if (countPeers == peerChannel)
+                {
+                    bandDetails.Rows[countPeers].Cells[2].Value = "Connected";
+                    return;
+                }
+            }
         }
 
         private void BellStrike(int bell)
@@ -251,15 +269,10 @@ namespace Muster
 
         private void TestConnection()
         {
-            /*
-            foreach (DataGridViewRow row in connectionList.Rows)
-            {
-                if (row.IsNewRow)
-                    continue;
+            for (int idx = 0; idx < currentBand.members.Length; idx++)
+                if (currentBand.members[idx].id != clientId)
+                    bandDetails.Rows[idx].Cells[2].Value = "Testing connection";
 
-                row.Cells[4].Value = "Waiting for reply";
-            }
-            */
             foreach (var sock in peerSockets)
             {
                 sock.Send(new byte[] { (byte)'?' });
@@ -291,11 +304,8 @@ namespace Muster
 
             ClosePeerSockets();
 
-            /*
-            foreach (DataGridViewRow row in connectionList.Rows)
-                if (!row.IsNewRow)
-                    row.Cells[4].Value = "Disconnected";
-            */
+            foreach (DataGridViewRow row in bandDetails.Rows)
+                row.Cells[2].Value = "Disconnected";
         }
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
