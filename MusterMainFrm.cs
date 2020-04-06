@@ -269,7 +269,7 @@ namespace Muster
                             var bytesReceived = runParameters.srcSocket.Receive(buffer);
 
                             var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                            Debug.WriteLine("Received message " + message);
+                            Debug.WriteLine($"Received '{message}' from {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
 
                             for (int i = 0; i < bytesReceived; i++)
                             {
@@ -283,6 +283,7 @@ namespace Muster
                                 }
                                 else if (buffer[i] == '#')
                                 {
+                                    Debug.WriteLine($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
                                     runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
                                 }
                             }
@@ -313,13 +314,12 @@ namespace Muster
 
         private void SocketEcho(int peerChannel)
         {
-            Debug.WriteLine($"Received echo request from peer index: {peerChannel}");
             int delta = 0;
             int peerCount = 0;
             foreach (var member in currentBand.members)
             {
                 if (member.id == clientId)
-                    delta++;                
+                    delta++;
                 else
                 {
                     if (peerCount == peerChannel)
@@ -356,6 +356,7 @@ namespace Muster
 
             foreach (var sock in peerSockets)
             {
+                Debug.WriteLine($"Sending test message to {sock.RemoteEndPoint.ToString()}.");
                 sock.Send(new byte[] { (byte)'?' });
             }
         }
