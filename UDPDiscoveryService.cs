@@ -47,6 +47,9 @@ namespace Muster
 
         public void ClearLocalClients()
         {
+            while (queue.TryDequeue(out var newClient))
+                ; // Do nothing
+
             _clients.Clear();
         }
 
