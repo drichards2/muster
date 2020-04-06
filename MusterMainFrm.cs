@@ -59,7 +59,6 @@ namespace Muster
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
         {
-            DisconnectAll();
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
 
