@@ -110,7 +110,7 @@ namespace Muster
                 bandDetails.Rows.Clear();
                 foreach (var peer in currentBand.members)
                 {
-                    var status = peer.id != clientId ? "Connecting" : "Ready";
+                    var status = peer.id != clientId ? "" : "Ready";
                     bandDetails.Rows.Add(peer.name, peer.location, status);
                 }
 
@@ -133,7 +133,7 @@ namespace Muster
             }
         }
 
-        private void SendUDPMessagesToServer()
+        private async void SendUDPMessagesToServer()
         {
             DisconnectAll();
 
@@ -186,6 +186,8 @@ namespace Muster
                         address = _localIP,
                         port = localEndpoint.Port
                     });
+
+                     var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE, clientId);
                 }
         }
 
@@ -193,6 +195,12 @@ namespace Muster
         {
             SendUDPMessagesToServer();
 
+            bool ready = false;
+            while (!ready)
+            {
+                ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
+            }
+            
             Thread.Sleep(1000);
 
             peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
@@ -205,6 +213,9 @@ namespace Muster
             }
 
             var localClients = localUDPDiscoveryService.LocalClients;
+            foreach (var client in localClients)
+                Debug.WriteLine($"{client.address}:{client.port}");
+
             var otherBandMembers = GetOtherBandMembers();
 
             for (int idx = 0; idx < peerSockets.Count; idx++)
@@ -374,7 +385,14 @@ namespace Muster
         {
             foreach (var cancellationToken in peerCancellation)
             {
-                cancellationToken.Cancel();
+                try
+                {
+                    cancellationToken.Cancel();
+                }
+                catch (ObjectDisposedException se)
+                {
+                    // Do nothing
+                }
                 cancellationToken.Dispose();
             }
 
@@ -388,7 +406,7 @@ namespace Muster
 
             for (int idx = 0; idx < currentBand.members.Length; idx++)
             {
-                var message = currentBand.members[idx].id == clientId ? "Need to rejoin" : "Disconnected";
+                var message = currentBand.members[idx].id == clientId ? "" : "Disconnected";
                 bandDetails.Rows[idx].Cells[2].Value = message;
             }
         }
