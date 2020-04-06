@@ -199,6 +199,7 @@ namespace Muster
             while (!ready)
             {
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
+                await Task.Delay(1000); // don't block GUI
             }
             
             Thread.Sleep(1000);
