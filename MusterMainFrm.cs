@@ -59,10 +59,11 @@ namespace Muster
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
         {
+            DisconnectAll();
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
 
-            currentBand = null;
+            clientId = null;
             bandDetails.Rows.Clear();
             localUDPDiscoveryService.ClearLocalClients();
         }
@@ -352,7 +353,9 @@ namespace Muster
         private void Disconnect_Click(object sender, EventArgs e)
         {
             DisconnectAll();
+            clientId = null;
             bandDetails.Rows.Clear();
+            localUDPDiscoveryService.ClearLocalClients();
         }
 
         private void Test_Click(object sender, EventArgs e)
