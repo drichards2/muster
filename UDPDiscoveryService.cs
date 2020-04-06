@@ -14,6 +14,8 @@ namespace Muster
 {
     internal class UDPDiscoveryService : IDisposable
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         internal class LocalNetworkClientDetail
         {
             public string client_id;
@@ -32,7 +34,10 @@ namespace Muster
         public List<LocalNetworkClientDetail> LocalClients { get
             {
                 while (queue.TryDequeue(out var newClient))
+                {
+                    logger.Debug("UDP dequeue client {client}", newClient);
                     _clients.Add(newClient);
+                }
                 return _clients;
             } }
 
@@ -47,6 +52,7 @@ namespace Muster
 
         public void ClearLocalClients()
         {
+            logger.Debug("Clear local clients");
             while (queue.TryDequeue(out var newClient))
                 ; // Do nothing
 
@@ -74,13 +80,14 @@ namespace Muster
                     {
                         // Blocks until a message returns on this socket from a remote host.
                         var bytesReceived = listener.Receive(buffer);
-                        Debug.WriteLine("UDP Discovery message " + String.Join("", buffer));
+                        logger.Debug("UDP Discovery message {udp_packet}", buffer);
 
                         try
                         {
                             string jsonRepr = Encoding.ASCII.GetString(buffer.Take(bytesReceived).ToArray());
-                            Debug.WriteLine(jsonRepr);
+                            logger.Debug("Received client detail {client_json}", jsonRepr);
                             var clientDetail = JsonConvert.DeserializeObject<LocalNetworkClientDetail>(jsonRepr);
+                            logger.Debug("Queued client detail {client}", clientDetail);
                             queue.Enqueue(clientDetail);
                         }
                         catch

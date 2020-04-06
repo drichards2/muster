@@ -16,7 +16,7 @@ namespace Muster
 
         public class ServerConfig
         {
-            public int UdpPort;
+            public int UdpPort { get; set; }
         }
 
         public class Band
