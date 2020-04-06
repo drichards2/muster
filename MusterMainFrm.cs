@@ -314,18 +314,21 @@ namespace Muster
         private void SocketEcho(int peerChannel)
         {
             Debug.WriteLine($"Received echo request from peer index: {peerChannel}");
-            int countPeers = 0;
+            int delta = 0;
+            int peerCount = 0;
             foreach (var member in currentBand.members)
             {
-                if (countPeers == peerChannel && member.id != clientId)
+                if (member.id == clientId)
+                    delta++;                
+                else
                 {
-                    bandDetails.Rows[countPeers].Cells[2].Value = "Connected";
-                    return;
+                    if (peerCount == peerChannel)
+                    {
+                        bandDetails.Rows[peerCount + delta].Cells[2].Value = "Connected";
+                        return;
+                    }
+                    peerCount++;
                 }
-
-                if (member.id != clientId)
-                    countPeers++;
-
             }
         }
 
