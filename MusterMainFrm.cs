@@ -17,8 +17,11 @@ namespace Muster
 {
     public partial class Muster : Form
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
         private const int numberOfBells = 12;
         private const int MAX_PEERS = 6;
+        private const int UDP_BLOCK_SIZE = 1024;
 
         private readonly MusterAPIExtended api = new MusterAPIExtended();
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
@@ -41,6 +44,8 @@ namespace Muster
         public Muster()
         {
             InitializeComponent();
+
+            logger.Info("Starting up");
 
             api.APIEndpoint = endpointAddress;
             NameInput.Text = Environment.UserName;
@@ -164,17 +169,26 @@ namespace Muster
                     var sent = _socket.SendTo(data, UdpEndPoint);
                     if (sent != data.Length)
                     {
+                        logger.Debug("Problem sending UDP to server, {bytes_expected} expected, {bytes_transmitted} transmitted", data.Length, sent);
                         MessageBox.Show("Error connecting to server. Try clicking 'Join/refresh band' again.");
-                        Debug.WriteLine("Error sending UDP message to server.");
                     }
 
-                    byte[] buffer = new byte[1024];
+                    byte[] buffer = new byte[UDP_BLOCK_SIZE];
                     _socket.ReceiveTimeout = 5000;
-                    var numBytesReceived = _socket.Receive(buffer);
+                    var numBytesReceived = 0;
+                    try
+                    {
+                        numBytesReceived = _socket.Receive(buffer);
+                    }
+                    catch (SocketException se)
+                    {
+                        logger.Debug("Timeout waiting for UDP reply from server");
+
+                    }
 
                     if (numBytesReceived == 0 || buffer[0] != '+')
                     {
-                        Debug.WriteLine("Did not receive reply from server.");
+                        logger.Error("No reply from server");
                     }
 
                     peerSockets.Add(_socket);
@@ -201,22 +215,22 @@ namespace Muster
             {
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
                 await Task.Delay(1000); // don't block GUI
-            }
-            
-            Thread.Sleep(1000);
+            }            
 
             peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
             if (peerEndpoints == null || peerEndpoints.Count != peerSockets.Count)
             {
-                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");
-                Debug.WriteLine("Did not receive the expected number of endpoints.");
+                logger.Error("Did not receive the expected number of endpoints");
+                logger.Error("Endpoints: {endpoints}", peerEndpoints);
+                logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
+                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");                
                 return;
             }
 
             var localClients = localUDPDiscoveryService.LocalClients;
             foreach (var client in localClients)
-                Debug.WriteLine($"{client.address}:{client.port}");
+                logger.Debug("Local client {address}:{port}", client.address, client.port);
 
             var otherBandMembers = GetOtherBandMembers();
 
@@ -244,7 +258,7 @@ namespace Muster
                     if (_targetId == localEP.client_id)
                     {
                         isLocal = true;
-                        Debug.WriteLine($"Connecting to {_targetId} over local network using address {localEP.address}:{localEP.port}.");
+                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _targetId, localEP.address, localEP.port);
                         _socket.Connect(localEP.address, localEP.port);
                         break;
                     }
@@ -252,7 +266,7 @@ namespace Muster
                 // Otherwise, connect over the internet
                 if (!isLocal)
                 {
-                    Debug.WriteLine($"Connecting to {_targetId} over internet.");
+                    logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _targetId, _targetIp, _targetPort);
                     _socket.Connect(_targetIp, _targetPort);
                 }
 
@@ -272,8 +286,7 @@ namespace Muster
                 {
                     runParameters.srcSocket.ReceiveTimeout = 5000;
 
-                    const int BLOCK_SIZE = 1024;
-                    byte[] buffer = new byte[BLOCK_SIZE];
+                    byte[] buffer = new byte[UDP_BLOCK_SIZE];
                     while (!runParameters.cancellationToken.IsCancellationRequested)
                     {
                         try
@@ -282,7 +295,7 @@ namespace Muster
                             var bytesReceived = runParameters.srcSocket.Receive(buffer);
 
                             var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                            Debug.WriteLine($"Received '{message}' from {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
+                            logger.Debug("Received '{message}' from {source}", message, runParameters.srcSocket.RemoteEndPoint.ToString());
 
                             for (int i = 0; i < bytesReceived; i++)
                             {
