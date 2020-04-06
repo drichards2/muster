@@ -196,9 +196,10 @@ namespace Muster
                     var localEndpoint = _socket.LocalEndPoint as IPEndPoint;
                     localUDPDiscoveryService.BroadcastClientAvailable(new UDPDiscoveryService.LocalNetworkClientDetail
                     {
-                        client_id = clientId,
+                        socket_owner_id = clientId,
                         address = _localIP,
-                        port = localEndpoint.Port
+                        port = localEndpoint.Port,
+                        required_destination_id = peer.id
                     });
                 }
 
@@ -254,7 +255,7 @@ namespace Muster
                 //Use client's local network if local peer
                 bool isLocal = false;
                 foreach (var localEP in localClients)
-                    if (_targetId == localEP.client_id)
+                    if ((_targetId == localEP.socket_owner_id) && (localEP.required_destination_id == clientId))
                     {
                         isLocal = true;
                         logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _targetId, localEP.address, localEP.port);

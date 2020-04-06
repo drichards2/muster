@@ -18,9 +18,10 @@ namespace Muster
 
         internal class LocalNetworkClientDetail
         {
-            public string client_id;
+            public string socket_owner_id;
             public string address;
             public int port;
+            public string required_destination_id;
         }
 
         private Socket listener;
