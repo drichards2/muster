@@ -136,7 +136,7 @@ namespace Muster
             if (!success)
             {
                 MessageBox.Show("Try clicking 'Connect' again.");
-                Debug.WriteLine("Could not set connection status.");
+                logger.Error("Could not set connection status.");
             }
         }
 
@@ -145,7 +145,7 @@ namespace Muster
             DisconnectAll();
 
             int numPeers = currentBand.members.Length - 1;
-            Debug.WriteLine($"Requesting to connect {numPeers} peers");
+            logger.Error("Requesting to connect {numPeers} peers", numPeers);
             if (numPeers > MAX_PEERS)
             {
                 MessageBox.Show($"Can't connect {numPeers} peers - {MAX_PEERS} is the maximum");
