@@ -200,9 +200,9 @@ namespace Muster
                         address = _localIP,
                         port = localEndpoint.Port
                     });
-
-                     var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE, clientId);
                 }
+
+            var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE, clientId);
         }
 
         private async void SetupPeerSockets()
