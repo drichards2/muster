@@ -254,7 +254,7 @@ namespace Muster
                     }
                 }
 
-                //Use client's local network if local peer
+                // Use client's local network if local peer
                 bool isLocal = false;
                 foreach (var localEP in localClients)
                     if ((_targetId == localEP.socket_owner_id) && (localEP.required_destination_id == clientId))
@@ -311,7 +311,7 @@ namespace Muster
                                 }
                                 else if (buffer[i] == '#')
                                 {
-                                    Debug.WriteLine($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
+                                    logger.Debug($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
                                     runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
                                 }
                             }
@@ -386,7 +386,7 @@ namespace Muster
 
             foreach (var sock in peerSockets)
             {
-                Debug.WriteLine($"Sending test message to {sock.RemoteEndPoint.ToString()}.");
+                logger.Debug($"Sending test message to {sock.RemoteEndPoint.ToString()}.");
                 sock.Send(new byte[] { (byte)'?' });
             }
         }
@@ -432,7 +432,7 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
-            Debug.WriteLine($"New key: {e.KeyValue}");
+            logger.Debug($"New key: {e.KeyValue}");
             int bellNumber = e.KeyValue - 'A';
 
             if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
@@ -442,7 +442,7 @@ namespace Muster
                 {
                     if (_socket.Connected)
                     {
-                        Debug.WriteLine($"Sending message to: {_socket.RemoteEndPoint.ToString()}");
+                        logger.Debug($"Sending message to: {_socket.RemoteEndPoint.ToString()}");
                         Task.Factory.StartNew(() => { _socket.Send(txBytes); });
                     }
                 }
