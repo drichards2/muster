@@ -12,13 +12,13 @@ namespace Muster
     {
         internal class ListenerConfig
         {
-            public delegate void RegisterOK(int peerChannel);
+            public delegate void BroadcastAlive(int peerChannel);
             public delegate void BellStrike(int bell);
 
             public CancellationToken cancellationToken;
             public Socket srcSocket;
             public int peerChannel;
-            public RegisterOK EchoBackEvent;
+            public BroadcastAlive EchoBackEvent;
             public BellStrike BellStrikeEvent;
         }
     }
