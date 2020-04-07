@@ -46,6 +46,7 @@
             this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.LocationColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.StatusColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.aboutText = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).BeginInit();
             this.SuspendLayout();
             // 
@@ -212,11 +213,22 @@
             this.StatusColumn.ReadOnly = true;
             this.StatusColumn.Width = 120;
             // 
+            // aboutText
+            // 
+            this.aboutText.AutoSize = true;
+            this.aboutText.Location = new System.Drawing.Point(15, 438);
+            this.aboutText.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.aboutText.Name = "aboutText";
+            this.aboutText.Size = new System.Drawing.Size(35, 13);
+            this.aboutText.TabIndex = 21;
+            this.aboutText.Text = "About";
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(476, 464);
+            this.Controls.Add(this.aboutText);
             this.Controls.Add(this.bandDetails);
             this.Controls.Add(this.abelConnectLabel);
             this.Controls.Add(this.LocationInput);
@@ -235,6 +247,7 @@
             this.Name = "Muster";
             this.Text = "Muster";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
+            ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -258,5 +271,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn NameColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn LocationColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn StatusColumn;
+        private System.Windows.Forms.Label aboutText;
     }
 }

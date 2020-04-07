@@ -54,6 +54,8 @@ namespace Muster
 
             FindAbel();
 
+            DisplayVersionInformation();
+
             var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
             for (int i = 0; i < numberOfBells; i++)
             {
@@ -518,6 +520,24 @@ namespace Muster
         private void AbelConnect_Tick(object sender, EventArgs e)
         {
             FindAbel();
+        }
+
+        private void DisplayVersionInformation()
+        {
+            var ver = getRunningVersion();
+            aboutText.Text = $"Muster (version {ver.ToString()}). Written by Dave Richards and Jonathan Agg";
+        }
+
+        private Version getRunningVersion()
+        {
+            try
+            {
+                return System.Deployment.Application.ApplicationDeployment.CurrentDeployment.CurrentVersion;
+            }
+            catch (Exception)
+            {
+                return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
+            }
         }
     }
 }
