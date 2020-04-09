@@ -13,6 +13,7 @@ namespace Muster
 {
     internal class MusterAPI
     {
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         public class ServerConfig
         {
@@ -64,12 +65,12 @@ namespace Muster
             if ((int)response.StatusCode == 201)
             {
                 var newbandID = await ReadStringResponse(response);
-                Debug.WriteLine("Created new band with ID: " + newbandID);
+                logger.Debug("Created new band with ID: " + newbandID);
                 return newbandID;
             }
             else
             {
-                Debug.WriteLine("Error creating band: " + response.ReasonPhrase);
+                logger.Error("Error creating band: " + response.ReasonPhrase);
                 return null;
             }
         }
@@ -89,7 +90,7 @@ namespace Muster
 
         public async Task<string> SendJoinBandRequest(string bandID, Member member)
         {
-            Debug.WriteLine("Joining band: " + bandID);
+            logger.Debug("Joining band: " + bandID);
             var json = JsonConvert.SerializeObject(member);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
@@ -97,12 +98,12 @@ namespace Muster
             if ((int)response.StatusCode == 201)
             {
                 var clientID = await ReadStringResponse(response);
-                Debug.WriteLine("Joined band with client ID: " + clientID);
+                logger.Debug("Joined band with client ID: " + clientID);
                 return clientID;
             }
             else
             {
-                Debug.WriteLine("Error joining band " + bandID + ": " + response.ReasonPhrase);
+                logger.Error("Error joining band " + bandID + ": " + response.ReasonPhrase);
                 return null;
             }
         }
@@ -118,7 +119,7 @@ namespace Muster
 
         public async Task<Band> GetBand(string bandID)
         {
-            Debug.WriteLine("Finding band members in band: " + bandID);
+            logger.Debug("Finding band members in band: " + bandID);
 
             AcceptJson();
 
@@ -131,14 +132,14 @@ namespace Muster
             }
             else
             {
-                Debug.WriteLine("No record of band ID '" + bandID + "': " + response.ReasonPhrase);
+                logger.Error("No record of band ID '" + bandID + "': " + response.ReasonPhrase);
                 return null;
             }
         }
 
         public async Task<List<string>> GetConnectionPhase(string bandID, string phase)
         {
-            Debug.WriteLine($"Getting status for band >{bandID}< at phase >{phase}<");
+            logger.Debug($"Getting status for band >{bandID}< at phase >{phase}<");
 
             AcceptJson();
 
@@ -151,14 +152,14 @@ namespace Muster
             }
             else
             {
-                Debug.WriteLine($"Could not get connection status of '{bandID}/{phase}': {response.ReasonPhrase}");
+                logger.Error($"Could not get connection status of '{bandID}/{phase}': {response.ReasonPhrase}");
                 return null;
             }
         }
 
         public async Task<bool> SetConnectionStatus(string bandID, string phase, string clientID)
         {
-            Debug.WriteLine("Setting connection status for band: " + bandID);
+            logger.Debug("Setting connection status for band: " + bandID);
 
             var json = JsonConvert.SerializeObject(clientID);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -170,14 +171,14 @@ namespace Muster
             }
             else
             {
-                Debug.WriteLine("Error setting connection status for band " + bandID + ": " + response.ReasonPhrase);
+                logger.Error("Error setting connection status for band " + bandID + ": " + response.ReasonPhrase);
                 return false;
             }
         }
 
         public async Task<List<Endpoint>> GetEndpointsForBand(string bandID, string clientID)
         {
-            Debug.WriteLine("Getting endpoints for band " + bandID + " for client " + clientID);
+            logger.Debug("Getting endpoints for band " + bandID + " for client " + clientID);
 
             AcceptJson();
 
@@ -191,7 +192,7 @@ namespace Muster
             }
             else
             {
-                Debug.WriteLine("Could not get endpoints for '" + bandID + "' for client '" + clientID + "' : " + response.ReasonPhrase);
+                logger.Error("Could not get endpoints for '" + bandID + "' for client '" + clientID + "' : " + response.ReasonPhrase);
                 return null;
             }
         }

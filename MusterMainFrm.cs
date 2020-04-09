@@ -27,6 +27,7 @@ namespace Muster
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
+        private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
 
         private IntPtr AbelHandle;
         private IPEndPoint UdpEndPoint => UdpEndPointResolver.Result;
@@ -77,6 +78,12 @@ namespace Muster
 
         private async void JoinBand_Click(object sender, EventArgs e)
         {
+            if (bandID.Text.Length == 0)
+            {
+                MessageBox.Show("The band ID is empty.\nEither click 'Make a new band', or type in the ID of an existing band. Then click 'Join/refresh band' again.");
+                return;
+            }
+
             var shouldJoin = clientId == null || currentBand == null;
             if (shouldJoin)
             {
@@ -98,8 +105,17 @@ namespace Muster
             if (clientId != null)
             {
                 bool timeToConnect = false;
+                joinBandCancellation.Dispose();
+                joinBandCancellation = new CancellationTokenSource();
+                
                 while (!timeToConnect)
                 {
+                    if (joinBandCancellation.Token.IsCancellationRequested)
+                    {
+                        logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting to start.");
+                        return;
+                    }
+                    
                     currentBand = await GetTheBandBackTogether();
 
                     bandDetails.Rows.Clear();
@@ -132,6 +148,12 @@ namespace Muster
 
         private async void Connect_Click(object sender, EventArgs e)
         {
+            if (currentBand == null || clientId == null)
+            {
+                MessageBox.Show("First, join a band. When everyone has joined, one band member should click 'Start ringing'.");
+                return;
+            }
+
             var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.CONNECT, clientId);
             if (!success)
             {
@@ -213,8 +235,16 @@ namespace Muster
             SendUDPMessagesToServer();
 
             bool ready = false;
+            joinBandCancellation.Dispose();
+            joinBandCancellation = new CancellationTokenSource();
             while (!ready)
             {
+                if (joinBandCancellation.Token.IsCancellationRequested)
+                {
+                    logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    return;
+                }
+
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
                 await Task.Delay(1000); // don't block GUI
             }            
@@ -367,6 +397,7 @@ namespace Muster
 
         private void Disconnect_Click(object sender, EventArgs e)
         {
+            joinBandCancellation.Cancel();
             DisconnectAll();
             clientId = null;
             bandDetails.Rows.Clear();
@@ -375,7 +406,8 @@ namespace Muster
 
         private void Test_Click(object sender, EventArgs e)
         {
-            TestConnection();
+            if (clientId != null && currentBand != null)
+                TestConnection();
         }
 
         private void TestConnection()
@@ -386,8 +418,11 @@ namespace Muster
 
             foreach (var sock in peerSockets)
             {
-                logger.Debug($"Sending test message to {sock.RemoteEndPoint.ToString()}.");
-                sock.Send(new byte[] { (byte)'?' });
+                if (sock.Connected)
+                {
+                    logger.Debug($"Sending test message to {sock.RemoteEndPoint.ToString()}.");
+                    sock.Send(new byte[] { (byte)'?' });
+                }
             }
         }
 
@@ -423,10 +458,14 @@ namespace Muster
 
             ClosePeerSockets();
 
-            for (int idx = 0; idx < currentBand.members.Length; idx++)
+            if (currentBand != null)
             {
-                var message = currentBand.members[idx].id == clientId ? "" : "Disconnected";
-                bandDetails.Rows[idx].Cells[2].Value = message;
+                for (int idx = 0; idx < currentBand.members.Length; idx++)
+                {
+                    var message = currentBand.members[idx].id == clientId ? "" : "Disconnected";
+                    if (bandDetails.Rows.Count > idx)
+                        bandDetails.Rows[idx].Cells[2].Value = message;
+                }
             }
         }
 
@@ -541,4 +580,3 @@ namespace Muster
         }
     }
 }
-
