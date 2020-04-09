@@ -27,6 +27,7 @@ namespace Muster
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
+        private List<UDPDiscoveryService.LocalNetworkClientDetail> localClientDetails = new List<UDPDiscoveryService.LocalNetworkClientDetail>(MAX_PEERS);
         private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
 
         private IntPtr AbelHandle;
@@ -218,13 +219,15 @@ namespace Muster
 
                     // Broadcast to local network that this client is hoping to receive messages on this entry point
                     var localEndpoint = _socket.LocalEndPoint as IPEndPoint;
-                    localUDPDiscoveryService.BroadcastClientAvailable(new UDPDiscoveryService.LocalNetworkClientDetail
+                    var _localDetail = new UDPDiscoveryService.LocalNetworkClientDetail
                     {
                         socket_owner_id = clientId,
                         address = _localIP,
                         port = localEndpoint.Port,
                         required_destination_id = peer.id
-                    });
+                    };
+                    localUDPDiscoveryService.BroadcastClientAvailable(_localDetail);
+                    localClientDetails.Add(_localDetail);
                 }
 
             var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE, clientId);
@@ -239,6 +242,9 @@ namespace Muster
             joinBandCancellation = new CancellationTokenSource();
             while (!ready)
             {
+                foreach(var localDetail in localClientDetails)
+                    localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
+
                 if (joinBandCancellation.Token.IsCancellationRequested)
                 {
                     logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
@@ -260,6 +266,7 @@ namespace Muster
                 return;
             }
 
+            Thread.Sleep(1000);
             var localClients = localUDPDiscoveryService.LocalClients;
             foreach (var client in localClients)
                 logger.Debug("Local client {address}:{port}", client.address, client.port);
@@ -397,6 +404,7 @@ namespace Muster
 
         private void Disconnect_Click(object sender, EventArgs e)
         {
+            localClientDetails.Clear();
             joinBandCancellation.Cancel();
             DisconnectAll();
             clientId = null;
