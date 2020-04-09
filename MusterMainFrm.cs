@@ -266,7 +266,6 @@ namespace Muster
                 return;
             }
 
-            Thread.Sleep(1000);
             var localClients = localUDPDiscoveryService.LocalClients;
             foreach (var client in localClients)
                 logger.Debug("Local client {address}:{port}", client.address, client.port);
