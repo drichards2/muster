@@ -45,6 +45,7 @@ namespace Muster
 
         public void BroadcastClientAvailable(LocalNetworkClientDetail clientDetail)
         {
+            logger.Debug($"Broadcasting local detail {clientDetail.address}:{clientDetail.port}");
             var broadcastAddress = new IPEndPoint(IPAddress.Broadcast, NETWORK_LISTEN_PORT);
             string detailAsJSON = JsonConvert.SerializeObject(clientDetail);
             byte[] broadcastPacket = Encoding.ASCII.GetBytes(detailAsJSON);

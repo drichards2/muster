@@ -184,6 +184,12 @@ namespace Muster
                 _localIP = endPoint.Address.ToString();
             }
 
+            if (localClientDetails.Count != 0)
+            {
+                logger.Debug("Unexpected local client details remaining. Removing them again.");
+                localClientDetails.Clear();
+            }
+
             foreach (var peer in currentBand.members)
                 if (peer.id != clientId)
                 {
@@ -261,7 +267,8 @@ namespace Muster
             {
                 logger.Error("Did not receive the expected number of endpoints");
                 logger.Error("Endpoints: {endpoints}", peerEndpoints);
-                logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
+                if (peerEndpoints != null)
+                    logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
                 MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");                
                 return;
             }
@@ -403,7 +410,6 @@ namespace Muster
 
         private void Disconnect_Click(object sender, EventArgs e)
         {
-            localClientDetails.Clear();
             joinBandCancellation.Cancel();
             DisconnectAll();
             clientId = null;
@@ -464,6 +470,7 @@ namespace Muster
             }
 
             ClosePeerSockets();
+            localClientDetails.Clear();
 
             if (currentBand != null)
             {
