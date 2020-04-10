@@ -57,12 +57,15 @@ namespace Muster
 
             DisplayVersionInformation();
 
-            var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
-            for (int i = 0; i < numberOfBells; i++)
+            Task.Run(() =>
             {
-                RingBell(bellOrder[i] - 1);
-                System.Threading.Thread.Sleep(150);
-            }
+                var bellOrder = new int[12] { 5, 6, 4, 7, 3, 8, 2, 9, 1, 10, 0, 11 };
+                foreach (var bell in bellOrder)
+                {
+                    RingBell(bell);
+                    Thread.Sleep(150);
+                }
+            });
         }
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
