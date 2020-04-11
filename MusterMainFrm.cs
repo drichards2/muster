@@ -273,14 +273,11 @@ namespace Muster
                 return;
             }
 
-            // TODO: Remove me
-            foreach (var ep in peerEndpoints)
-                ep.check_local = true;
-
-            ready = false;
+            bool allReady = false;
+            bool clientReady = false;
             joinBandCancellation.Dispose();
             joinBandCancellation = new CancellationTokenSource();
-            while (!ready)
+            while (!allReady)
             {
                 foreach (var localDetail in localClientDetails)
                     localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
@@ -297,12 +294,14 @@ namespace Muster
                     if (ep.check_local)
                         anyMissing = !localUDPDiscoveryService.CheckDetailReceivedFor(ep.target_id);
 
-                if (!anyMissing)
+                // Send status to the server once we're ready, but not again on subsequent loop iterations
+                if (!anyMissing && !clientReady)
                 {
                     var status = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED, clientId);
+                    clientReady = status;
                 }
 
-                ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED);
+                allReady = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED);
                 await Task.Delay(1000); // don't block GUI
             }
 

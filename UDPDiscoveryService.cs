@@ -22,6 +22,11 @@ namespace Muster
             public string address;
             public int port;
             public string required_destination_id;
+
+            public override string ToString()
+            {
+                return $"Owner: {socket_owner_id}-> target: {required_destination_id} ({address}:{port})";
+            }
         }
 
         private Socket listener;
@@ -36,7 +41,7 @@ namespace Muster
             {
                 while (queue.TryDequeue(out var newClient))
                 {
-                    logger.Debug("UDP dequeue client {client}", newClient);
+                    logger.Debug("UDP dequeue client {client}", newClient.ToString());
                     _clients.Add(newClient);
                 }
                 return _clients;
@@ -102,7 +107,7 @@ namespace Muster
                             string jsonRepr = Encoding.ASCII.GetString(buffer.Take(bytesReceived).ToArray());
                             logger.Debug("Received client detail {client_json}", jsonRepr);
                             var clientDetail = JsonConvert.DeserializeObject<LocalNetworkClientDetail>(jsonRepr);
-                            logger.Debug("Queued client detail {client}", clientDetail);
+                            logger.Debug("Queued client detail {client}", clientDetail.ToString());
                             queue.Enqueue(clientDetail);
                         }
                         catch
