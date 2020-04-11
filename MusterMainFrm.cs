@@ -183,6 +183,33 @@ namespace Muster
             }
         }
 
+        private async void SetupPeerSockets()
+        {
+            SendUDPMessagesToServer();
+
+            await AllClientsFinishedLocalDiscovery();
+
+            await GetEndpointsFromServer();
+
+            await AllClientsReceivedLocalDetails();
+
+            var localClientsReceived = localUDPDiscoveryService.LocalClients;
+            foreach (var client in localClientsReceived)
+            {
+                logger.Debug("Local client {address}:{port}", client.address, client.port);
+            }
+
+            var otherBandMembers = GetOtherBandMembers();
+
+            for (int idx = 0; idx < peerSockets.Count; idx++)
+            {
+                BindSocket(idx, otherBandMembers[idx].id, localClientsReceived);
+                AddListenerToSocket(idx);
+            }
+
+            TestConnection();
+        }
+
         private async void SendUDPMessagesToServer()
         {
             DisconnectAll();
@@ -259,10 +286,8 @@ namespace Muster
             var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE, clientId);
         }
 
-        private async void SetupPeerSockets()
+        private async Task AllClientsFinishedLocalDiscovery()
         {
-            SendUDPMessagesToServer();
-
             bool ready = false;
             joinBandCancellation.Dispose();
             joinBandCancellation = new CancellationTokenSource();
@@ -280,7 +305,10 @@ namespace Muster
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
                 await Task.Delay(1000); // don't block GUI
             }
+        }
 
+        private async Task GetEndpointsFromServer()
+        {
             peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
             if (peerEndpoints == null || peerEndpoints.Count != peerSockets.Count)
@@ -292,7 +320,10 @@ namespace Muster
                 MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                 return;
             }
+        }
 
+        private async Task AllClientsReceivedLocalDetails()
+        {
             bool allReady = false;
             bool clientReady = false;
             joinBandCancellation.Dispose();
@@ -324,115 +355,6 @@ namespace Muster
                 allReady = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED);
                 await Task.Delay(1000); // don't block GUI
             }
-
-            var localClientsReceived = localUDPDiscoveryService.LocalClients;
-            foreach (var client in localClientsReceived)
-            {
-                logger.Debug("Local client {address}:{port}", client.address, client.port);
-            }
-
-            var otherBandMembers = GetOtherBandMembers();
-
-            for (int idx = 0; idx < peerSockets.Count; idx++)
-            {
-                // For each peer, find the corresponding endpoint
-                var _socket = peerSockets[idx];
-                MusterAPI.Endpoint _relevantEP = null;
-                foreach (var ep in peerEndpoints)
-                {
-                    if (ep.target_id == otherBandMembers[idx].id)
-                    {
-                        _relevantEP = ep;
-                        break;
-                    }
-                }
-
-                if (_relevantEP == null)
-                {
-                    logger.Error("Could not find endpoint for {target}", otherBandMembers[idx].id);
-                    MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
-                    return;
-                }
-
-                // Use client's local network if local peer
-                if (_relevantEP.check_local)
-                {
-                    // Find the relevent local client detail
-                    foreach (var localEP in localClientsReceived)
-                        if ((localEP.socket_owner_id == _relevantEP.target_id) && (localEP.required_destination_id == clientId))
-                        {
-                            logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _relevantEP.target_id, localEP.address, localEP.port);
-                            _socket.Connect(localEP.address, localEP.port);
-                            break;
-                        }
-
-                    if (!_socket.Connected)
-                    {
-                        logger.Error("Could not find local details for {target}", _relevantEP.target_id);
-                        MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
-                        return;
-                    }
-                }
-                else // Otherwise, connect over the internet
-                {
-                    logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
-                    _socket.Connect(_relevantEP.ip, _relevantEP.port);
-                }
-
-                var ctokenSource = new CancellationTokenSource();
-                peerCancellation.Add(ctokenSource);
-
-                var runParameters = new ListenerTask.ListenerConfig
-                {
-                    cancellationToken = ctokenSource.Token,
-                    peerChannel = idx,
-                    srcSocket = peerSockets[idx],
-                    BellStrikeEvent = BellStrike,
-                    EchoBackEvent = SocketEcho
-                };
-
-                var listenerTask = new Task(() =>
-                {
-                    runParameters.srcSocket.ReceiveTimeout = 5000;
-
-                    byte[] buffer = new byte[UDP_BLOCK_SIZE];
-                    while (!runParameters.cancellationToken.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            // Blocks until a message returns on this socket from a remote host.
-                            var bytesReceived = runParameters.srcSocket.Receive(buffer);
-
-                            var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                            logger.Debug("Received '{message}' from {source}", message, runParameters.srcSocket.RemoteEndPoint.ToString());
-
-                            for (int i = 0; i < bytesReceived; i++)
-                            {
-                                if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
-                                {
-                                    runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
-                                }
-                                else if (buffer[i] == '?')
-                                {
-                                    runParameters.srcSocket.Send(new byte[] { (byte)'#' });
-                                }
-                                else if (buffer[i] == '#')
-                                {
-                                    logger.Debug($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
-                                    runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
-                                }
-                            }
-                        }
-                        catch (SocketException se)
-                        {
-                            // Probably OK?
-                        }
-                    }
-                });
-                listenerTask.Start();
-            }
-
-            TestConnection();
         }
 
         private List<MusterAPI.Member> GetOtherBandMembers()
@@ -445,6 +367,109 @@ namespace Muster
                     peers.Add(member);
             }
             return peers;
+        }
+
+        private void BindSocket(int idx, string target_id, List<UDPDiscoveryService.LocalNetworkClientDetail> localClientsReceived)
+        {
+            var _socket = peerSockets[idx];
+
+            // For each peer, find the corresponding endpoint
+            MusterAPI.Endpoint _relevantEP = null;
+            foreach (var ep in peerEndpoints)
+            {
+                if (ep.target_id == target_id)
+                {
+                    _relevantEP = ep;
+                    break;
+                }
+            }
+
+            if (_relevantEP == null)
+            {
+                logger.Error("Could not find endpoint for {target}", target_id);
+                MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
+                return;
+            }
+
+            // Use client's local network if local peer
+            if (_relevantEP.check_local)
+            {
+                // Find the relevent local client detail
+                foreach (var localEP in localClientsReceived)
+                    if ((localEP.socket_owner_id == _relevantEP.target_id) && (localEP.required_destination_id == clientId))
+                    {
+                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _relevantEP.target_id, localEP.address, localEP.port);
+                        _socket.Connect(localEP.address, localEP.port);
+                        break;
+                    }
+
+                if (!_socket.Connected)
+                {
+                    logger.Error("Could not find local details for {target}", _relevantEP.target_id);
+                    MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
+                    return;
+                }
+            }
+            else // Otherwise, connect over the internet
+            {
+                logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
+                _socket.Connect(_relevantEP.ip, _relevantEP.port);
+            }
+        }
+
+        private void AddListenerToSocket(int idx)
+        {
+            var ctokenSource = new CancellationTokenSource();
+            peerCancellation.Add(ctokenSource);
+
+            var runParameters = new ListenerTask.ListenerConfig
+            {
+                cancellationToken = ctokenSource.Token,
+                peerChannel = idx,
+                srcSocket = peerSockets[idx],
+                BellStrikeEvent = BellStrike,
+                EchoBackEvent = SocketEcho
+            };
+
+            var listenerTask = new Task(() =>
+            {
+                runParameters.srcSocket.ReceiveTimeout = 5000;
+
+                byte[] buffer = new byte[UDP_BLOCK_SIZE];
+                while (!runParameters.cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        // Blocks until a message returns on this socket from a remote host.
+                        var bytesReceived = runParameters.srcSocket.Receive(buffer);
+
+                        var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
+                        logger.Debug("Received '{message}' from {source}", message, runParameters.srcSocket.RemoteEndPoint.ToString());
+
+                        for (int i = 0; i < bytesReceived; i++)
+                        {
+                            if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                            {
+                                runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                            }
+                            else if (buffer[i] == '?')
+                            {
+                                runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                            }
+                            else if (buffer[i] == '#')
+                            {
+                                logger.Debug($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
+                                runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
+                            }
+                        }
+                    }
+                    catch (SocketException se)
+                    {
+                        // Probably OK?
+                    }
+                }
+            });
+            listenerTask.Start();
         }
 
         private void SocketEcho(int peerChannel)
@@ -561,11 +586,14 @@ namespace Muster
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
             logger.Debug($"New key: {e.KeyValue}");
-            int bellNumber = e.KeyValue - 'A';
+            ProcessKeyStroke(e.KeyCode, e.KeyValue);
+        }
 
-            if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
+        private void ProcessKeyStroke(Keys keyCode, int keyValue)
+        {
+            if ((keyValue >= 'A' && keyValue < 'A' + numberOfBells) || (keyValue == '?'))
             {
-                var txBytes = Encoding.ASCII.GetBytes($"{e.KeyCode}");
+                var txBytes = Encoding.ASCII.GetBytes($"{keyCode}");
                 foreach (var _socket in peerSockets)
                 {
                     if (_socket.Connected)
@@ -576,6 +604,7 @@ namespace Muster
                 }
             }
 
+            int bellNumber = keyValue - 'A';
             RingBell(bellNumber);
         }
 
