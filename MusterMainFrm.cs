@@ -331,7 +331,7 @@ namespace Muster
                 {
                     logger.Error("Could not find endpoint for {target}", otherBandMembers[idx].id);
                     MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
-
+                    return;
                 }
 
                 // Use client's local network if local peer
@@ -350,7 +350,7 @@ namespace Muster
                     {
                         logger.Error("Could not find local details for {target}", _relevantEP.target_id);
                         MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
-
+                        return;
                     }
                 }
                 else // Otherwise, connect over the internet
