@@ -160,7 +160,7 @@ namespace Muster
 
         public async Task<bool> SetConnectionStatus(string bandID, string phase, string clientID)
         {
-            logger.Debug("Setting status for band >{bandID}< at phase >{phase}<");
+            logger.Debug($"Setting status for band >{bandID}< at phase >{phase}<");
 
             var json = JsonConvert.SerializeObject(clientID);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
