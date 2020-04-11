@@ -476,15 +476,28 @@ namespace Muster
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
             Keys key = ApplyMapping(e);
-            char keyStroke = key.ToString()[0];
-            logger.Debug($"Key press: {e.KeyValue} -> {keyStroke}");
-            ProcessKeyStroke(keyStroke);
+
+            if (key != Keys.None)
+            {
+                char keyStroke = key.ToString()[0];
+                logger.Debug($"Key press: {e.KeyValue} -> {keyStroke}");
+                ProcessKeyStroke(keyStroke);
+            }
+            else
+            {
+                logger.Debug($"Key press ignored: {e.KeyValue}");
+            }
         }
 
         private Keys ApplyMapping(KeyEventArgs e)
         {
             if (AdvancedMode.Checked)
-                return e.KeyCode;
+            {
+                if (e.KeyCode >= Keys.A && e.KeyCode <= Keys.A + numberOfBells + numberOfCommands)
+                    return e.KeyCode;
+                else
+                    return Keys.None;
+            }
 
             Keys res = Keys.None;
             switch (e.KeyCode)
@@ -523,7 +536,7 @@ namespace Muster
 
         private void ProcessKeyStroke(char keyValue)
         {
-            if (keyValue >= 'A' && keyValue < 'A' + numberOfBells + numberOfCommands)
+             if (keyValue >= 'A' && keyValue < 'A' + numberOfBells + numberOfCommands)
             {
                 var txBytes = Encoding.ASCII.GetBytes($"{keyValue}");
                 foreach (var _socket in peerSockets)
@@ -641,7 +654,12 @@ namespace Muster
             ctl.SelectNextControl(ActiveControl, true, true, true, true);
         }
 
-        private void BellSelection_KeyPress(object sender, KeyPressEventArgs e)
+        private void Suppress_KeyPress(object sender, KeyEventArgs e)
+        {
+            // Prevent key presses changing the selected bell
+            e.SuppressKeyPress = true;
+        }
+        private void Suppress_KeyPress2(object sender, KeyPressEventArgs e)
         {
             // Prevent key presses changing the selected bell
             e.Handled = true;
@@ -651,6 +669,9 @@ namespace Muster
         {
             LHBell.Enabled = !AdvancedMode.Checked;
             RHBell.Enabled = !AdvancedMode.Checked;
+
+            Control ctl = (Control)sender;
+            ctl.SelectNextControl(ActiveControl, true, false, true, true);
         }
     }
 }

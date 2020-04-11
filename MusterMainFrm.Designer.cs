@@ -62,9 +62,11 @@
             this.Connect.Name = "Connect";
             this.Connect.Size = new System.Drawing.Size(123, 24);
             this.Connect.TabIndex = 6;
+            this.Connect.TabStop = false;
             this.Connect.Text = "Start ringing";
             this.Connect.UseVisualStyleBackColor = true;
             this.Connect.Click += new System.EventHandler(this.Connect_Click);
+            this.Connect.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // Disconnect
             // 
@@ -73,9 +75,11 @@
             this.Disconnect.Name = "Disconnect";
             this.Disconnect.Size = new System.Drawing.Size(123, 24);
             this.Disconnect.TabIndex = 7;
+            this.Disconnect.TabStop = false;
             this.Disconnect.Text = "Quit the band";
             this.Disconnect.UseVisualStyleBackColor = true;
             this.Disconnect.Click += new System.EventHandler(this.Disconnect_Click);
+            this.Disconnect.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // Test
             // 
@@ -84,9 +88,11 @@
             this.Test.Name = "Test";
             this.Test.Size = new System.Drawing.Size(123, 24);
             this.Test.TabIndex = 8;
+            this.Test.TabStop = false;
             this.Test.Text = "Test connection";
             this.Test.UseVisualStyleBackColor = true;
             this.Test.Click += new System.EventHandler(this.Test_Click);
+            this.Test.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // bandID
             // 
@@ -95,6 +101,7 @@
             this.bandID.Name = "bandID";
             this.bandID.Size = new System.Drawing.Size(76, 20);
             this.bandID.TabIndex = 9;
+            this.bandID.TabStop = false;
             // 
             // label2
             // 
@@ -113,9 +120,11 @@
             this.JoinBand.Name = "JoinBand";
             this.JoinBand.Size = new System.Drawing.Size(123, 24);
             this.JoinBand.TabIndex = 11;
+            this.JoinBand.TabStop = false;
             this.JoinBand.Text = "Join/refresh band";
             this.JoinBand.UseVisualStyleBackColor = true;
             this.JoinBand.Click += new System.EventHandler(this.JoinBand_Click);
+            this.JoinBand.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // MakeNewBand
             // 
@@ -124,9 +133,11 @@
             this.MakeNewBand.Name = "MakeNewBand";
             this.MakeNewBand.Size = new System.Drawing.Size(123, 24);
             this.MakeNewBand.TabIndex = 12;
+            this.MakeNewBand.TabStop = false;
             this.MakeNewBand.Text = "Make new band";
             this.MakeNewBand.UseVisualStyleBackColor = true;
             this.MakeNewBand.Click += new System.EventHandler(this.MakeNewBand_Click);
+            this.MakeNewBand.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // label3
             // 
@@ -146,6 +157,7 @@
             this.NameInput.Name = "NameInput";
             this.NameInput.Size = new System.Drawing.Size(76, 20);
             this.NameInput.TabIndex = 14;
+            this.NameInput.TabStop = false;
             this.NameInput.Text = "Frank";
             // 
             // label4
@@ -166,6 +178,7 @@
             this.LocationInput.Name = "LocationInput";
             this.LocationInput.Size = new System.Drawing.Size(76, 20);
             this.LocationInput.TabIndex = 16;
+            this.LocationInput.TabStop = false;
             // 
             // abelConnect
             // 
@@ -245,13 +258,13 @@
             "0",
             "E",
             "T"});
-            this.LHBell.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BellSelection_KeyPress);
             this.LHBell.Location = new System.Drawing.Point(123, 129);
             this.LHBell.Name = "LHBell";
-            this.LHBell.SelectedIndex = 0;
-            this.LHBell.SelectedIndexChanged += new System.EventHandler(this.LHBell_SelectedIndexChanged);
             this.LHBell.Size = new System.Drawing.Size(64, 21);
             this.LHBell.TabIndex = 22;
+            this.LHBell.TabStop = false;
+            this.LHBell.SelectedIndexChanged += new System.EventHandler(this.LHBell_SelectedIndexChanged);
+            this.LHBell.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // RHBell
             // 
@@ -270,12 +283,12 @@
             "0",
             "E",
             "T"});
-            this.RHBell.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BellSelection_KeyPress);
             this.RHBell.Location = new System.Drawing.Point(212, 129);
             this.RHBell.Name = "RHBell";
-            this.RHBell.SelectedIndex = 1;
             this.RHBell.Size = new System.Drawing.Size(64, 21);
             this.RHBell.TabIndex = 23;
+            this.RHBell.TabStop = false;
+            this.RHBell.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // AdvancedMode
             // 
@@ -284,9 +297,13 @@
             this.AdvancedMode.Name = "AdvancedMode";
             this.AdvancedMode.Size = new System.Drawing.Size(104, 17);
             this.AdvancedMode.TabIndex = 24;
+            this.AdvancedMode.TabStop = false;
             this.AdvancedMode.Text = "Advanced mode";
             this.AdvancedMode.UseVisualStyleBackColor = true;
             this.AdvancedMode.CheckedChanged += new System.EventHandler(this.AdvancedMode_CheckedChanged);
+            this.AdvancedMode.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
+            this.AdvancedMode.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.Suppress_KeyPress2);
+            // 
             // 
             // label1
             // 
