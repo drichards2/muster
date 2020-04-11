@@ -19,7 +19,8 @@ namespace Muster
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private const int numberOfBells = 12;
+        private const int numberOfBells = 16;
+        private const int numberOfCommands = 7; 
         private const int MAX_PEERS = 6;
         private const int UDP_BLOCK_SIZE = 1024;
 
@@ -334,7 +335,7 @@ namespace Muster
 
                             for (int i = 0; i < bytesReceived; i++)
                             {
-                                if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                                if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells + numberOfCommands)
                                 {
                                     runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
                                 }
@@ -474,29 +475,55 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
-            logger.Debug($"New key: {e.KeyValue}");
-            char key = ApplyMapping(e);
-            ProcessKeyStroke(key);
+            Keys key = ApplyMapping(e);
+            char keyStroke = key.ToString()[0];
+            logger.Debug($"Key press: {e.KeyValue} -> {keyStroke}");
+            ProcessKeyStroke(keyStroke);
         }
 
-        private char ApplyMapping(KeyEventArgs e)
+        private Keys ApplyMapping(KeyEventArgs e)
         {
-            var key = (char) e.KeyValue;
             if (AdvancedMode.Checked)
-                return key;
+                return e.KeyCode;
 
-            var res = key;
-            if (key == 'F')
-                res = (char) (LHBell.SelectedIndex + 'A');
-            if (key == 'J')
-                res = (char) (RHBell.SelectedIndex + 'A');
+            Keys res = Keys.None;
+            switch (e.KeyCode)
+            {
+                case Keys.F: // LH bell
+                    res = Keys.A + (LHBell.SelectedIndex);
+                    break;
+                case Keys.J: // RH bell
+                    res = Keys.A + (RHBell.SelectedIndex);
+                    break;
+                case Keys.G: // Go
+                    res = Keys.Q;
+                    break;
+                case Keys.A: // Bob
+                    res = Keys.R;
+                    break;
+                case Keys.OemSemicolon: // Single
+                    res = Keys.S;
+                    break;
+                case Keys.T: // That's all
+                    res = Keys.T;
+                    break;
+                case Keys.R: // Rounds
+                    res = Keys.U;
+                    break;
+                case Keys.Q: // Stand
+                    res = Keys.V;
+                    break;
+                case Keys.F4: // Reset all bells
+                    res = Keys.W;
+                    break;
+            }
 
             return res;
         }
 
         private void ProcessKeyStroke(char keyValue)
         {
-            if ((keyValue >= 'A' && keyValue < 'A' + numberOfBells) || (keyValue == '?'))
+            if (keyValue >= 'A' && keyValue < 'A' + numberOfBells + numberOfCommands)
             {
                 var txBytes = Encoding.ASCII.GetBytes($"{keyValue}");
                 foreach (var _socket in peerSockets)
@@ -515,7 +542,7 @@ namespace Muster
 
         private void RingBell(int bellNumber)
         {
-            if (bellNumber >= 0 && bellNumber < numberOfBells)
+            if (bellNumber >= 0 && bellNumber < numberOfBells + numberOfCommands)
             {
                 SendKeystroke(bellNumber);
             }
