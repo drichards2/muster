@@ -47,6 +47,11 @@
             this.LocationColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.StatusColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.aboutText = new System.Windows.Forms.Label();
+            this.LHBell = new System.Windows.Forms.ComboBox();
+            this.RHBell = new System.Windows.Forms.ComboBox();
+            this.AdvancedMode = new System.Windows.Forms.CheckBox();
+            this.label1 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).BeginInit();
             this.SuspendLayout();
             // 
@@ -223,11 +228,94 @@
             this.aboutText.TabIndex = 21;
             this.aboutText.Text = "About";
             // 
+            // LHBell
+            // 
+            this.LHBell.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.LHBell.FormattingEnabled = true;
+            this.LHBell.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "0",
+            "E",
+            "T"});
+            this.LHBell.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BellSelection_KeyPress);
+            this.LHBell.Location = new System.Drawing.Point(123, 129);
+            this.LHBell.Name = "LHBell";
+            this.LHBell.SelectedIndex = 0;
+            this.LHBell.SelectedIndexChanged += new System.EventHandler(this.LHBell_SelectedIndexChanged);
+            this.LHBell.Size = new System.Drawing.Size(64, 21);
+            this.LHBell.TabIndex = 22;
+            // 
+            // RHBell
+            // 
+            this.RHBell.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.RHBell.FormattingEnabled = true;
+            this.RHBell.Items.AddRange(new object[] {
+            "1",
+            "2",
+            "3",
+            "4",
+            "5",
+            "6",
+            "7",
+            "8",
+            "9",
+            "0",
+            "E",
+            "T"});
+            this.RHBell.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.BellSelection_KeyPress);
+            this.RHBell.Location = new System.Drawing.Point(212, 129);
+            this.RHBell.Name = "RHBell";
+            this.RHBell.SelectedIndex = 1;
+            this.RHBell.Size = new System.Drawing.Size(64, 21);
+            this.RHBell.TabIndex = 23;
+            // 
+            // AdvancedMode
+            // 
+            this.AdvancedMode.AutoSize = true;
+            this.AdvancedMode.Location = new System.Drawing.Point(294, 131);
+            this.AdvancedMode.Name = "AdvancedMode";
+            this.AdvancedMode.Size = new System.Drawing.Size(104, 17);
+            this.AdvancedMode.TabIndex = 24;
+            this.AdvancedMode.Text = "Advanced mode";
+            this.AdvancedMode.UseVisualStyleBackColor = true;
+            this.AdvancedMode.CheckedChanged += new System.EventHandler(this.AdvancedMode_CheckedChanged);
+            // 
+            // label1
+            // 
+            this.label1.AutoSize = true;
+            this.label1.Location = new System.Drawing.Point(140, 113);
+            this.label1.Name = "label1";
+            this.label1.Size = new System.Drawing.Size(34, 13);
+            this.label1.TabIndex = 25;
+            this.label1.Text = "Key F";
+            // 
+            // label5
+            // 
+            this.label5.AutoSize = true;
+            this.label5.Location = new System.Drawing.Point(229, 113);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(33, 13);
+            this.label5.TabIndex = 26;
+            this.label5.Text = "Key J";
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(476, 464);
+            this.Controls.Add(this.label5);
+            this.Controls.Add(this.label1);
+            this.Controls.Add(this.AdvancedMode);
+            this.Controls.Add(this.RHBell);
+            this.Controls.Add(this.LHBell);
             this.Controls.Add(this.aboutText);
             this.Controls.Add(this.bandDetails);
             this.Controls.Add(this.abelConnectLabel);
@@ -272,5 +360,10 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn LocationColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn StatusColumn;
         private System.Windows.Forms.Label aboutText;
+        private System.Windows.Forms.ComboBox LHBell;
+        private System.Windows.Forms.ComboBox RHBell;
+        private System.Windows.Forms.CheckBox AdvancedMode;
+        private System.Windows.Forms.Label label1;
+        private System.Windows.Forms.Label label5;
     }
 }

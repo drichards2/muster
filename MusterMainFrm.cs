@@ -110,7 +110,7 @@ namespace Muster
                 bool timeToConnect = false;
                 joinBandCancellation.Dispose();
                 joinBandCancellation = new CancellationTokenSource();
-                
+
                 while (!timeToConnect)
                 {
                     if (joinBandCancellation.Token.IsCancellationRequested)
@@ -118,7 +118,7 @@ namespace Muster
                         logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting to start.");
                         return;
                     }
-                    
+
                     currentBand = await GetTheBandBackTogether();
 
                     bandDetails.Rows.Clear();
@@ -250,7 +250,7 @@ namespace Muster
 
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
                 await Task.Delay(1000); // don't block GUI
-            }            
+            }
 
             peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
@@ -259,7 +259,7 @@ namespace Muster
                 logger.Error("Did not receive the expected number of endpoints");
                 logger.Error("Endpoints: {endpoints}", peerEndpoints);
                 logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
-                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");                
+                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");
                 return;
             }
 
@@ -475,11 +475,30 @@ namespace Muster
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
             logger.Debug($"New key: {e.KeyValue}");
-            int bellNumber = e.KeyValue - 'A';
+            char key = ApplyMapping(e);
+            ProcessKeyStroke(key);
+        }
 
-            if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
+        private char ApplyMapping(KeyEventArgs e)
+        {
+            var key = (char) e.KeyValue;
+            if (AdvancedMode.Checked)
+                return key;
+
+            var res = key;
+            if (key == 'F')
+                res = (char) (LHBell.SelectedIndex + 'A');
+            if (key == 'J')
+                res = (char) (RHBell.SelectedIndex + 'A');
+
+            return res;
+        }
+
+        private void ProcessKeyStroke(char keyValue)
+        {
+            if ((keyValue >= 'A' && keyValue < 'A' + numberOfBells) || (keyValue == '?'))
             {
-                var txBytes = Encoding.ASCII.GetBytes($"{e.KeyCode}");
+                var txBytes = Encoding.ASCII.GetBytes($"{keyValue}");
                 foreach (var _socket in peerSockets)
                 {
                     if (_socket.Connected)
@@ -490,6 +509,7 @@ namespace Muster
                 }
             }
 
+            int bellNumber = keyValue - 'A';
             RingBell(bellNumber);
         }
 
@@ -580,6 +600,30 @@ namespace Muster
             {
                 return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             }
+        }
+
+        private void LHBell_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Set RH bell to one more than selected LH bell
+            var idx = LHBell.SelectedIndex + 1;
+            if (idx >= RHBell.Items.Count)
+                idx = 0;
+            RHBell.SelectedIndex = idx;
+
+            Control ctl = (Control)sender;
+            ctl.SelectNextControl(ActiveControl, true, true, true, true);
+        }
+
+        private void BellSelection_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            // Prevent key presses changing the selected bell
+            e.Handled = true;
+        }
+
+        private void AdvancedMode_CheckedChanged(object sender, EventArgs e)
+        {
+            LHBell.Enabled = !AdvancedMode.Checked;
+            RHBell.Enabled = !AdvancedMode.Checked;
         }
     }
 }
