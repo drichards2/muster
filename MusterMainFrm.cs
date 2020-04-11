@@ -108,7 +108,7 @@ namespace Muster
                 bool timeToConnect = false;
                 joinBandCancellation.Dispose();
                 joinBandCancellation = new CancellationTokenSource();
-                
+
                 while (!timeToConnect)
                 {
                     if (joinBandCancellation.Token.IsCancellationRequested)
@@ -116,7 +116,7 @@ namespace Muster
                         logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting to start.");
                         return;
                     }
-                    
+
                     currentBand = await GetTheBandBackTogether();
 
                     bandDetails.Rows.Clear();
@@ -248,7 +248,7 @@ namespace Muster
             joinBandCancellation = new CancellationTokenSource();
             while (!ready)
             {
-                foreach(var localDetail in localClientDetails)
+                foreach (var localDetail in localClientDetails)
                     localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
 
                 if (joinBandCancellation.Token.IsCancellationRequested)
@@ -269,7 +269,7 @@ namespace Muster
                 logger.Error("Endpoints: {endpoints}", peerEndpoints);
                 if (peerEndpoints != null)
                     logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
-                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");                
+                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");
                 return;
             }
 
@@ -282,7 +282,7 @@ namespace Muster
             joinBandCancellation = new CancellationTokenSource();
             while (!ready)
             {
-                foreach(var localDetail in localClientDetails)
+                foreach (var localDetail in localClientDetails)
                     localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
 
                 if (joinBandCancellation.Token.IsCancellationRequested)
@@ -292,11 +292,12 @@ namespace Muster
                 }
 
                 // Check whether local details have been received for every peer it's required for
-                var seenAll = true;
+                var anyMissing = false;
                 foreach (var ep in peerEndpoints)
-                    seenAll = localUDPDiscoveryService.CheckDetailReceivedFor(ep.target_id);
+                    if (ep.check_local)
+                        anyMissing = !localUDPDiscoveryService.CheckDetailReceivedFor(ep.target_id);
 
-                if (seenAll)
+                if (!anyMissing)
                 {
                     var status = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED, clientId);
                 }
@@ -315,38 +316,48 @@ namespace Muster
 
             for (int idx = 0; idx < peerSockets.Count; idx++)
             {
+                // For each peer, find the corresponding endpoint
                 var _socket = peerSockets[idx];
-
-                string _targetId = "";
-                string _targetIp = "";
-                int _targetPort = 0;
+                MusterAPI.Endpoint _relevantEP = null;
                 foreach (var ep in peerEndpoints)
                 {
                     if (ep.target_id == otherBandMembers[idx].id)
                     {
-                        _targetId = ep.target_id;
-                        _targetIp = ep.ip;
-                        _targetPort = ep.port;
+                        _relevantEP = ep;
                         break;
                     }
                 }
 
-                // Use client's local network if local peer
-                bool isLocal = false;
-                foreach (var localEP in localClientsReceived)
-                    if ((_targetId == localEP.socket_owner_id) && (localEP.required_destination_id == clientId))
-                    {
-                        isLocal = true;
-                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _targetId, localEP.address, localEP.port);
-                        _socket.Connect(localEP.address, localEP.port);
-                        break;
-                    }
-
-                // Otherwise, connect over the internet
-                if (!isLocal)
+                if (_relevantEP == null)
                 {
-                    logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _targetId, _targetIp, _targetPort);
-                    _socket.Connect(_targetIp, _targetPort);
+                    logger.Error("Could not find endpoint for {target}", otherBandMembers[idx].id);
+                    MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
+
+                }
+
+                // Use client's local network if local peer
+                if (_relevantEP.check_local)
+                {
+                    // Find the relevent local client detail
+                    foreach (var localEP in localClientsReceived)
+                        if ((localEP.socket_owner_id == _relevantEP.target_id) && (localEP.required_destination_id == clientId))
+                        {
+                            logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _relevantEP.target_id, localEP.address, localEP.port);
+                            _socket.Connect(localEP.address, localEP.port);
+                            break;
+                        }
+
+                    if (!_socket.Connected)
+                    {
+                        logger.Error("Could not find local details for {target}", _relevantEP.target_id);
+                        MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
+
+                    }
+                }
+                else // Otherwise, connect over the internet
+                {
+                    logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
+                    _socket.Connect(_relevantEP.ip, _relevantEP.port);
                 }
 
                 var ctokenSource = new CancellationTokenSource();
