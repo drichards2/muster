@@ -68,20 +68,43 @@ namespace Muster
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
         {
+            bool isAlreadyConnected = CheckIfConnected();
+            if (isAlreadyConnected)
+            {
+                logger.Debug("Already a member of a band. Aborting request to make a new band.");
+                MessageBox.Show("Already a member of a band. To make a new band, disconnect from the existing band and click 'Make a new band' again.");
+                return;
+            }
+
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
-
-            clientId = null;
-            bandDetails.Rows.Clear();
-            localUDPDiscoveryService.ClearLocalClients();
         }
 
+        private bool CheckIfConnected()
+        {
+            bool isAlreadyConnected = false;
+            foreach (var peer in peerSockets)
+                if (peer.Connected)
+                    isAlreadyConnected = true;
+            return isAlreadyConnected;
+        }
 
         private async void JoinBand_Click(object sender, EventArgs e)
         {
             if (bandID.Text.Length == 0)
             {
                 MessageBox.Show("The band ID is empty.\nEither click 'Make a new band', or type in the ID of an existing band. Then click 'Join/refresh band' again.");
+                return;
+            }
+
+            bool isAlreadyConnected = false;
+            foreach (var peer in peerSockets)
+                if (peer.Connected)
+                    isAlreadyConnected = true;
+            if (isAlreadyConnected)
+            {
+                logger.Debug("Already a member of a band. Aborting request to join a band.");
+                MessageBox.Show("Already a member of a band. To join a new band, disconnect from the existing band and click 'Join/refresh band' again.");
                 return;
             }
 
@@ -269,7 +292,7 @@ namespace Muster
                 logger.Error("Endpoints: {endpoints}", peerEndpoints);
                 if (peerEndpoints != null)
                     logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
-                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");
+                MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                 return;
             }
 
@@ -454,6 +477,11 @@ namespace Muster
 
         private void Disconnect_Click(object sender, EventArgs e)
         {
+            LeaveBand();
+        }
+
+        private void LeaveBand()
+        {
             joinBandCancellation.Cancel();
             DisconnectAll();
             clientId = null;
@@ -469,6 +497,12 @@ namespace Muster
 
         private void TestConnection()
         {
+            if (bandDetails.Rows.Count < currentBand.members.Length)
+            {
+                logger.Debug($"Abandoning testing connection. Something's gone wrong.");
+                return;
+            }
+
             for (int idx = 0; idx < currentBand.members.Length; idx++)
                 if (currentBand.members[idx].id != clientId)
                     bandDetails.Rows[idx].Cells[2].Value = "Testing connection";
