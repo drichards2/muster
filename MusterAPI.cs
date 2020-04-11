@@ -36,6 +36,7 @@ namespace Muster
             public string target_id {get; set;}
             public string ip {get; set;}
             public int port {get; set;}
+            public bool check_local {get; set;}
         }
 
         public string APIServer { get; set; } = "muster.norfolk-st.co.uk";

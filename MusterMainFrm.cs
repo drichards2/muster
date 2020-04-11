@@ -259,7 +259,7 @@ namespace Muster
 
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
                 await Task.Delay(1000); // don't block GUI
-            }            
+            }
 
             peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
@@ -273,9 +273,43 @@ namespace Muster
                 return;
             }
 
-            var localClients = localUDPDiscoveryService.LocalClients;
-            foreach (var client in localClients)
+            // TODO: Remove me
+            foreach (var ep in peerEndpoints)
+                ep.check_local = true;
+
+            ready = false;
+            joinBandCancellation.Dispose();
+            joinBandCancellation = new CancellationTokenSource();
+            while (!ready)
+            {
+                foreach(var localDetail in localClientDetails)
+                    localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
+
+                if (joinBandCancellation.Token.IsCancellationRequested)
+                {
+                    logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    return;
+                }
+
+                // Check whether local details have been received for every peer it's required for
+                var seenAll = true;
+                foreach (var ep in peerEndpoints)
+                    seenAll = localUDPDiscoveryService.CheckDetailReceivedFor(ep.target_id);
+
+                if (seenAll)
+                {
+                    var status = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED, clientId);
+                }
+
+                ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED);
+                await Task.Delay(1000); // don't block GUI
+            }
+
+            var localClientsReceived = localUDPDiscoveryService.LocalClients;
+            foreach (var client in localClientsReceived)
+            {
                 logger.Debug("Local client {address}:{port}", client.address, client.port);
+            }
 
             var otherBandMembers = GetOtherBandMembers();
 
@@ -299,7 +333,7 @@ namespace Muster
 
                 // Use client's local network if local peer
                 bool isLocal = false;
-                foreach (var localEP in localClients)
+                foreach (var localEP in localClientsReceived)
                     if ((_targetId == localEP.socket_owner_id) && (localEP.required_destination_id == clientId))
                     {
                         isLocal = true;

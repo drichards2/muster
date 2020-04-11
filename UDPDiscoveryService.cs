@@ -42,6 +42,19 @@ namespace Muster
                 return _clients;
             } }
 
+        public bool CheckDetailReceivedFor(string clientID)
+        {
+            bool isSeen = false;
+            foreach (var detail in LocalClients)
+            {
+                if (detail.socket_owner_id == clientID)
+                {
+                    isSeen = true;
+                    break;
+                }
+            }
+            return isSeen;
+        }
 
         public void BroadcastClientAvailable(LocalNetworkClientDetail clientDetail)
         {
