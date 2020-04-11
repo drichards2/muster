@@ -97,10 +97,7 @@ namespace Muster
                 return;
             }
 
-            bool isAlreadyConnected = false;
-            foreach (var peer in peerSockets)
-                if (peer.Connected)
-                    isAlreadyConnected = true;
+            bool isAlreadyConnected = CheckIfConnected();
             if (isAlreadyConnected)
             {
                 logger.Debug("Already a member of a band. Aborting request to join a band.");
