@@ -25,7 +25,7 @@ namespace Muster
 
             public override string ToString()
             {
-                return $"Owner: {socket_owner_id}-> target: {required_destination_id} ({address}:{port})";
+                return $"Owner: {socket_owner_id} will send to target: {required_destination_id} from {address}:{port}";
             }
         }
 
