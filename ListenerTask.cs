@@ -13,7 +13,7 @@ namespace Muster
         internal class ListenerConfig
         {
             public delegate void BroadcastAlive(int peerChannel);
-            public delegate void BellStrike(int bell);
+            public delegate void BellStrike(char keyStroke);
 
             public CancellationToken cancellationToken;
             public Socket srcSocket;

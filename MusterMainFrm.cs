@@ -23,6 +23,7 @@ namespace Muster
         private const int numberOfCommands = 7; 
         private const int MAX_PEERS = 6;
         private const int UDP_BLOCK_SIZE = 1024;
+        private readonly List<char> ValidAbelCommands = SpecifyValidAbelCommands();
 
         private readonly MusterAPIExtended api = new MusterAPIExtended();
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
@@ -39,7 +40,6 @@ namespace Muster
         private List<MusterAPI.Endpoint> peerEndpoints = new List<MusterAPI.Endpoint>(MAX_PEERS);
         private UDPDiscoveryService localUDPDiscoveryService = new UDPDiscoveryService();
 
-        private static readonly HttpClient client = new HttpClient();
         //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
@@ -60,10 +60,10 @@ namespace Muster
 
             Task.Run(() =>
             {
-                var bellOrder = new int[12] { 5, 6, 4, 7, 3, 8, 2, 9, 1, 10, 0, 11 };
+                var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
                 foreach (var bell in bellOrder)
                 {
-                    RingBell(bell);
+                    RingBell(FindKeyStrokeForBell(bell));
                     Thread.Sleep(150);
                 }
             });
@@ -335,9 +335,9 @@ namespace Muster
 
                             for (int i = 0; i < bytesReceived; i++)
                             {
-                                if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells + numberOfCommands)
+                                if (IsValidAbelCommand((char) buffer[i]))
                                 {
-                                    runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                                    runParameters.BellStrikeEvent?.Invoke((char) buffer[i]);
                                 }
                                 else if (buffer[i] == '?')
                                 {
@@ -394,9 +394,9 @@ namespace Muster
             }
         }
 
-        private void BellStrike(int bell)
+        private void BellStrike(char keyStroke)
         {
-            RingBell(bell);
+            RingBell(keyStroke);
         }
 
         private void Disconnect_Click(object sender, EventArgs e)
@@ -479,7 +479,7 @@ namespace Muster
 
             if (key != Keys.None)
             {
-                char keyStroke = key.ToString()[0];
+                char keyStroke = (char) key;
                 logger.Debug($"Key press: {e.KeyValue} -> {keyStroke}");
                 ProcessKeyStroke(keyStroke);
             }
@@ -493,7 +493,7 @@ namespace Muster
         {
             if (AdvancedMode.Checked)
             {
-                if (e.KeyCode >= Keys.A && e.KeyCode <= Keys.A + numberOfBells + numberOfCommands)
+                if (IsValidAbelCommand((char) e.KeyCode))
                     return e.KeyCode;
                 else
                     return Keys.None;
@@ -503,31 +503,31 @@ namespace Muster
             switch (e.KeyCode)
             {
                 case Keys.F: // LH bell
-                    res = Keys.A + (LHBell.SelectedIndex);
+                    res = (Keys) FindKeyStrokeForBell(LHBell.SelectedIndex + 1);
                     break;
                 case Keys.J: // RH bell
-                    res = Keys.A + (RHBell.SelectedIndex);
+                    res = (Keys) FindKeyStrokeForBell(RHBell.SelectedIndex + 1);
                     break;
                 case Keys.G: // Go
-                    res = Keys.Q;
-                    break;
-                case Keys.A: // Bob
-                    res = Keys.R;
-                    break;
-                case Keys.OemSemicolon: // Single
                     res = Keys.S;
                     break;
-                case Keys.T: // That's all
+                case Keys.A: // Bob
                     res = Keys.T;
                     break;
-                case Keys.R: // Rounds
+                case Keys.OemSemicolon: // Single
                     res = Keys.U;
                     break;
-                case Keys.Q: // Stand
+                case Keys.T: // That's all
                     res = Keys.V;
                     break;
-                case Keys.F4: // Reset all bells
+                case Keys.R: // Rounds
                     res = Keys.W;
+                    break;
+                case Keys.Q: // Stand
+                    res = Keys.X;
+                    break;
+                case Keys.F4: // Reset all bells
+                    res = Keys.Y;
                     break;
             }
 
@@ -536,8 +536,8 @@ namespace Muster
 
         private void ProcessKeyStroke(char keyValue)
         {
-             if (keyValue >= 'A' && keyValue < 'A' + numberOfBells + numberOfCommands)
-            {
+             if (IsValidAbelCommand(keyValue))
+             {
                 var txBytes = Encoding.ASCII.GetBytes($"{keyValue}");
                 foreach (var _socket in peerSockets)
                 {
@@ -549,15 +549,14 @@ namespace Muster
                 }
             }
 
-            int bellNumber = keyValue - 'A';
-            RingBell(bellNumber);
+            RingBell(keyValue);
         }
 
-        private void RingBell(int bellNumber)
+        private void RingBell(char keyStroke)
         {
-            if (bellNumber >= 0 && bellNumber < numberOfBells + numberOfCommands)
+            if (IsValidAbelCommand(keyStroke))
             {
-                SendKeystroke(bellNumber);
+                SendKeystroke(keyStroke);
             }
         }
 
@@ -568,11 +567,11 @@ namespace Muster
         const int WM_KEYUP = 0x101;
         const int WM_CHAR = 0x102;
 
-        private void SendKeystroke(int bell)
+        private void SendKeystroke(char keyStroke)
         {
             if (AbelHandle != null)
             {
-                PostMessage(AbelHandle, WM_CHAR, 'A' + bell, 0);
+                PostMessage(AbelHandle, WM_CHAR, keyStroke, 0);
             }
         }
 
@@ -622,6 +621,33 @@ namespace Muster
         private void AbelConnect_Tick(object sender, EventArgs e)
         {
             FindAbel();
+        }
+
+        private bool IsValidAbelCommand(char key)
+        {
+            return ValidAbelCommands.Contains(key);
+        }
+
+        private char FindKeyStrokeForBell(int bell)
+        {
+            if (bell >= 1 && bell <= numberOfBells)
+            {
+                return ValidAbelCommands[bell-1];
+            }
+            else
+                return ' ';
+        }
+
+        private static List<char> SpecifyValidAbelCommands()
+        {
+            List<char> validKeys = new List<char>();
+
+            // Return A-Y except F and J
+            for (char i = 'A'; i <= 'Y'; i++)
+                if (i != 'F' && i != 'J')
+                    validKeys.Add(i);
+
+            return validKeys;
         }
 
         private void DisplayVersionInformation()
