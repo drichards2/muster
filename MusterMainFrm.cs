@@ -19,9 +19,10 @@ namespace Muster
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private const int numberOfBells = 12;
+        private const int numberOfBells = 16;
         private const int MAX_PEERS = 6;
         private const int UDP_BLOCK_SIZE = 1024;
+        private readonly List<char> ValidAbelCommands = SpecifyValidAbelCommands();
 
         private readonly MusterAPIExtended api = new MusterAPIExtended();
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
@@ -38,7 +39,6 @@ namespace Muster
         private List<MusterAPI.Endpoint> peerEndpoints = new List<MusterAPI.Endpoint>(MAX_PEERS);
         private UDPDiscoveryService localUDPDiscoveryService = new UDPDiscoveryService();
 
-        private static readonly HttpClient client = new HttpClient();
         //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
         private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
@@ -57,12 +57,14 @@ namespace Muster
 
             DisplayVersionInformation();
 
+            RHBell.SelectedIndex = 0;
+
             Task.Run(() =>
             {
-                var bellOrder = new int[12] { 5, 6, 4, 7, 3, 8, 2, 9, 1, 10, 0, 11 };
+                var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
                 foreach (var bell in bellOrder)
                 {
-                    RingBell(bell);
+                    RingBell(FindKeyStrokeForBell(bell));
                     Thread.Sleep(150);
                 }
             });
@@ -110,7 +112,7 @@ namespace Muster
                 bool timeToConnect = false;
                 joinBandCancellation.Dispose();
                 joinBandCancellation = new CancellationTokenSource();
-                
+
                 while (!timeToConnect)
                 {
                     if (joinBandCancellation.Token.IsCancellationRequested)
@@ -118,7 +120,7 @@ namespace Muster
                         logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting to start.");
                         return;
                     }
-                    
+
                     currentBand = await GetTheBandBackTogether();
 
                     bandDetails.Rows.Clear();
@@ -250,7 +252,7 @@ namespace Muster
 
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
                 await Task.Delay(1000); // don't block GUI
-            }            
+            }
 
             peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
@@ -259,7 +261,7 @@ namespace Muster
                 logger.Error("Did not receive the expected number of endpoints");
                 logger.Error("Endpoints: {endpoints}", peerEndpoints);
                 logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
-                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");                
+                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");
                 return;
             }
 
@@ -334,9 +336,9 @@ namespace Muster
 
                             for (int i = 0; i < bytesReceived; i++)
                             {
-                                if (buffer[i] >= 'A' && buffer[i] < 'A' + numberOfBells)
+                                if (IsValidAbelCommand((char) buffer[i]))
                                 {
-                                    runParameters.BellStrikeEvent?.Invoke(buffer[i] - 'A');
+                                    runParameters.BellStrikeEvent?.Invoke((char) buffer[i]);
                                 }
                                 else if (buffer[i] == '?')
                                 {
@@ -393,9 +395,9 @@ namespace Muster
             }
         }
 
-        private void BellStrike(int bell)
+        private void BellStrike(char keyStroke)
         {
-            RingBell(bell);
+            RingBell(keyStroke);
         }
 
         private void Disconnect_Click(object sender, EventArgs e)
@@ -474,12 +476,100 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
-            logger.Debug($"New key: {e.KeyValue}");
-            int bellNumber = e.KeyValue - 'A';
-
-            if ((e.KeyValue >= 'A' && e.KeyValue < 'A' + numberOfBells) || (e.KeyValue == '?'))
+            if (e.KeyCode == Keys.Space)
             {
-                var txBytes = Encoding.ASCII.GetBytes($"{e.KeyCode}");
+                logger.Debug($"Key press ignored: {e.KeyCode}");
+                e.SuppressKeyPress = true;
+                return;
+            }
+
+            Keys key = ApplyMapping(e);
+
+            if (key != Keys.None)
+            {
+                char keyStroke = (char) key;
+                logger.Debug($"Key press: {e.KeyValue} -> {keyStroke}");
+                ProcessKeyStroke(keyStroke);
+            }
+            else
+            {
+                logger.Debug($"Key press ignored: {e.KeyValue}");
+            }
+        }
+
+        private Keys ApplyMapping(KeyEventArgs e)
+        {
+            if (AdvancedMode.Checked)
+            {
+                if (IsValidAbelCommand((char) e.KeyCode))
+                    return e.KeyCode;
+                else
+                    return Keys.None;
+            }
+
+            Keys res = Keys.None;
+            switch (e.KeyCode)
+            {
+                case Keys.F: // LH bell
+                    res = (Keys) FindKeyStrokeForBell(LHBell.SelectedIndex + 1);
+                    break;
+                case Keys.J: // RH bell
+                    res = (Keys) FindKeyStrokeForBell(RHBell.SelectedIndex + 1);
+                    break;
+                /*                case Keys.G: // Go
+                                    res = Keys.S;
+                                    break;
+                                case Keys.A: // Bob
+                                    res = Keys.T;
+                                    break;
+                                case Keys.OemSemicolon: // Single
+                                    res = Keys.U;
+                                    break;
+                                case Keys.T: // That's all
+                                    res = Keys.V;
+                                    break;
+                                case Keys.R: // Rounds
+                                    res = Keys.W;
+                                    break;
+                                case Keys.Q: // Stand
+                                    res = Keys.X;
+                                    break;
+                                case Keys.F4: // Reset all bells
+                                    res = Keys.Y;
+                                    break;
+                */
+                case Keys.G: // Go
+                    res = Keys.Q;
+                    break;
+                case Keys.A: // Bob
+                    res = Keys.R;
+                    break;
+                case Keys.OemSemicolon: // Single
+                    res = Keys.S;
+                    break;
+                case Keys.T: // That's all
+                    res = Keys.T;
+                    break;
+                case Keys.R: // Rounds
+                    res = Keys.U;
+                    break;
+                case Keys.Q: // Stand
+                    res = Keys.V;
+                    break;
+                case Keys.F4: // Reset all bells
+                    res = Keys.W;
+                    break;
+
+            }
+
+            return res;
+        }
+
+        private void ProcessKeyStroke(char keyValue)
+        {
+             if (IsValidAbelCommand(keyValue))
+             {
+                var txBytes = Encoding.ASCII.GetBytes($"{keyValue}");
                 foreach (var _socket in peerSockets)
                 {
                     if (_socket.Connected)
@@ -490,14 +580,14 @@ namespace Muster
                 }
             }
 
-            RingBell(bellNumber);
+            RingBell(keyValue);
         }
 
-        private void RingBell(int bellNumber)
+        private void RingBell(char keyStroke)
         {
-            if (bellNumber >= 0 && bellNumber < numberOfBells)
+            if (IsValidAbelCommand(keyStroke))
             {
-                SendKeystroke(bellNumber);
+                SendKeystroke(keyStroke);
             }
         }
 
@@ -508,11 +598,11 @@ namespace Muster
         const int WM_KEYUP = 0x101;
         const int WM_CHAR = 0x102;
 
-        private void SendKeystroke(int bell)
+        private void SendKeystroke(char keyStroke)
         {
             if (AbelHandle != null)
             {
-                PostMessage(AbelHandle, WM_CHAR, 'A' + bell, 0);
+                PostMessage(AbelHandle, WM_CHAR, keyStroke, 0);
             }
         }
 
@@ -564,6 +654,38 @@ namespace Muster
             FindAbel();
         }
 
+        private bool IsValidAbelCommand(char key)
+        {
+            return ValidAbelCommands.Contains(key);
+        }
+
+        private char FindKeyStrokeForBell(int bell)
+        {
+            if (bell >= 1 && bell <= numberOfBells)
+            {
+                return ValidAbelCommands[bell-1];
+            }
+            else
+                return ' ';
+        }
+
+        private static List<char> SpecifyValidAbelCommands()
+        {
+            List<char> validKeys = new List<char>();
+
+            /*            // Return A-Y except F and J
+                        for (char i = 'A'; i <= 'Y'; i++)
+                            if (i != 'F' && i != 'J')
+                                validKeys.Add(i);
+            */
+
+            // Return A-W
+            for (char i = 'A'; i <= 'W'; i++)
+                validKeys.Add(i);
+
+            return validKeys;
+        }
+
         private void DisplayVersionInformation()
         {
             var ver = getRunningVersion();
@@ -580,6 +702,33 @@ namespace Muster
             {
                 return System.Reflection.Assembly.GetExecutingAssembly().GetName().Version;
             }
+        }
+
+        private void RHBell_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Set LH bell to one more than selected RH bell
+            var idx = RHBell.SelectedIndex + 1;
+            if (idx >= LHBell.Items.Count)
+                idx = 0;
+            LHBell.SelectedIndex = idx;
+        }
+
+        private void Suppress_KeyEvent(object sender, KeyEventArgs e)
+        {
+            // Prevent key presses changing the selected bell
+            e.SuppressKeyPress = true;
+        }
+        private void Suppress_KeyPressEvent(object sender, KeyPressEventArgs e)
+        {
+            // Prevent key presses changing the selected bell
+             e.Handled = true;
+        }
+
+        private void AdvancedMode_CheckedChanged(object sender, EventArgs e)
+        {
+            LHBell.Enabled = !AdvancedMode.Checked;
+            RHBell.Enabled = !AdvancedMode.Checked;
+            KeyInfo.Visible = !AdvancedMode.Checked;
         }
     }
 }
