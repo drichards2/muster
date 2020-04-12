@@ -477,6 +477,13 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
+            if (e.KeyCode == Keys.Space)
+            {
+                logger.Debug($"Key press ignored: {e.KeyCode}");
+                e.SuppressKeyPress = true;
+                return;
+            }
+
             Keys key = ApplyMapping(e);
 
             if (key != Keys.None)
@@ -677,29 +684,23 @@ namespace Muster
             if (idx >= LHBell.Items.Count)
                 idx = 0;
             LHBell.SelectedIndex = idx;
-
-            Control ctl = (Control)sender;
-            ctl.SelectNextControl(ActiveControl, true, true, true, true);
         }
 
-        private void Suppress_KeyPress(object sender, KeyEventArgs e)
+        private void Suppress_KeyEvent(object sender, KeyEventArgs e)
         {
             // Prevent key presses changing the selected bell
             e.SuppressKeyPress = true;
         }
-        private void Suppress_KeyPress2(object sender, KeyPressEventArgs e)
+        private void Suppress_KeyPressEvent(object sender, KeyPressEventArgs e)
         {
             // Prevent key presses changing the selected bell
-            e.Handled = true;
+             e.Handled = true;
         }
 
         private void AdvancedMode_CheckedChanged(object sender, EventArgs e)
         {
             LHBell.Enabled = !AdvancedMode.Checked;
             RHBell.Enabled = !AdvancedMode.Checked;
-
-            Control ctl = (Control)sender;
-            ctl.SelectNextControl(ActiveControl, true, false, true, true);
         }
     }
 }
