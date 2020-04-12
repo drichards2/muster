@@ -89,23 +89,24 @@ namespace Muster
             }
         }
 
-        public async Task<string> SendJoinBandRequest(string bandID, Member member)
+        public async Task<Tuple<string,bool>> SendJoinBandRequest(string bandID, Member member)
         {
             logger.Debug("Joining band: " + bandID);
             var json = JsonConvert.SerializeObject(member);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
 
             var response = await client.PostAsync(APIEndpoint + "bands/" + bandID + "/members", content);
+            string clientID = null;
             if ((int)response.StatusCode == 201)
             {
-                var clientID = await ReadStringResponse(response);
+                clientID = await ReadStringResponse(response);
                 logger.Debug("Joined band with client ID: " + clientID);
-                return clientID;
+                return new Tuple<string,bool>(clientID, false);
             }
             else
             {
                 logger.Error("Error joining band " + bandID + ": " + response.ReasonPhrase);
-                return null;
+                return new Tuple<string,bool>(clientID, (int)response.StatusCode == 403);
             }
         }
 

@@ -117,11 +117,17 @@ namespace Muster
                     name = NameInput.Text,
                     location = LocationInput.Text
                 };
-                clientId = await api.SendJoinBandRequest(bandID.Text, member);
+                var result = await api.SendJoinBandRequest(bandID.Text, member);
+
+                clientId = result.Item1;
+                var bandStarted = result.Item2;
 
                 if (clientId == null)
                 {
-                    MessageBox.Show("Could not join band. Check the band ID is correct and try clicking 'Join/refresh band' again.");
+                    if (bandStarted)
+                        MessageBox.Show("Could not join this band as they've already started ringing. Try joining or making a new band.");
+                    else
+                        MessageBox.Show("Could not find this band. Check the band ID is correct and try clicking 'Join/refresh band' again.");
                     return;
                 }
             }
