@@ -128,12 +128,14 @@ namespace Muster
                 bool timeToConnect = false;
                 joinBandCancellation.Dispose();
                 joinBandCancellation = new CancellationTokenSource();
+                joinBandCancellation.CancelAfter(300 * 1000);
 
                 while (!timeToConnect)
                 {
                     if (joinBandCancellation.Token.IsCancellationRequested)
                     {
                         logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting to start.");
+                        MessageBox.Show("Error while waiting to start ringing. Ask everyone to click 'Join/refresh band' again.");
                         return;
                     }
 
@@ -291,6 +293,7 @@ namespace Muster
             bool ready = false;
             joinBandCancellation.Dispose();
             joinBandCancellation = new CancellationTokenSource();
+            joinBandCancellation.CancelAfter(30 * 1000);
             while (!ready)
             {
                 foreach (var localDetail in localClientDetails)
@@ -299,6 +302,7 @@ namespace Muster
                 if (joinBandCancellation.Token.IsCancellationRequested)
                 {
                     logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                     return;
                 }
 
@@ -328,6 +332,7 @@ namespace Muster
             bool clientReady = false;
             joinBandCancellation.Dispose();
             joinBandCancellation = new CancellationTokenSource();
+            joinBandCancellation.CancelAfter(30 * 1000);
             while (!allReady)
             {
                 foreach (var localDetail in localClientDetails)
@@ -336,6 +341,7 @@ namespace Muster
                 if (joinBandCancellation.Token.IsCancellationRequested)
                 {
                     logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                     return;
                 }
 
