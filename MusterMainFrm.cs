@@ -20,7 +20,6 @@ namespace Muster
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
         private const int numberOfBells = 16;
-        private const int numberOfCommands = 7; 
         private const int MAX_PEERS = 6;
         private const int UDP_BLOCK_SIZE = 1024;
         private readonly List<char> ValidAbelCommands = SpecifyValidAbelCommands();
