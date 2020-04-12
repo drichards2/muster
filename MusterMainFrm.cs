@@ -608,12 +608,12 @@ namespace Muster
             if (key != Keys.None)
             {
                 char keyStroke = (char)key;
-                logger.Debug($"Key press: {e.KeyValue} -> {keyStroke}");
+                logger.Debug($"Key press: {e.KeyCode} -> {keyStroke}");
                 ProcessKeyStroke(keyStroke);
             }
             else
             {
-                logger.Debug($"Key press ignored: {e.KeyValue}");
+                logger.Debug($"Key press ignored: {e.KeyCode}");
             }
         }
 
