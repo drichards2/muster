@@ -58,6 +58,8 @@ namespace Muster
 
             DisplayVersionInformation();
 
+            RHBell.SelectedIndex = 0;
+
             Task.Run(() =>
             {
                 var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
@@ -668,13 +670,13 @@ namespace Muster
             }
         }
 
-        private void LHBell_SelectedIndexChanged(object sender, EventArgs e)
+        private void RHBell_SelectedIndexChanged(object sender, EventArgs e)
         {
-            // Set RH bell to one more than selected LH bell
-            var idx = LHBell.SelectedIndex + 1;
-            if (idx >= RHBell.Items.Count)
+            // Set LH bell to one more than selected RH bell
+            var idx = RHBell.SelectedIndex + 1;
+            if (idx >= LHBell.Items.Count)
                 idx = 0;
-            RHBell.SelectedIndex = idx;
+            LHBell.SelectedIndex = idx;
 
             Control ctl = (Control)sender;
             ctl.SelectNextControl(ActiveControl, true, true, true, true);

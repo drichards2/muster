@@ -263,7 +263,6 @@
             this.LHBell.Size = new System.Drawing.Size(64, 21);
             this.LHBell.TabIndex = 22;
             this.LHBell.TabStop = false;
-            this.LHBell.SelectedIndexChanged += new System.EventHandler(this.LHBell_SelectedIndexChanged);
             this.LHBell.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Suppress_KeyPress);
             // 
             // RHBell
@@ -285,6 +284,7 @@
             "T"});
             this.RHBell.Location = new System.Drawing.Point(212, 129);
             this.RHBell.Name = "RHBell";
+            this.RHBell.SelectedIndexChanged += new System.EventHandler(this.RHBell_SelectedIndexChanged);
             this.RHBell.Size = new System.Drawing.Size(64, 21);
             this.RHBell.TabIndex = 23;
             this.RHBell.TabStop = false;
