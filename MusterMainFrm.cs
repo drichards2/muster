@@ -56,8 +56,6 @@ namespace Muster
 
             FindAbel();
 
-            DisplayVersionInformation();
-
             RHBell.SelectedIndex = 0;
 
             Task.Run(() =>
@@ -806,10 +804,12 @@ namespace Muster
             return validKeys;
         }
 
-        private void DisplayVersionInformation()
+        private void About_Click(object sender, EventArgs e)
         {
             var ver = getRunningVersion();
-            aboutText.Text = $"Muster (version {ver.ToString()}). Written by Dave Richards and Jonathan Agg";
+            MessageBox.Show("Facilitates ringing on Abel with other ringers over the internet. \n" +
+                "Visit https://muster.norfolk-st.co.uk/ for more information.\n" +
+                "Written by Dave Richards and Jonathan Agg.", $"Muster (version { ver.ToString()})");
         }
 
         private Version getRunningVersion()

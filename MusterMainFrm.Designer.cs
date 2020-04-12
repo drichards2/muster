@@ -53,6 +53,7 @@
             this.label1 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
             this.KeyInfo = new System.Windows.Forms.TextBox();
+            this.About = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).BeginInit();
             this.SuspendLayout();
             // 
@@ -334,11 +335,22 @@
             this.KeyInfo.Text = "Bob    A   Single     ;\r\nGo     G   That\'s all T\r\nRounds R   Stand      Q\r\nReset " +
     "bells F4";
             // 
+            // About
+            // 
+            this.About.Location = new System.Drawing.Point(12, 433);
+            this.About.Name = "About";
+            this.About.Size = new System.Drawing.Size(75, 23);
+            this.About.TabIndex = 29;
+            this.About.Text = "Help";
+            this.About.UseVisualStyleBackColor = true;
+            this.About.Click += new System.EventHandler(this.About_Click);
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(476, 464);
+            this.Controls.Add(this.About);
             this.Controls.Add(this.KeyInfo);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label1);
@@ -395,5 +407,6 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox KeyInfo;
+        private System.Windows.Forms.Button About;
     }
 }
