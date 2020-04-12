@@ -234,7 +234,7 @@ namespace Muster
             DisconnectAll();
 
             int numPeers = currentBand.members.Length - 1;
-            logger.Error("Requesting to connect {numPeers} peers", numPeers);
+            logger.Debug("Requesting to connect {numPeers} peers", numPeers);
             if (numPeers > MAX_PEERS)
             {
                 MessageBox.Show($"Can't connect {numPeers} peers - {MAX_PEERS} is the maximum");
@@ -265,7 +265,7 @@ namespace Muster
                     var sent = _socket.SendTo(data, UdpEndPoint);
                     if (sent != data.Length)
                     {
-                        logger.Debug("Problem sending UDP to server, {bytes_expected} expected, {bytes_transmitted} transmitted", data.Length, sent);
+                        logger.Error("Problem sending UDP to server, {bytes_expected} expected, {bytes_transmitted} transmitted", data.Length, sent);
                         MessageBox.Show("Error connecting to server. Try clicking 'Join/refresh band' again.");
                     }
 
@@ -278,7 +278,7 @@ namespace Muster
                     }
                     catch (SocketException se)
                     {
-                        logger.Debug("Timeout waiting for UDP reply from server");
+                        logger.Error("Timeout waiting for UDP reply from server");
 
                     }
 
@@ -321,7 +321,7 @@ namespace Muster
 
                 if (timeOutCancellation.Token.IsCancellationRequested)
                 {
-                    logger.Debug($"Timed out joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    logger.Error($"Timed out joining band {bandID.Text} while waiting for local discovery to be completed.");
                     MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                     return;
                 }
@@ -369,7 +369,7 @@ namespace Muster
 
                 if (timeOutCancellation.Token.IsCancellationRequested)
                 {
-                    logger.Debug($"Timed out joining band {bandID.Text} while waiting for everyone to confirm local discovery worked.");
+                    logger.Error($"Timed out joining band {bandID.Text} while waiting for everyone to confirm local discovery worked.");
                     MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                     return;
                 }
