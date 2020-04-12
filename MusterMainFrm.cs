@@ -517,27 +517,50 @@ namespace Muster
                 case Keys.J: // RH bell
                     res = (Keys) FindKeyStrokeForBell(RHBell.SelectedIndex + 1);
                     break;
+                /*                case Keys.G: // Go
+                                    res = Keys.S;
+                                    break;
+                                case Keys.A: // Bob
+                                    res = Keys.T;
+                                    break;
+                                case Keys.OemSemicolon: // Single
+                                    res = Keys.U;
+                                    break;
+                                case Keys.T: // That's all
+                                    res = Keys.V;
+                                    break;
+                                case Keys.R: // Rounds
+                                    res = Keys.W;
+                                    break;
+                                case Keys.Q: // Stand
+                                    res = Keys.X;
+                                    break;
+                                case Keys.F4: // Reset all bells
+                                    res = Keys.Y;
+                                    break;
+                */
                 case Keys.G: // Go
-                    res = Keys.S;
+                    res = Keys.Q;
                     break;
                 case Keys.A: // Bob
-                    res = Keys.T;
+                    res = Keys.R;
                     break;
                 case Keys.OemSemicolon: // Single
-                    res = Keys.U;
+                    res = Keys.S;
                     break;
                 case Keys.T: // That's all
-                    res = Keys.V;
+                    res = Keys.T;
                     break;
                 case Keys.R: // Rounds
-                    res = Keys.W;
+                    res = Keys.U;
                     break;
                 case Keys.Q: // Stand
-                    res = Keys.X;
+                    res = Keys.V;
                     break;
                 case Keys.F4: // Reset all bells
-                    res = Keys.Y;
+                    res = Keys.W;
                     break;
+
             }
 
             return res;
@@ -651,10 +674,15 @@ namespace Muster
         {
             List<char> validKeys = new List<char>();
 
-            // Return A-Y except F and J
-            for (char i = 'A'; i <= 'Y'; i++)
-                if (i != 'F' && i != 'J')
-                    validKeys.Add(i);
+            /*            // Return A-Y except F and J
+                        for (char i = 'A'; i <= 'Y'; i++)
+                            if (i != 'F' && i != 'J')
+                                validKeys.Add(i);
+            */
+
+            // Return A-W
+            for (char i = 'A'; i <= 'W'; i++)
+                validKeys.Add(i);
 
             return validKeys;
         }
