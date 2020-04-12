@@ -110,6 +110,19 @@ namespace Muster
             }
         }
 
+        public async Task<bool> SendLeaveBandRequest(string bandID, string clientID)
+        {
+            logger.Debug("Leaving band: " + bandID);
+            var response = await client.DeleteAsync(APIEndpoint + "bands/" + bandID + "/members/" + clientID);
+            if ((int)response.StatusCode == 204)
+                return true;
+            else
+            {
+                logger.Error("Error leaving band '" + bandID + "': " + response.ReasonPhrase);
+                return false;
+            }
+        }
+
         private void AcceptJson()
         {
             client.DefaultRequestHeaders.Clear();

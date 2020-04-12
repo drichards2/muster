@@ -137,14 +137,22 @@ namespace Muster
                 bool timeToConnect = false;
                 joinBandCancellation.Dispose();
                 joinBandCancellation = new CancellationTokenSource();
-                joinBandCancellation.CancelAfter(300 * 1000);
+
+                var timeOutCancellation = new CancellationTokenSource();
+                timeOutCancellation.CancelAfter(300 * 1000);
 
                 while (!timeToConnect)
                 {
+                    if (timeOutCancellation.Token.IsCancellationRequested)
+                    {
+                        logger.Debug($"Timed out joining band ID {bandID.Text} while waiting to start.");
+                        MessageBox.Show("Communication error while waiting to start ringing. Ask everyone to click 'Join/refresh band' again.");
+                        return;
+                    }
+
                     if (joinBandCancellation.Token.IsCancellationRequested)
                     {
                         logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting to start.");
-                        MessageBox.Show("Error while waiting to start ringing. Ask everyone to click 'Join/refresh band' again.");
                         return;
                     }
 
@@ -302,16 +310,25 @@ namespace Muster
             bool ready = false;
             joinBandCancellation.Dispose();
             joinBandCancellation = new CancellationTokenSource();
-            joinBandCancellation.CancelAfter(30 * 1000);
+
+            var timeOutCancellation = new CancellationTokenSource();
+            timeOutCancellation.CancelAfter(30 * 1000);
+
             while (!ready)
             {
                 foreach (var localDetail in localClientDetails)
                     localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
 
+                if (timeOutCancellation.Token.IsCancellationRequested)
+                {
+                    logger.Debug($"Timed out joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
+                    return;
+                }
+
                 if (joinBandCancellation.Token.IsCancellationRequested)
                 {
-                    logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
-                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
+                    logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting for local discovery to be completed.");
                     return;
                 }
 
@@ -341,20 +358,28 @@ namespace Muster
             bool clientReady = false;
             joinBandCancellation.Dispose();
             joinBandCancellation = new CancellationTokenSource();
-            joinBandCancellation.CancelAfter(30 * 1000);
+
+            var timeOutCancellation = new CancellationTokenSource();
+            timeOutCancellation.CancelAfter(30 * 1000);
+
             while (!allReady)
             {
                 foreach (var localDetail in localClientDetails)
                     localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
 
-                if (joinBandCancellation.Token.IsCancellationRequested)
+                if (timeOutCancellation.Token.IsCancellationRequested)
                 {
-                    logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    logger.Debug($"Timed out joining band {bandID.Text} while waiting for everyone to confirm local discovery worked.");
                     MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                     return;
                 }
 
-                // Check whether local details have been received for every peer it's required for
+                if (joinBandCancellation.Token.IsCancellationRequested)
+                {
+                    logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting for everyone to confirm local discovery worked.");
+                    return;
+                }
+
                 var anyMissing = false;
                 foreach (var ep in peerEndpoints)
                     if (ep.check_local)
@@ -512,13 +537,15 @@ namespace Muster
             RingBell(keyStroke);
         }
 
-        private void Disconnect_Click(object sender, EventArgs e)
+        private async void Disconnect_Click(object sender, EventArgs e)
         {
-            LeaveBand();
+            await LeaveBand();
         }
 
-        private void LeaveBand()
+        private async Task LeaveBand()
         {
+            if (bandID.Text != null && clientId != null)
+                await api.SendLeaveBandRequest(bandID.Text, clientId);
             joinBandCancellation.Cancel();
             DisconnectAll();
             clientId = null;
