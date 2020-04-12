@@ -728,6 +728,7 @@ namespace Muster
         {
             LHBell.Enabled = !AdvancedMode.Checked;
             RHBell.Enabled = !AdvancedMode.Checked;
+            KeyInfo.Visible = !AdvancedMode.Checked;
         }
     }
 }

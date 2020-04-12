@@ -52,6 +52,7 @@
             this.AdvancedMode = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
+            this.KeyInfo = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).BeginInit();
             this.SuspendLayout();
             // 
@@ -321,11 +322,24 @@
             this.label5.TabIndex = 26;
             this.label5.Text = "Key J";
             // 
+            // KeyInfo
+            // 
+            this.KeyInfo.Enabled = false;
+            this.KeyInfo.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.KeyInfo.Location = new System.Drawing.Point(278, 51);
+            this.KeyInfo.Multiline = true;
+            this.KeyInfo.Name = "KeyInfo";
+            this.KeyInfo.Size = new System.Drawing.Size(186, 66);
+            this.KeyInfo.TabIndex = 27;
+            this.KeyInfo.Text = "Bob    A   Single     ;\r\nGo     G   That\'s all T\r\nRounds R   Stand      Q\r\nReset " +
+    "bells F4";
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(476, 464);
+            this.Controls.Add(this.KeyInfo);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.AdvancedMode);
@@ -380,5 +394,6 @@
         private System.Windows.Forms.CheckBox AdvancedMode;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.TextBox KeyInfo;
     }
 }
