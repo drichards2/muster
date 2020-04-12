@@ -36,6 +36,7 @@ namespace Muster
             public string target_id {get; set;}
             public string ip {get; set;}
             public int port {get; set;}
+            public bool check_local {get; set;}
         }
 
         public string APIServer { get; set; } = "muster.norfolk-st.co.uk";
@@ -159,7 +160,7 @@ namespace Muster
 
         public async Task<bool> SetConnectionStatus(string bandID, string phase, string clientID)
         {
-            logger.Debug("Setting connection status for band: " + bandID);
+            logger.Debug($"Setting status for band >{bandID}< at phase >{phase}<");
 
             var json = JsonConvert.SerializeObject(clientID);
             var content = new StringContent(json, Encoding.UTF8, "application/json");
@@ -171,7 +172,7 @@ namespace Muster
             }
             else
             {
-                logger.Error("Error setting connection status for band " + bandID + ": " + response.ReasonPhrase);
+                logger.Error($"Could not set connection status of '{bandID}/{phase}': {response.ReasonPhrase}");
                 return false;
             }
         }

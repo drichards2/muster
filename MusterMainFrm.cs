@@ -28,6 +28,7 @@ namespace Muster
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
+        private List<UDPDiscoveryService.LocalNetworkClientDetail> localClientDetails = new List<UDPDiscoveryService.LocalNetworkClientDetail>(MAX_PEERS);
         private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
 
         private IntPtr AbelHandle;
@@ -55,8 +56,6 @@ namespace Muster
 
             FindAbel();
 
-            DisplayVersionInformation();
-
             RHBell.SelectedIndex = 0;
 
             Task.Run(() =>
@@ -72,20 +71,40 @@ namespace Muster
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
         {
+            bool isAlreadyConnected = CheckIfConnected();
+            if (isAlreadyConnected)
+            {
+                logger.Debug("Already a member of a band. Aborting request to make a new band.");
+                MessageBox.Show("Already a member of a band. To make a new band, disconnect from the existing band and click 'Make a new band' again.");
+                return;
+            }
+
             var newBandID = await api.CreateBand();
             bandID.Text = newBandID;
-
-            clientId = null;
-            bandDetails.Rows.Clear();
-            localUDPDiscoveryService.ClearLocalClients();
         }
 
+        private bool CheckIfConnected()
+        {
+            bool isAlreadyConnected = false;
+            foreach (var peer in peerSockets)
+                if (peer.Connected)
+                    isAlreadyConnected = true;
+            return isAlreadyConnected;
+        }
 
         private async void JoinBand_Click(object sender, EventArgs e)
         {
             if (bandID.Text.Length == 0)
             {
                 MessageBox.Show("The band ID is empty.\nEither click 'Make a new band', or type in the ID of an existing band. Then click 'Join/refresh band' again.");
+                return;
+            }
+
+            bool isAlreadyConnected = CheckIfConnected();
+            if (isAlreadyConnected)
+            {
+                logger.Debug("Already a member of a band. Aborting request to join a band.");
+                MessageBox.Show("Already a member of a band. To join a new band, disconnect from the existing band and click 'Join/refresh band' again.");
                 return;
             }
 
@@ -112,12 +131,14 @@ namespace Muster
                 bool timeToConnect = false;
                 joinBandCancellation.Dispose();
                 joinBandCancellation = new CancellationTokenSource();
+                joinBandCancellation.CancelAfter(300 * 1000);
 
                 while (!timeToConnect)
                 {
                     if (joinBandCancellation.Token.IsCancellationRequested)
                     {
                         logger.Debug($"Cancelled joining band ID {bandID.Text} while waiting to start.");
+                        MessageBox.Show("Error while waiting to start ringing. Ask everyone to click 'Join/refresh band' again.");
                         return;
                     }
 
@@ -167,6 +188,33 @@ namespace Muster
             }
         }
 
+        private async void SetupPeerSockets()
+        {
+            SendUDPMessagesToServer();
+
+            await AllClientsFinishedLocalDiscovery();
+
+            await GetEndpointsFromServer();
+
+            await AllClientsReceivedLocalDetails();
+
+            var localClientsReceived = localUDPDiscoveryService.LocalClients;
+            foreach (var client in localClientsReceived)
+            {
+                logger.Debug("Local client {address}:{port}", client.address, client.port);
+            }
+
+            var otherBandMembers = GetOtherBandMembers();
+
+            for (int idx = 0; idx < peerSockets.Count; idx++)
+            {
+                BindSocket(idx, otherBandMembers[idx].id, localClientsReceived);
+                AddListenerToSocket(idx);
+            }
+
+            TestConnection();
+        }
+
         private async void SendUDPMessagesToServer()
         {
             DisconnectAll();
@@ -186,6 +234,12 @@ namespace Muster
                 socket.Connect("8.8.8.8", 65530);
                 IPEndPoint endPoint = socket.LocalEndPoint as IPEndPoint;
                 _localIP = endPoint.Address.ToString();
+            }
+
+            if (localClientDetails.Count != 0)
+            {
+                logger.Debug("Unexpected local client details remaining. Removing them again.");
+                localClientDetails.Clear();
             }
 
             foreach (var peer in currentBand.members)
@@ -223,144 +277,93 @@ namespace Muster
 
                     // Broadcast to local network that this client is hoping to receive messages on this entry point
                     var localEndpoint = _socket.LocalEndPoint as IPEndPoint;
-                    localUDPDiscoveryService.BroadcastClientAvailable(new UDPDiscoveryService.LocalNetworkClientDetail
+                    var _localDetail = new UDPDiscoveryService.LocalNetworkClientDetail
                     {
                         socket_owner_id = clientId,
                         address = _localIP,
                         port = localEndpoint.Port,
                         required_destination_id = peer.id
-                    });
+                    };
+                    localUDPDiscoveryService.BroadcastClientAvailable(_localDetail);
+                    localClientDetails.Add(_localDetail);
                 }
 
             var success = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE, clientId);
         }
 
-        private async void SetupPeerSockets()
+        private async Task AllClientsFinishedLocalDiscovery()
         {
-            SendUDPMessagesToServer();
-
             bool ready = false;
             joinBandCancellation.Dispose();
             joinBandCancellation = new CancellationTokenSource();
+            joinBandCancellation.CancelAfter(30 * 1000);
             while (!ready)
             {
+                foreach (var localDetail in localClientDetails)
+                    localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
+
                 if (joinBandCancellation.Token.IsCancellationRequested)
                 {
                     logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                     return;
                 }
 
                 ready = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE);
                 await Task.Delay(1000); // don't block GUI
             }
+        }
 
+        private async Task GetEndpointsFromServer()
+        {
             peerEndpoints = await api.GetEndpointsForBand(bandID.Text, clientId);
 
             if (peerEndpoints == null || peerEndpoints.Count != peerSockets.Count)
             {
                 logger.Error("Did not receive the expected number of endpoints");
                 logger.Error("Endpoints: {endpoints}", peerEndpoints);
-                logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
-                MessageBox.Show("Error connecting to other ringers. Try clicking 'Join/refresh band' again.");
+                if (peerEndpoints != null)
+                    logger.Error("{endpoint_count}/{socket_count}", peerEndpoints.Count, peerSockets.Count);
+                MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
                 return;
             }
+        }
 
-            var localClients = localUDPDiscoveryService.LocalClients;
-            foreach (var client in localClients)
-                logger.Debug("Local client {address}:{port}", client.address, client.port);
-
-            var otherBandMembers = GetOtherBandMembers();
-
-            for (int idx = 0; idx < peerSockets.Count; idx++)
+        private async Task AllClientsReceivedLocalDetails()
+        {
+            bool allReady = false;
+            bool clientReady = false;
+            joinBandCancellation.Dispose();
+            joinBandCancellation = new CancellationTokenSource();
+            joinBandCancellation.CancelAfter(30 * 1000);
+            while (!allReady)
             {
-                var _socket = peerSockets[idx];
+                foreach (var localDetail in localClientDetails)
+                    localUDPDiscoveryService.BroadcastClientAvailable(localDetail);
 
-                string _targetId = "";
-                string _targetIp = "";
-                int _targetPort = 0;
+                if (joinBandCancellation.Token.IsCancellationRequested)
+                {
+                    logger.Debug($"Cancelled joining band {bandID.Text} while waiting for local discovery to be completed.");
+                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
+                    return;
+                }
+
+                // Check whether local details have been received for every peer it's required for
+                var anyMissing = false;
                 foreach (var ep in peerEndpoints)
+                    if (ep.check_local)
+                        anyMissing = !localUDPDiscoveryService.CheckDetailReceivedFor(ep.target_id);
+
+                // Send status to the server once we're ready, but not again on subsequent loop iterations
+                if (!anyMissing && !clientReady)
                 {
-                    if (ep.target_id == otherBandMembers[idx].id)
-                    {
-                        _targetId = ep.target_id;
-                        _targetIp = ep.ip;
-                        _targetPort = ep.port;
-                        break;
-                    }
+                    var status = await api.SetConnectionStatus(bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED, clientId);
+                    clientReady = status;
                 }
 
-                // Use client's local network if local peer
-                bool isLocal = false;
-                foreach (var localEP in localClients)
-                    if ((_targetId == localEP.socket_owner_id) && (localEP.required_destination_id == clientId))
-                    {
-                        isLocal = true;
-                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _targetId, localEP.address, localEP.port);
-                        _socket.Connect(localEP.address, localEP.port);
-                        break;
-                    }
-
-                // Otherwise, connect over the internet
-                if (!isLocal)
-                {
-                    logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _targetId, _targetIp, _targetPort);
-                    _socket.Connect(_targetIp, _targetPort);
-                }
-
-                var ctokenSource = new CancellationTokenSource();
-                peerCancellation.Add(ctokenSource);
-
-                var runParameters = new ListenerTask.ListenerConfig
-                {
-                    cancellationToken = ctokenSource.Token,
-                    peerChannel = idx,
-                    srcSocket = peerSockets[idx],
-                    BellStrikeEvent = BellStrike,
-                    EchoBackEvent = SocketEcho
-                };
-
-                var listenerTask = new Task(() =>
-                {
-                    runParameters.srcSocket.ReceiveTimeout = 5000;
-
-                    byte[] buffer = new byte[UDP_BLOCK_SIZE];
-                    while (!runParameters.cancellationToken.IsCancellationRequested)
-                    {
-                        try
-                        {
-                            // Blocks until a message returns on this socket from a remote host.
-                            var bytesReceived = runParameters.srcSocket.Receive(buffer);
-
-                            var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                            logger.Debug("Received '{message}' from {source}", message, runParameters.srcSocket.RemoteEndPoint.ToString());
-
-                            for (int i = 0; i < bytesReceived; i++)
-                            {
-                                if (IsValidAbelCommand((char) buffer[i]))
-                                {
-                                    runParameters.BellStrikeEvent?.Invoke((char) buffer[i]);
-                                }
-                                else if (buffer[i] == '?')
-                                {
-                                    runParameters.srcSocket.Send(new byte[] { (byte)'#' });
-                                }
-                                else if (buffer[i] == '#')
-                                {
-                                    logger.Debug($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
-                                    runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
-                                }
-                            }
-                        }
-                        catch (SocketException se)
-                        {
-                            // Probably OK?
-                        }
-                    }
-                });
-                listenerTask.Start();
+                allReady = await api.ConnectionPhaseAllResponded(currentBand, bandID.Text, MusterAPIExtended.ConnectionPhases.ENDPOINTS_REGISTERED);
+                await Task.Delay(1000); // don't block GUI
             }
-
-            TestConnection();
         }
 
         private List<MusterAPI.Member> GetOtherBandMembers()
@@ -373,6 +376,109 @@ namespace Muster
                     peers.Add(member);
             }
             return peers;
+        }
+
+        private void BindSocket(int idx, string target_id, List<UDPDiscoveryService.LocalNetworkClientDetail> localClientsReceived)
+        {
+            var _socket = peerSockets[idx];
+
+            // For each peer, find the corresponding endpoint
+            MusterAPI.Endpoint _relevantEP = null;
+            foreach (var ep in peerEndpoints)
+            {
+                if (ep.target_id == target_id)
+                {
+                    _relevantEP = ep;
+                    break;
+                }
+            }
+
+            if (_relevantEP == null)
+            {
+                logger.Error("Could not find endpoint for {target}", target_id);
+                MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
+                return;
+            }
+
+            // Use client's local network if local peer
+            if (_relevantEP.check_local)
+            {
+                // Find the relevent local client detail
+                foreach (var localEP in localClientsReceived)
+                    if ((localEP.socket_owner_id == _relevantEP.target_id) && (localEP.required_destination_id == clientId))
+                    {
+                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _relevantEP.target_id, localEP.address, localEP.port);
+                        _socket.Connect(localEP.address, localEP.port);
+                        break;
+                    }
+
+                if (!_socket.Connected)
+                {
+                    logger.Error("Could not find local details for {target}", _relevantEP.target_id);
+                    MessageBox.Show("Connecting to other ringers failed. Ask everyone to join a new band and try again.");
+                    return;
+                }
+            }
+            else // Otherwise, connect over the internet
+            {
+                logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
+                _socket.Connect(_relevantEP.ip, _relevantEP.port);
+            }
+        }
+
+        private void AddListenerToSocket(int idx)
+        {
+            var ctokenSource = new CancellationTokenSource();
+            peerCancellation.Add(ctokenSource);
+
+            var runParameters = new ListenerTask.ListenerConfig
+            {
+                cancellationToken = ctokenSource.Token,
+                peerChannel = idx,
+                srcSocket = peerSockets[idx],
+                BellStrikeEvent = BellStrike,
+                EchoBackEvent = SocketEcho
+            };
+
+            var listenerTask = new Task(() =>
+            {
+                runParameters.srcSocket.ReceiveTimeout = 5000;
+
+                byte[] buffer = new byte[UDP_BLOCK_SIZE];
+                while (!runParameters.cancellationToken.IsCancellationRequested)
+                {
+                    try
+                    {
+                        // Blocks until a message returns on this socket from a remote host.
+                        var bytesReceived = runParameters.srcSocket.Receive(buffer);
+
+                        var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
+                        logger.Debug("Received '{message}' from {source}", message, runParameters.srcSocket.RemoteEndPoint.ToString());
+
+                        for (int i = 0; i < bytesReceived; i++)
+                        {
+                            if (IsValidAbelCommand((char)buffer[i]))
+                            {
+                                runParameters.BellStrikeEvent?.Invoke((char)buffer[i]);
+                            }
+                            else if (buffer[i] == '?')
+                            {
+                                runParameters.srcSocket.Send(new byte[] { (byte)'#' });
+                            }
+                            else if (buffer[i] == '#')
+                            {
+                                logger.Debug($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
+                                runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
+                            }
+                        }
+                    }
+                    catch (SocketException se)
+                    {
+                        // Probably OK?
+                    }
+                }
+            });
+            listenerTask.Start();
         }
 
         private void SocketEcho(int peerChannel)
@@ -402,6 +508,11 @@ namespace Muster
 
         private void Disconnect_Click(object sender, EventArgs e)
         {
+            LeaveBand();
+        }
+
+        private void LeaveBand()
+        {
             joinBandCancellation.Cancel();
             DisconnectAll();
             clientId = null;
@@ -417,6 +528,12 @@ namespace Muster
 
         private void TestConnection()
         {
+            if (bandDetails.Rows.Count < currentBand.members.Length)
+            {
+                logger.Debug($"Abandoning testing connection. Something's gone wrong.");
+                return;
+            }
+
             for (int idx = 0; idx < currentBand.members.Length; idx++)
                 if (currentBand.members[idx].id != clientId)
                     bandDetails.Rows[idx].Cells[2].Value = "Testing connection";
@@ -462,6 +579,7 @@ namespace Muster
             }
 
             ClosePeerSockets();
+            localClientDetails.Clear();
 
             if (currentBand != null)
             {
@@ -487,13 +605,13 @@ namespace Muster
 
             if (key != Keys.None)
             {
-                char keyStroke = (char) key;
-                logger.Debug($"Key press: {e.KeyValue} -> {keyStroke}");
+                char keyStroke = (char)key;
+                logger.Debug($"Key press: {e.KeyCode} -> {keyStroke}");
                 ProcessKeyStroke(keyStroke);
             }
             else
             {
-                logger.Debug($"Key press ignored: {e.KeyValue}");
+                logger.Debug($"Key press ignored: {e.KeyCode}");
             }
         }
 
@@ -501,7 +619,7 @@ namespace Muster
         {
             if (AdvancedMode.Checked)
             {
-                if (IsValidAbelCommand((char) e.KeyCode))
+                if (IsValidAbelCommand((char)e.KeyCode))
                     return e.KeyCode;
                 else
                     return Keys.None;
@@ -511,10 +629,10 @@ namespace Muster
             switch (e.KeyCode)
             {
                 case Keys.F: // LH bell
-                    res = (Keys) FindKeyStrokeForBell(LHBell.SelectedIndex + 1);
+                    res = (Keys)FindKeyStrokeForBell(LHBell.SelectedIndex + 1);
                     break;
                 case Keys.J: // RH bell
-                    res = (Keys) FindKeyStrokeForBell(RHBell.SelectedIndex + 1);
+                    res = (Keys)FindKeyStrokeForBell(RHBell.SelectedIndex + 1);
                     break;
                 /*                case Keys.G: // Go
                                     res = Keys.S;
@@ -567,8 +685,8 @@ namespace Muster
 
         private void ProcessKeyStroke(char keyValue)
         {
-             if (IsValidAbelCommand(keyValue))
-             {
+            if (IsValidAbelCommand(keyValue))
+            {
                 var txBytes = Encoding.ASCII.GetBytes($"{keyValue}");
                 foreach (var _socket in peerSockets)
                 {
@@ -663,7 +781,7 @@ namespace Muster
         {
             if (bell >= 1 && bell <= numberOfBells)
             {
-                return ValidAbelCommands[bell-1];
+                return ValidAbelCommands[bell - 1];
             }
             else
                 return ' ';
@@ -686,10 +804,12 @@ namespace Muster
             return validKeys;
         }
 
-        private void DisplayVersionInformation()
+        private void About_Click(object sender, EventArgs e)
         {
             var ver = getRunningVersion();
-            aboutText.Text = $"Muster (version {ver.ToString()}). Written by Dave Richards and Jonathan Agg";
+            MessageBox.Show("Facilitates ringing on Abel with other ringers over the internet. \n" +
+                "Visit https://muster.norfolk-st.co.uk/ for more information.\n" +
+                "Written by Dave Richards and Jonathan Agg.", $"Muster (version { ver.ToString()})");
         }
 
         private Version getRunningVersion()
@@ -721,7 +841,7 @@ namespace Muster
         private void Suppress_KeyPressEvent(object sender, KeyPressEventArgs e)
         {
             // Prevent key presses changing the selected bell
-             e.Handled = true;
+            e.Handled = true;
         }
 
         private void AdvancedMode_CheckedChanged(object sender, EventArgs e)

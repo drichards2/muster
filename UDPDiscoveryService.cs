@@ -22,6 +22,11 @@ namespace Muster
             public string address;
             public int port;
             public string required_destination_id;
+
+            public override string ToString()
+            {
+                return $"Owner: {socket_owner_id} will send to target: {required_destination_id} from {address}:{port}";
+            }
         }
 
         private Socket listener;
@@ -36,15 +41,29 @@ namespace Muster
             {
                 while (queue.TryDequeue(out var newClient))
                 {
-                    logger.Debug("UDP dequeue client {client}", newClient);
+                    logger.Debug("UDP dequeue client {client}", newClient.ToString());
                     _clients.Add(newClient);
                 }
                 return _clients;
             } }
 
+        public bool CheckDetailReceivedFor(string clientID)
+        {
+            bool isSeen = false;
+            foreach (var detail in LocalClients)
+            {
+                if (detail.socket_owner_id == clientID)
+                {
+                    isSeen = true;
+                    break;
+                }
+            }
+            return isSeen;
+        }
 
         public void BroadcastClientAvailable(LocalNetworkClientDetail clientDetail)
         {
+            logger.Debug($"Broadcasting local detail {clientDetail.address}:{clientDetail.port}");
             var broadcastAddress = new IPEndPoint(IPAddress.Broadcast, NETWORK_LISTEN_PORT);
             string detailAsJSON = JsonConvert.SerializeObject(clientDetail);
             byte[] broadcastPacket = Encoding.ASCII.GetBytes(detailAsJSON);
@@ -88,7 +107,7 @@ namespace Muster
                             string jsonRepr = Encoding.ASCII.GetString(buffer.Take(bytesReceived).ToArray());
                             logger.Debug("Received client detail {client_json}", jsonRepr);
                             var clientDetail = JsonConvert.DeserializeObject<LocalNetworkClientDetail>(jsonRepr);
-                            logger.Debug("Queued client detail {client}", clientDetail);
+                            logger.Debug("Queued client detail {client}", clientDetail.ToString());
                             queue.Enqueue(clientDetail);
                         }
                         catch
