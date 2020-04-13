@@ -57,6 +57,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AbelAPI.cs" />
     <Compile Include="ListenerTask.cs" />
     <Compile Include="MusterAPI.cs" />
     <Compile Include="MusterAPIExtended.cs" />

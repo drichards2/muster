@@ -22,9 +22,11 @@ namespace Muster
         private const int numberOfBells = 16;
         private const int MAX_PEERS = 6;
         private const int UDP_BLOCK_SIZE = 1024;
-        private readonly List<char> ValidAbelCommands = SpecifyValidAbelCommands();
 
         private readonly MusterAPIExtended api = new MusterAPIExtended();
+        private readonly Abel.AbelAPI abelAPI = new Abel.AbelAPI();
+        private static readonly List<char> ValidAbelCommands = Abel.AbelAPI.SpecifyValidAbelCommands();
+
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
@@ -36,7 +38,6 @@ namespace Muster
         private const bool EnableKeepAlives = true;
         private float TXThreshold = 5000;
 
-        private IntPtr AbelHandle;
         private IPEndPoint UdpEndPoint => UdpEndPointResolver.Result;
         private Task<IPEndPoint> UdpEndPointResolver;
 
@@ -784,65 +785,25 @@ namespace Muster
         {
             if (IsValidAbelCommand(keyStroke))
             {
-                SendKeystroke(keyStroke);
+                abelAPI.SendKeystroke(keyStroke);
             }
         }
-
-        [DllImport("user32.dll")]
-        static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-
-        const int WM_KEYDOWN = 0x100;
-        const int WM_KEYUP = 0x101;
-        const int WM_CHAR = 0x102;
-
-        private void SendKeystroke(char keyStroke)
-        {
-            if (AbelHandle != null)
-            {
-                PostMessage(AbelHandle, WM_CHAR, keyStroke, 0);
-            }
-        }
-
-        [DllImport("user32.dll")]
-        private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
 
         private void FindAbel()
         {
-            var foundHandle = IntPtr.Zero;
-            // Inspired by the Abel connection in Graham John's Handbell Manager (https://github.com/GACJ/handbellmanager)
-            Process[] currentProcesses = Process.GetProcesses();
-            foreach (Process p in currentProcesses)
-            {
-                if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
-                {
-                    foundHandle = p.MainWindowHandle;
+            abelAPI.FindAbel();
 
-                    string ChildWindow = "AfxMDIFrame140s";
-                    string GrandchildWindow = "AfxFrameOrView140s";
-
-                    foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, ChildWindow, "");
-                    foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, GrandchildWindow, "");
-                    if (foundHandle != IntPtr.Zero)
-                        break;
-                }
-            }
-
-            if (foundHandle != AbelHandle)
-            {
-                AbelHandle = foundHandle;
-            }
-
-            if (AbelHandle == IntPtr.Zero)
-            {
-                abelConnectLabel.Text = "Abel: Not connected";
-                abelConnectLabel.ForeColor = Color.DarkOrange;
-                abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Bold);
-            }
-            else
+            if (abelAPI.IsAbelConnected())
             {
                 abelConnectLabel.Text = "Abel: Connected";
                 abelConnectLabel.ForeColor = Color.CadetBlue;
                 abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Regular);
+            }
+            else
+            {
+                abelConnectLabel.Text = "Abel: Not connected";
+                abelConnectLabel.ForeColor = Color.DarkOrange;
+                abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Bold);
             }
         }
 
@@ -864,23 +825,6 @@ namespace Muster
             }
             else
                 return ' ';
-        }
-
-        private static List<char> SpecifyValidAbelCommands()
-        {
-            List<char> validKeys = new List<char>();
-
-            /*            // Return A-Y except F and J
-                        for (char i = 'A'; i <= 'Y'; i++)
-                            if (i != 'F' && i != 'J')
-                                validKeys.Add(i);
-            */
-
-            // Return A-W
-            for (char i = 'A'; i <= 'W'; i++)
-                validKeys.Add(i);
-
-            return validKeys;
         }
 
         private void About_Click(object sender, EventArgs e)
