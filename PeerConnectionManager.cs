@@ -18,9 +18,9 @@ namespace Muster
         public string bandID
         {
             get { return bandIDDisplay.Text; }
-            internal set { bandIDDisplay.Text = value; } 
+            internal set { bandIDDisplay.Text = value; }
         }
-        public Abel.AbelAPI simulator { get; set; }
+        public AbelAPI simulator { get; set; }
         public bool EnableKeepAlives { get; set; }
         public DataGridView bandDetails { get; set; }
         public TextBox bandIDDisplay { get; set; }
@@ -105,7 +105,7 @@ namespace Muster
                     name = name,
                     location = location
                 };
-                var result = await serverAPI.SendJoinBandRequest(bandIDDisplay.Text, member);
+                var result = await serverAPI.SendJoinBandRequest(bandID, member);
 
                 clientId = result.Item1;
                 var bandStarted = result.Item2;
@@ -272,7 +272,6 @@ namespace Muster
                     catch (SocketException se)
                     {
                         logger.Error("Timeout waiting for UDP reply from server");
-
                     }
 
                     if (numBytesReceived == 0 || buffer[0] != '+')
@@ -481,7 +480,7 @@ namespace Muster
 
                         for (int i = 0; i < bytesReceived; i++)
                         {
-                            if (simulator.IsValidAbelCommand((char)buffer[i]))
+                            if (simulator.IsValidAbelKeystroke((char)buffer[i]))
                             {
                                 runParameters.BellStrikeEvent?.Invoke((char)buffer[i]);
                             }
@@ -613,7 +612,7 @@ namespace Muster
                     if (bandDetails.Rows.Count > idx)
                         bandDetails.Rows[idx].Cells[2].Value = message;
                 }
-            } 
+            }
         }
 
         public void keepAlive_Tick()
@@ -625,11 +624,11 @@ namespace Muster
                 }
         }
 
-        public void SendAndRingKeyStroke(char keyValue)
+        public void SendAndRingKeyStroke(RingingEvent ringingEvent)
         {
-            if (simulator.IsValidAbelCommand(keyValue))
+            if (simulator.IsValidAbelCommand(ringingEvent))
             {
-                var txBytes = Encoding.ASCII.GetBytes($"{keyValue}");
+                var txBytes = Encoding.ASCII.GetBytes($"{ringingEvent.ToByte()}");
                 foreach (var _socket in peerSockets)
                 {
                     if (_socket.Connected)
@@ -643,7 +642,7 @@ namespace Muster
             if (SendKeepAlives)
                 TimeSinceLastTX.Restart();
 
-            simulator.RingBell(keyValue);
+            simulator.SendRingingEvent(ringingEvent);
         }
     }
 }

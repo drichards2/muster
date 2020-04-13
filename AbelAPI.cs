@@ -1,15 +1,33 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.InteropServices;
 
-namespace Abel
+namespace Muster
 {
     internal class AbelAPI
     {
         private IntPtr AbelHandle;
 
+        private Dictionary<string, char> RingingCommands = new Dictionary<string, char>
+        {
+            {"Go", 'Q' },
+            {"Bob", 'R' },
+            {"Single", 'S' },
+            {"ThatsAll", 'T' },
+            {"Rounds", 'U' },
+            {"Stand", 'V' },
+            {"ResetBells", 'W' }
+        };
+
         public const int numberOfBells = 16;
+
+        public AbelAPI()
+        {
+            for (int i = 0; i < numberOfBells; i++)
+                RingingCommands.Add((i + 1).ToString(), (char)('A' + i));
+        }
 
         public bool IsAbelConnected()
         {
@@ -61,45 +79,51 @@ namespace Abel
             }
         }
 
-        private static List<char> SpecifyValidAbelCommands()
+        public void SendRingingEvent(RingingEvent evt)
         {
-            List<char> validKeys = new List<char>();
+            if (IsValidAbelCommand(evt))
+            {
+                SendKeystroke(evt.ToByte());
+            }
+        }
 
-            /*            // Return A-Y except F and J
-                        for (char i = 'A'; i <= 'Y'; i++)
-                            if (i != 'F' && i != 'J')
-                                validKeys.Add(i);
-            */
-
-            // Return A-W
-            for (char i = 'A'; i <= 'W'; i++)
-                validKeys.Add(i);
-
-            return validKeys;
+        public bool IsValidAbelCommand(RingingEvent ringingEvent)
+        {
+            return RingingCommands.ContainsKey(ringingEvent.ToString());
         }
 
         public void RingBell(char keyStroke)
         {
-            if (IsValidAbelCommand(keyStroke))
+            if (IsValidAbelKeystroke(keyStroke))
             {
                 SendKeystroke(keyStroke);
             }
         }
 
-        public bool IsValidAbelCommand(char key)
+        public bool IsValidAbelKeystroke(char key)
         {
-            return SpecifyValidAbelCommands().Contains(key);
+            return RingingCommands.ContainsValue(key);
         }
 
-        public char FindKeyStrokeForBell(int bell)
+        public RingingEvent FindEventForCommand(string command)
         {
-            if (bell >= 1 && bell <= numberOfBells)
+            if (RingingCommands.ContainsKey(command))
             {
-                return SpecifyValidAbelCommands()[bell - 1];
+                return new RingingEvent(command, RingingCommands[command]);
             }
             else
-                return ' ';
+                return null;
         }
 
+        public RingingEvent FindEventForKeystroke(char keyStroke)
+        {
+            var reversed = RingingCommands.ToDictionary(x => x.Value, x => x.Key);
+            if (reversed.ContainsKey(keyStroke))
+            {
+                return new RingingEvent(reversed[keyStroke], keyStroke);
+            }
+            else
+                return null;
+        }
     }
 }

@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -12,7 +10,7 @@ namespace Muster
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        private readonly Abel.AbelAPI abelAPI = new Abel.AbelAPI();
+        private readonly AbelAPI abelAPI = new AbelAPI();
         private readonly PeerConnectionManager peerConnectionManager;
 
         private const bool EnableKeepAlives = true;
@@ -45,7 +43,7 @@ namespace Muster
                 var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
                 foreach (var bell in bellOrder)
                 {
-                    abelAPI.RingBell(abelAPI.FindKeyStrokeForBell(bell));
+                    abelAPI.SendRingingEvent(abelAPI.FindEventForCommand(bell.ToString()));
                     Thread.Sleep(150);
                 }
             });
@@ -58,7 +56,7 @@ namespace Muster
 
         private async void JoinBand_Click(object sender, EventArgs e)
         {
-             await peerConnectionManager.JoinBandRequest(NameInput.Text, LocationInput.Text);
+            await peerConnectionManager.JoinBandRequest(NameInput.Text, LocationInput.Text);
         }
 
         private async void Connect_Click(object sender, EventArgs e)
@@ -90,13 +88,12 @@ namespace Muster
                 return;
             }
 
-            Keys key = ApplyMapping(e);
+            RingingEvent evt = ApplyMapping(e);
 
-            if (key != Keys.None)
+            if (evt != null)
             {
-                char keyStroke = (char)key;
-                logger.Debug($"Key press: {e.KeyCode} -> {keyStroke}");
-                peerConnectionManager.SendAndRingKeyStroke(keyStroke);
+                logger.Debug($"Key press: {e.KeyCode} -> {evt}");
+                peerConnectionManager.SendAndRingKeyStroke(evt);
             }
             else
             {
@@ -104,69 +101,46 @@ namespace Muster
             }
         }
 
-        private Keys ApplyMapping(KeyEventArgs e)
+        private RingingEvent ApplyMapping(KeyEventArgs e)
         {
             if (AdvancedMode.Checked)
             {
-                if (abelAPI.IsValidAbelCommand((char)e.KeyCode))
-                    return e.KeyCode;
+                if (abelAPI.IsValidAbelKeystroke((char)e.KeyCode))
+                    return abelAPI.FindEventForKeystroke((char)e.KeyCode);
                 else
-                    return Keys.None;
+                    return null;
             }
 
-            Keys res = Keys.None;
+            RingingEvent res = null;
             switch (e.KeyCode)
             {
                 case Keys.F: // LH bell
-                    res = (Keys)abelAPI.FindKeyStrokeForBell(LHBell.SelectedIndex + 1);
+                    res = abelAPI.FindEventForCommand((LHBell.SelectedIndex + 1).ToString());
                     break;
                 case Keys.J: // RH bell
-                    res = (Keys)abelAPI.FindKeyStrokeForBell(RHBell.SelectedIndex + 1);
+                    res = abelAPI.FindEventForCommand((RHBell.SelectedIndex + 1).ToString());
                     break;
-                /*                case Keys.G: // Go
-                                    res = Keys.S;
-                                    break;
-                                case Keys.A: // Bob
-                                    res = Keys.T;
-                                    break;
-                                case Keys.OemSemicolon: // Single
-                                    res = Keys.U;
-                                    break;
-                                case Keys.T: // That's all
-                                    res = Keys.V;
-                                    break;
-                                case Keys.R: // Rounds
-                                    res = Keys.W;
-                                    break;
-                                case Keys.Q: // Stand
-                                    res = Keys.X;
-                                    break;
-                                case Keys.F4: // Reset all bells
-                                    res = Keys.Y;
-                                    break;
-                */
                 case Keys.G: // Go
-                    res = Keys.Q;
+                    res = abelAPI.FindEventForCommand("Go");
                     break;
                 case Keys.A: // Bob
-                    res = Keys.R;
+                    res = abelAPI.FindEventForCommand("Bob");
                     break;
                 case Keys.OemSemicolon: // Single
-                    res = Keys.S;
+                    res = abelAPI.FindEventForCommand("Single");
                     break;
                 case Keys.T: // That's all
-                    res = Keys.T;
+                    res = abelAPI.FindEventForCommand("ThatsAll");
                     break;
                 case Keys.R: // Rounds
-                    res = Keys.U;
+                    res = abelAPI.FindEventForCommand("Rounds");
                     break;
                 case Keys.Q: // Stand
-                    res = Keys.V;
+                    res = abelAPI.FindEventForCommand("Stand");
                     break;
                 case Keys.F4: // Reset all bells
-                    res = Keys.W;
+                    res = abelAPI.FindEventForCommand("ResetBells");
                     break;
-
             }
 
             return res;

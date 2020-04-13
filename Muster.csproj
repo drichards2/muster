@@ -70,6 +70,7 @@
     <Compile Include="MusterPgm.cs" />
     <Compile Include="PeerConnectionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="RingingEvent.cs" />
     <Compile Include="UDPDiscoveryService.cs" />
     <EmbeddedResource Include="MusterMainFrm.resx">
       <DependentUpon>MusterMainFrm.cs</DependentUpon>
