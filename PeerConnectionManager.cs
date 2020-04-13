@@ -628,7 +628,7 @@ namespace Muster
         {
             if (simulator.IsValidAbelCommand(ringingEvent))
             {
-                var txBytes = Encoding.ASCII.GetBytes($"{ringingEvent.ToByte()}");
+                var txBytes = Encoding.ASCII.GetBytes($"{ringingEvent.ToChar()}");
                 foreach (var _socket in peerSockets)
                 {
                     if (_socket.Connected)

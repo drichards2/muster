@@ -83,7 +83,7 @@ namespace Muster
         {
             if (IsValidAbelCommand(evt))
             {
-                SendKeystroke(evt.ToByte());
+                SendKeystroke(evt.ToChar());
             }
         }
 

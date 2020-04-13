@@ -22,7 +22,7 @@ namespace Muster
             return Name;
         }
 
-        public char ToByte()
+        public char ToChar()
         {
             return Message;
         }
