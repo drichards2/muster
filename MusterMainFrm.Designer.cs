@@ -54,6 +54,7 @@
             this.label5 = new System.Windows.Forms.Label();
             this.KeyInfo = new System.Windows.Forms.TextBox();
             this.About = new System.Windows.Forms.Button();
+            this.keepAlive = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).BeginInit();
             this.SuspendLayout();
             // 
@@ -345,6 +346,11 @@
             this.About.UseVisualStyleBackColor = true;
             this.About.Click += new System.EventHandler(this.About_Click);
             // 
+            // keepAlive
+            // 
+            this.keepAlive.Interval = 1000;
+            this.keepAlive.Tick += new System.EventHandler(this.keepAlive_Tick);
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -408,5 +414,6 @@
         private System.Windows.Forms.Label label5;
         private System.Windows.Forms.TextBox KeyInfo;
         private System.Windows.Forms.Button About;
+        private System.Windows.Forms.Timer keepAlive;
     }
 }

@@ -30,6 +30,11 @@ namespace Muster
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
         private List<UDPDiscoveryService.LocalNetworkClientDetail> localClientDetails = new List<UDPDiscoveryService.LocalNetworkClientDetail>(MAX_PEERS);
         private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
+        
+        private Stopwatch TimeSinceLastTX = new Stopwatch();
+        private bool SendKeepAlives = false;
+        private const bool EnableKeepAlives = true;
+        private float TXThreshold = 5000;
 
         private IntPtr AbelHandle;
         private IPEndPoint UdpEndPoint => UdpEndPointResolver.Result;
@@ -55,6 +60,9 @@ namespace Muster
             UdpEndPointResolver = api.GetUDPEndPoint();
 
             FindAbel();
+
+            if (EnableKeepAlives)
+                keepAlive.Start();
 
             RHBell.SelectedIndex = 0;
 
@@ -224,6 +232,13 @@ namespace Muster
             {
                 BindSocket(idx, otherBandMembers[idx].id, localClientsReceived);
                 AddListenerToSocket(idx);
+            }
+
+            // Start sending keep alive messages if it's enabled
+            if (EnableKeepAlives)
+            {
+                SendKeepAlives = true;
+                TimeSinceLastTX.Start();
             }
 
             TestConnection();
@@ -551,6 +566,8 @@ namespace Muster
             clientId = null;
             bandDetails.Rows.Clear();
             localUDPDiscoveryService.ClearLocalClients();
+            SendKeepAlives = false;
+            TimeSinceLastTX.Reset();
         }
 
         private void Test_Click(object sender, EventArgs e)
@@ -579,6 +596,10 @@ namespace Muster
                     sock.Send(new byte[] { (byte)'?' });
                 }
             }
+
+            // Reset timer since last transmission to zero
+            if (SendKeepAlives)
+                TimeSinceLastTX.Restart();
         }
 
         private void ClosePeerSockets()
@@ -731,6 +752,9 @@ namespace Muster
                 }
             }
 
+            if (SendKeepAlives)
+                TimeSinceLastTX.Restart();
+
             RingBell(keyValue);
         }
 
@@ -882,6 +906,15 @@ namespace Muster
             LHBell.Enabled = !AdvancedMode.Checked;
             RHBell.Enabled = !AdvancedMode.Checked;
             KeyInfo.Visible = !AdvancedMode.Checked;
+        }
+
+        private void keepAlive_Tick(object sender, EventArgs e)
+        {
+            if (SendKeepAlives)
+                if (TimeSinceLastTX.ElapsedMilliseconds > TXThreshold)
+                {
+                    TestConnection();
+                }
         }
     }
 }
