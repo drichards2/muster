@@ -15,7 +15,11 @@ namespace Muster
     {
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        public string bandID { get; internal set; }
+        public string bandID
+        {
+            get { return bandIDDisplay.Text; }
+            internal set { bandIDDisplay.Text = value; } 
+        }
         public Abel.AbelAPI simulator { get; set; }
         public bool EnableKeepAlives { get; set; }
         public DataGridView bandDetails { get; set; }
@@ -65,7 +69,6 @@ namespace Muster
 
             var newBandID = await serverAPI.CreateBand();
             bandID = newBandID;
-            bandIDDisplay.Text = bandID;
         }
 
         private bool CheckIfConnected()
@@ -79,7 +82,7 @@ namespace Muster
 
         public async Task JoinBandRequest(string name, string location)
         {
-            if (bandIDDisplay.Text.Length == 0)
+            if (bandID.Length == 0)
             {
                 MessageBox.Show("The band ID is empty.\nEither click 'Make a new band', or type in the ID of an existing band. Then click 'Join/refresh band' again.");
                 return;
@@ -114,10 +117,6 @@ namespace Muster
                     else
                         MessageBox.Show("Could not find this band. Check the band ID is correct and try clicking 'Join/refresh band' again.");
                     return;
-                }
-                else
-                {
-                    bandID = bandIDDisplay.Text;
                 }
             }
 
