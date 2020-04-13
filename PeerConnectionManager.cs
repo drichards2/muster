@@ -79,7 +79,7 @@ namespace Muster
 
         public async Task JoinBandRequest(string name, string location)
         {
-            if (bandID.Length == 0)
+            if (bandIDDisplay.Text.Length == 0)
             {
                 MessageBox.Show("The band ID is empty.\nEither click 'Make a new band', or type in the ID of an existing band. Then click 'Join/refresh band' again.");
                 return;
@@ -102,7 +102,7 @@ namespace Muster
                     name = name,
                     location = location
                 };
-                var result = await serverAPI.SendJoinBandRequest(bandID, member);
+                var result = await serverAPI.SendJoinBandRequest(bandIDDisplay.Text, member);
 
                 clientId = result.Item1;
                 var bandStarted = result.Item2;
@@ -114,6 +114,10 @@ namespace Muster
                     else
                         MessageBox.Show("Could not find this band. Check the band ID is correct and try clicking 'Join/refresh band' again.");
                     return;
+                }
+                else
+                {
+                    bandID = bandIDDisplay.Text;
                 }
             }
 
