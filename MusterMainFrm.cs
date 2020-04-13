@@ -79,6 +79,11 @@ namespace Muster
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
         {
+            await CreateNewBand();
+        }
+
+        private async Task  CreateNewBand()
+        {
             bool isAlreadyConnected = CheckIfConnected();
             if (isAlreadyConnected)
             {
@@ -101,6 +106,11 @@ namespace Muster
         }
 
         private async void JoinBand_Click(object sender, EventArgs e)
+        {
+             await JoinBandRequest();
+        }
+
+        private async Task JoinBandRequest()
         {
             if (bandID.Text.Length == 0)
             {
@@ -196,6 +206,11 @@ namespace Muster
 
         private async void Connect_Click(object sender, EventArgs e)
         {
+            await SendConnectRequest();
+        }
+
+        private async Task SendConnectRequest()
+        { 
             if (currentBand == null || clientId == null)
             {
                 MessageBox.Show("First, join a band. When everyone has joined, one band member should click 'Start ringing'.");
@@ -572,12 +587,14 @@ namespace Muster
 
         private void Test_Click(object sender, EventArgs e)
         {
-            if (clientId != null && currentBand != null)
-                TestConnection();
+            TestConnection();
         }
 
         private void TestConnection()
         {
+            if (clientId == null || currentBand == null)
+                return;
+
             if (bandDetails.Rows.Count < currentBand.members.Length)
             {
                 logger.Debug($"Abandoning testing connection. Something's gone wrong.");
@@ -648,6 +665,11 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
+            ProcessKeystroke(e);
+        }
+
+        private void ProcessKeystroke(KeyEventArgs e)
+        {
             if (e.KeyCode == Keys.Space)
             {
                 logger.Debug($"Key press ignored: {e.KeyCode}");
@@ -661,7 +683,7 @@ namespace Muster
             {
                 char keyStroke = (char)key;
                 logger.Debug($"Key press: {e.KeyCode} -> {keyStroke}");
-                ProcessKeyStroke(keyStroke);
+                SendAndRingKeyStroke(keyStroke);
             }
             else
             {
@@ -737,7 +759,7 @@ namespace Muster
             return res;
         }
 
-        private void ProcessKeyStroke(char keyValue)
+        private void SendAndRingKeyStroke(char keyValue)
         {
             if (IsValidAbelCommand(keyValue))
             {
