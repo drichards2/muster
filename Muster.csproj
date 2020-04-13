@@ -68,6 +68,7 @@
       <DependentUpon>MusterMainFrm.cs</DependentUpon>
     </Compile>
     <Compile Include="MusterPgm.cs" />
+    <Compile Include="PeerConnectionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UDPDiscoveryService.cs" />
     <EmbeddedResource Include="MusterMainFrm.resx">

@@ -9,6 +9,8 @@ namespace Abel
     {
         private IntPtr AbelHandle;
 
+        public const int numberOfBells = 16;
+
         public bool IsAbelConnected()
         {
             return AbelHandle != IntPtr.Zero;
@@ -59,7 +61,7 @@ namespace Abel
             }
         }
 
-        public static List<char> SpecifyValidAbelCommands()
+        private static List<char> SpecifyValidAbelCommands()
         {
             List<char> validKeys = new List<char>();
 
@@ -75,5 +77,29 @@ namespace Abel
 
             return validKeys;
         }
+
+        public void RingBell(char keyStroke)
+        {
+            if (IsValidAbelCommand(keyStroke))
+            {
+                SendKeystroke(keyStroke);
+            }
+        }
+
+        public bool IsValidAbelCommand(char key)
+        {
+            return SpecifyValidAbelCommands().Contains(key);
+        }
+
+        public char FindKeyStrokeForBell(int bell)
+        {
+            if (bell >= 1 && bell <= numberOfBells)
+            {
+                return SpecifyValidAbelCommands()[bell - 1];
+            }
+            else
+                return ' ';
+        }
+
     }
 }
