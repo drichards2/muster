@@ -15,8 +15,8 @@ jobs:
     - name: Setup Nuget.exe
       uses: warrenbuckley/Setup-Nuget@v1
     - name: Restore packages
-      run: nuget restore Muster.csproj
+      run: nuget restore Muster.sln
     - name: Setup MSBuild.exe
       uses: warrenbuckley/Setup-MSBuild@v1
     - name: Build with MSBuild
-      run: msbuild  Muster.csproj -p:Configuration=Release
+      run: msbuild Muster.sln -p:Configuration=Release
