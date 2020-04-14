@@ -161,7 +161,7 @@ namespace Muster
                 bandDetails.Rows.Clear();
                 foreach (var peer in currentBand.members)
                 {
-                    var status = peer.id != clientId ? "" : "Ready";
+                    var status = peer.id != clientId ? "Connecting" : "Connected";
                     bandDetails.Rows.Add(peer.name, peer.location, status);
                 }
 
@@ -608,7 +608,7 @@ namespace Muster
             {
                 for (int idx = 0; idx < currentBand.members.Length; idx++)
                 {
-                    var message = currentBand.members[idx].id == clientId ? "" : "Disconnected";
+                    var message = currentBand.members[idx].id == clientId ? "Connected" : "Disconnected";
                     if (bandDetails.Rows.Count > idx)
                         bandDetails.Rows[idx].Cells[2].Value = message;
                 }
