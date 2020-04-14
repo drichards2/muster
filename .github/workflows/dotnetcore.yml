@@ -19,4 +19,10 @@ jobs:
     - name: Setup MSBuild.exe
       uses: warrenbuckley/Setup-MSBuild@v1
     - name: Build with MSBuild
-      run: msbuild Muster.sln -p:Configuration=Release
+      run: msbuild Muster.sln -p:Configuration=Release -p:DeployOnBuild=true
+      
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        name: published_exe
+        path: publish\
