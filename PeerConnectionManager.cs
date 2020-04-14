@@ -476,7 +476,7 @@ namespace Muster
                         var bytesReceived = runParameters.srcSocket.Receive(buffer);
 
                         var message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
-                        logger.Debug("Received '{message}' from {source}", message, runParameters.srcSocket.RemoteEndPoint.ToString());
+                        logger.Debug("Received {message} from {source}", message, runParameters.srcSocket.RemoteEndPoint.ToString());
 
                         for (int i = 0; i < bytesReceived; i++)
                         {
