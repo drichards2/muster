@@ -92,7 +92,7 @@ namespace Muster
 
             if (evt != null)
             {
-                logger.Debug($"Key press: {e.KeyCode} -> {evt}");
+                logger.Debug("Key press: {in} -> {out}", e.KeyCode, evt);
                 peerConnectionManager.SendAndRingKeyStroke(evt);
             }
             else

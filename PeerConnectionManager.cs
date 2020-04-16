@@ -490,7 +490,7 @@ namespace Muster
                             }
                             else if (buffer[i] == '#')
                             {
-                                logger.Debug($"Received reply to test message from peer #{runParameters.peerChannel} at {runParameters.srcSocket.RemoteEndPoint.ToString()}.");
+                                logger.Debug("Received reply to test from peer #{peerID} at {peerAddress}.", runParameters.peerChannel, runParameters.srcSocket.RemoteEndPoint.ToString());
                                 runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
                             }
                         }
@@ -561,7 +561,7 @@ namespace Muster
             {
                 if (sock.Connected)
                 {
-                    logger.Debug($"Sending test message to {sock.RemoteEndPoint.ToString()}.");
+                    logger.Debug("Sending test message to {dest}.", sock.RemoteEndPoint.ToString());
                     sock.Send(new byte[] { (byte)'?' });
                 }
             }
@@ -633,7 +633,7 @@ namespace Muster
                 {
                     if (_socket.Connected)
                     {
-                        logger.Debug($"Sending message to: {_socket.RemoteEndPoint.ToString()}");
+                        logger.Debug("Sending message to: {dest}", _socket.RemoteEndPoint.ToString());
                         Task.Factory.StartNew(() => { _socket.Send(txBytes); });
                     }
                 }
