@@ -29,34 +29,40 @@ namespace Muster
         public bool ReceiveNotification(Tuple<DateTime, RingingEvent, bool> input)
         {
             var strikeTime = input.Item1;
-            if (!shouldRing[int.Parse(input.Item2.ToString()) - 1] && lastStrike != DateTime.MinValue)
+
+            bool isBell = input.Item2.ToChar() <= 'P';
+            if (isBell)
             {
-                var delta = strikeTime - lastStrike;
-                double gap = delta.TotalMilliseconds;
-
-                // Account for handstroke-gap
-                if (strikeCount == 0)
-                    gap /= (1 + HSGRatio);
-
-                // Don't include large mistakes
-                //    This doesn't ever trigger as it needs knowledge of the expected strike order
-                if (gap < 2 * interbellGap)
-                    prevHumanGaps.Insert(0, gap);
-
-                double average = prevHumanGaps.Average();
-                var change = gain * (average - interbellGap);
-                change = Math.Min(50, change);
-                change = Math.Max(-50, change);
-
-                if (Math.Abs(change) < 10)
-                    change = 0;
-
-                interbellGap += change;
-                Debug.WriteLine($"Change: {change}, interbellgap: {interbellGap}");
-
-                if (prevHumanGaps.Count == HISTORY_SIZE)
+                int bell = int.Parse(input.Item2.ToString());
+                if (!shouldRing[bell - 1] && lastStrike != DateTime.MinValue)
                 {
-                    prevHumanGaps.RemoveAt(prevHumanGaps.Count - 1);
+                    var delta = strikeTime - lastStrike;
+                    double gap = delta.TotalMilliseconds;
+
+                    // Account for handstroke-gap
+                    if (strikeCount == 0)
+                        gap /= (1 + HSGRatio);
+
+                    // Don't include large mistakes
+                    //    This doesn't ever trigger as it needs knowledge of the expected strike order
+                    if (gap < 2 * interbellGap)
+                        prevHumanGaps.Insert(0, gap);
+
+                    double average = prevHumanGaps.Average();
+                    var change = gain * (average - interbellGap);
+                    change = Math.Min(50, change);
+                    change = Math.Max(-50, change);
+
+                    if (Math.Abs(change) < 10)
+                        change = 0;
+
+                    interbellGap += change;
+                    Debug.WriteLine($"Change: {change}, interbellgap: {interbellGap}");
+
+                    if (prevHumanGaps.Count == HISTORY_SIZE)
+                    {
+                        prevHumanGaps.RemoveAt(prevHumanGaps.Count - 1);
+                    }
                 }
             }
 
