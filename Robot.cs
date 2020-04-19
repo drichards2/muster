@@ -36,7 +36,7 @@ namespace Muster
 
                 // Account for handstroke-gap
                 if (strikeCount == 0)
-                    gap /= HSGRatio;
+                    gap /= (1 + HSGRatio);
 
                 // Don't include large mistakes
                 //    This doesn't ever trigger as it needs knowledge of the expected strike order
@@ -47,6 +47,9 @@ namespace Muster
                 var change = gain * (average - interbellGap);
                 change = Math.Min(50, change);
                 change = Math.Max(-50, change);
+
+                if (Math.Abs(change) < 10)
+                    change = 0;
 
                 interbellGap += change;
                 Debug.WriteLine($"Change: {change}, interbellgap: {interbellGap}");
@@ -66,6 +69,7 @@ namespace Muster
 
     public void LoadRows(string filename)
     {
+        bellOrder.Clear();
         using (StreamReader sr = new StreamReader(filename))
         {
             // Read the stream to a string, and write the string to the console.
