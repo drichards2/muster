@@ -50,7 +50,8 @@ namespace Muster
 
             peerConnectionManager.NotifyBellStrike = robot.ReceiveNotification;
 
-            Task.Run(() => { robot.Start(); });
+            robot.LoadRows("C:\\Users\\jagg\\source\\repos\\muster\\Plain Bob Minor.txt");
+            Task.Run(async () => { await robot.Start(); });
 
             RHBell.SelectedIndex = 0;
         }

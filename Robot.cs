@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -15,6 +16,8 @@ namespace Muster
         public int interbellGap = 200;
         public float HSGRatio = 0.7F;
 
+        public List<int> bellOrder = new List<int>();
+
         public bool ReceiveNotification(Tuple<DateTime, RingingEvent, bool> input)
         {
             Debug.WriteLine($"{input.Item1.ToString("hh:mm:ss.ffff")}, {input.Item2}");
@@ -23,21 +26,36 @@ namespace Muster
 
         public AbelAPI simulator;
 
+        public void LoadRows(string filename)
+        {
+            using (StreamReader sr = new StreamReader(filename))
+            {
+                // Read the stream to a string, and write the string to the console.
+                while (!sr.EndOfStream)
+                {
+                    string line = sr.ReadLine();
+                    foreach (char c in line)
+                        bellOrder.Add(c - '0');
+                }
+            }
+        }
+
         public Func<RingingEvent, bool> SendBellStrike { get; set; }
 
-        public Task Start()
+        public async Task Start()
         {
             bool isHS = true;
-            while (true)
+            int index = 0;
+            while (index < bellOrder.Count - numBells + 1)
             {
                 for (int idxBell = 0; idxBell < numBells; idxBell++)
                 {
-                    int bell = idxBell;
-                    if (shouldRing[bell])
+                    int bell = bellOrder[index++];
+                    if (shouldRing[bell - 1])
                     {
-                        RingingEvent ringingEvent = simulator.FindEventForCommand((bell+1).ToString());
+                        RingingEvent ringingEvent = simulator.FindEventForCommand((bell).ToString());
                         SendBellStrike(ringingEvent);
-                        Debug.WriteLine($"Ringing bell {idxBell+1} at {DateTime.Now}");
+                        Debug.WriteLine($"Ringing bell {bell} at {DateTime.Now}");
                     }
                     Thread.Sleep(interbellGap);
                 }
