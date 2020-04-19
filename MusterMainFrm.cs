@@ -45,15 +45,16 @@ namespace Muster
             robot = new Robot()
             {
                 simulator = abelAPI,
-                SendBellStrike = peerConnectionManager.SendAndRingKeyStroke
+                SendBellStrike = peerConnectionManager.SendAndRingKeyStroke,
+                bellOrder = { 1, 2, 3, 4, 5, 6 }
             };
 
             peerConnectionManager.NotifyBellStrike = robot.ReceiveNotification;
 
-            robot.LoadRows("C:\\Users\\jagg\\source\\repos\\muster\\Plain Bob Minor.txt");
+            //robot.LoadRows("C:\\Users\\jagg\\source\\repos\\muster\\Plain Bob Minor.txt");
             Task.Run(async () => { await robot.Start(); });
 
-            RHBell.SelectedIndex = 0;
+            RHBell.SelectedIndex = 2;
         }
 
         private async void MakeNewBand_Click(object sender, EventArgs e)
