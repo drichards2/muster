@@ -14,6 +14,7 @@ namespace Muster
 
         private readonly AbelAPI abelAPI = new AbelAPI();
         private readonly PeerConnectionManager peerConnectionManager;
+        private Robot robot = new Robot();
 
         private const bool EnableKeepAlives = true;
 
@@ -41,17 +42,17 @@ namespace Muster
             if (EnableKeepAlives)
                 keepAlive.Start();
 
-            RHBell.SelectedIndex = 0;
-
-            Task.Run(() =>
+            robot = new Robot()
             {
-                var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
-                foreach (var bell in bellOrder)
-                {
-                    abelAPI.SendRingingEvent(abelAPI.FindEventForCommand(bell.ToString()));
-                    Thread.Sleep(150);
-                }
-            });
+                simulator = abelAPI,
+                SendBellStrike = peerConnectionManager.SendAndRingKeyStroke
+            };
+
+            peerConnectionManager.NotifyBellStrike = robot.ReceiveNotification;
+
+            Task.Run(() => { robot.Start(); });
+
+            RHBell.SelectedIndex = 0;
         }
 
         private async void MakeNewBand_Click(object sender, EventArgs e)

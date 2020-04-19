@@ -24,6 +24,7 @@ namespace Muster
         public bool EnableKeepAlives { get; set; }
         public DataGridView bandDetails { get; set; }
         public TextBox bandIDDisplay { get; set; }
+        public Func<Tuple<DateTime, RingingEvent, bool>, bool> NotifyBellStrike { get; set; }
 
         private const int MAX_PEERS = 6;
         private const int UDP_BLOCK_SIZE = 1024;
@@ -526,6 +527,7 @@ namespace Muster
 
         private void BellStrike(char keyStroke)
         {
+            var result = NotifyBellStrike(new Tuple<DateTime, RingingEvent, bool> (DateTime.Now, simulator.FindEventForKeystroke(keyStroke), true));
             simulator.RingBell(keyStroke);
         }
 
@@ -624,8 +626,10 @@ namespace Muster
                 }
         }
 
-        public void SendAndRingKeyStroke(RingingEvent ringingEvent)
+        public bool SendAndRingKeyStroke(RingingEvent ringingEvent)
         {
+            var result = NotifyBellStrike(new Tuple<DateTime, RingingEvent, bool>(DateTime.Now, ringingEvent, false));
+
             if (simulator.IsValidAbelCommand(ringingEvent))
             {
                 var txBytes = Encoding.ASCII.GetBytes($"{ringingEvent.ToChar()}");
@@ -643,6 +647,7 @@ namespace Muster
                 TimeSinceLastTX.Restart();
 
             simulator.SendRingingEvent(ringingEvent);
+            return true;
         }
     }
 }
