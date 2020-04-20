@@ -12,21 +12,28 @@ namespace Muster
 
         private Dictionary<string, char> RingingCommands = new Dictionary<string, char>
         {
-            {"Go", 'Q' },
-            {"Bob", 'R' },
-            {"Single", 'S' },
-            {"ThatsAll", 'T' },
-            {"Rounds", 'U' },
-            {"Stand", 'V' },
-            {"ResetBells", 'W' }
+            {"Go", 'S' },
+            {"Bob", 'T' },
+            {"Single", 'U' },
+            {"ThatsAll", 'V' },
+            {"Rounds", 'W' },
+            {"Stand", 'X' },
+            {"ResetBells", 'Y' }
         };
 
         public const int numberOfBells = 16;
 
         public AbelAPI()
         {
+            int command = 0;
             for (int i = 0; i < numberOfBells; i++)
-                RingingCommands.Add((i + 1).ToString(), (char)('A' + i));
+            {
+                // Skip F and J
+                if ((char)('A' + command) == 'F' || (char)('A' + command) == 'J')
+                    command++;
+
+                RingingCommands.Add((i + 1).ToString(), (char)('A' + command++));
+            }
         }
 
         public bool IsAbelConnected()
