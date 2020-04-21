@@ -23,8 +23,8 @@ Abel is available for purchase at <http://abelsim.co.uk/>. Version 3.10.2 or lat
 Muster is available for download from [here](releases/Muster 1.0.0.0.zip). When it's downloaded, extract the files and run muster.exe. Make sure you sufficiently appease any anti-virus software, and ensure you give permission for Muster to communicate on public and private networks, otherwise the ringing won't go too well.
 
 There is no charge for Muster, though please do consider making a donation to one of the following charities:
-* Trussel Trust: https://www.trusselltrust.org/
-* CARE: https://www.careinternational.org.uk/
+* Trussel Trust: [https://www.trusselltrust.org/](https://www.trusselltrust.org/)
+* CARE: [https://www.careinternational.org.uk/](https://www.careinternational.org.uk/)
 
 ## Ringing
 Each time a band wants to ring:
