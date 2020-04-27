@@ -192,7 +192,7 @@
             // abelConnectLabel
             // 
             this.abelConnectLabel.AutoSize = true;
-            this.abelConnectLabel.Location = new System.Drawing.Point(175, 57);
+            this.abelConnectLabel.Location = new System.Drawing.Point(166, 56);
             this.abelConnectLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.abelConnectLabel.Name = "abelConnectLabel";
             this.abelConnectLabel.Size = new System.Drawing.Size(35, 13);

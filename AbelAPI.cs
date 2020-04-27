@@ -22,6 +22,7 @@ namespace Muster
         };
 
         public const int numberOfBells = 16;
+        public static int[] RequiredVersion = { 3, 10, 2 };
 
         public AbelAPI()
         {
@@ -54,13 +55,16 @@ namespace Muster
                 if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
                 {
                     foundHandle = p.MainWindowHandle;
+                    var version = p.MainModule.FileVersionInfo.FileVersion;
+                    var IsCompatible = CheckCompatibility(version);
 
                     string ChildWindow = "AfxMDIFrame140s";
                     string GrandchildWindow = "AfxFrameOrView140s";
 
                     foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, ChildWindow, "");
                     foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, GrandchildWindow, "");
-                    if (foundHandle != IntPtr.Zero)
+                    
+                    if (IsCompatible && foundHandle != IntPtr.Zero)
                         break;
                 }
             }
@@ -69,6 +73,15 @@ namespace Muster
             {
                 AbelHandle = foundHandle;
             }
+        }
+
+        private bool CheckCompatibility(string version)
+        {
+            // Check compatibility based on the first three parts of the version number
+            string[] verParts = version.Split('.');
+            return int.Parse(verParts[0]) > RequiredVersion[0] ||
+                int.Parse(verParts[0]) == RequiredVersion[0] && int.Parse(verParts[1]) > RequiredVersion[1] ||
+                int.Parse(verParts[0]) == RequiredVersion[0] && int.Parse(verParts[1]) == RequiredVersion[1] && int.Parse(verParts[2]) >= RequiredVersion[2];
         }
 
         [DllImport("user32.dll")]
