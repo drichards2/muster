@@ -76,7 +76,9 @@ namespace Muster
 
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
-            ProcessKeystroke(e);
+            // Don't send commands to Abel when typing in a text box
+            if (!(ActiveControl is TextBox))
+                ProcessKeystroke(e);
         }
 
         private void ProcessKeystroke(KeyEventArgs e)
