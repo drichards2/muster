@@ -152,13 +152,13 @@ namespace Muster
 
             if (abelAPI.IsAbelConnected())
             {
-                abelConnectLabel.Text = "Abel: Connected";
+                abelConnectLabel.Text = "Abel status:\nConnected";
                 abelConnectLabel.ForeColor = Color.CadetBlue;
                 abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Regular);
             }
             else
             {
-                abelConnectLabel.Text = "Abel: Not connected";
+                abelConnectLabel.Text = "Abel status:\nNot connected";
                 abelConnectLabel.ForeColor = Color.DarkOrange;
                 abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Bold);
             }
