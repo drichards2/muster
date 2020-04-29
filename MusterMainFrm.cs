@@ -223,4 +223,44 @@ namespace Muster
             peerConnectionManager.keepAlive_Tick();
         }
     }
+
+    internal class CustomTextBox : System.Windows.Forms.TextBox
+    {
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            // Prevent main keypress event firing to avoid sending keypresses to Abel when editing a text box
+            
+            // Do some rudimentary processing
+            // TODO: Ideally work out how to invoke the default processing
+            char data = (char)keyData;
+            if (data >= '0' && data <= '9' || data >= 'A' && data <= 'Z')
+            {
+                // Add character if valid
+                // TOOD: Add this where the cursor is.
+                Text += data;
+                SelectionStart = Text.Length;
+                SelectionLength = 0;
+            }
+            if (keyData == Keys.Back)
+            {
+                if (SelectionLength > 0)
+                {
+                    // Remove selection
+                    Text = Text.Remove(SelectionStart, SelectionLength);
+                    SelectionStart = Text.Length;
+                    SelectionLength = 0;
+                }
+                else if (Text.Length > 0)
+                {
+                    // Remove last character
+                    Text = Text.Remove(Text.Length - 1, 1);
+                    SelectionStart = Text.Length;
+                    SelectionLength = 0;
+                }
+            }
+
+            // Tell form that we've processed the keystroke here
+            return true;
+        }
+    }
 }
