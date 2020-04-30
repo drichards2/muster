@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -14,6 +16,9 @@ namespace Muster
         private readonly PeerConnectionManager peerConnectionManager;
 
         private const bool EnableKeepAlives = true;
+
+        private Dictionary<Keys, Keys> CustomKeyMappings = new Dictionary<Keys, Keys>();
+        private const string CustomKeyMapFileName = "KeyConfig.txt";
 
         public Muster()
         {
@@ -105,8 +110,9 @@ namespace Muster
         {
             if (AdvancedMode.Checked)
             {
-                if (abelAPI.IsValidAbelKeystroke((char)e.KeyCode))
-                    return abelAPI.FindEventForKeystroke((char)e.KeyCode);
+                Keys mappedKey = CustomMapKeypress(e.KeyCode);
+                if (abelAPI.IsValidAbelKeystroke((char)mappedKey))
+                    return abelAPI.FindEventForKeystroke((char)mappedKey);
                 else
                     return null;
             }
@@ -144,6 +150,16 @@ namespace Muster
             }
 
             return res;
+        }
+
+        private Keys CustomMapKeypress(Keys e)
+        {
+            // Override only if user has explicitly specified this in a configuration file
+            if (CustomKeyMappings.ContainsKey(e))
+            {
+                e = CustomKeyMappings[e];
+            }
+            return e;
         }
 
         private void FindAbel()
@@ -214,6 +230,41 @@ namespace Muster
             LHBell.Enabled = !AdvancedMode.Checked;
             RHBell.Enabled = !AdvancedMode.Checked;
             KeyInfo.Visible = !AdvancedMode.Checked;
+
+            if (AdvancedMode.Checked)
+                UpdateCustomKeyPressConfiguration();
+        }
+
+        private void UpdateCustomKeyPressConfiguration()
+        {
+            // Read in tab-separated pairs of overrides in specified file
+            // 'A\tB' will send the character 'B' to Abel when 'A' is pressed
+            // Other keys e.g. 'B' and 'C' will be unaffected.
+
+            CustomKeyMappings.Clear();
+
+            if (File.Exists(CustomKeyMapFileName))
+            {
+                var mapping = File.ReadAllLines(CustomKeyMapFileName);
+                foreach (string map in mapping)
+                {
+                    var tokens = map.Split('\t');
+                    Keys key, value;
+                    if (tokens.Length == 2 && Enum.TryParse(tokens[0], false, out key) && Enum.TryParse(tokens[1], false, out value))
+                    {
+                        if (CustomKeyMappings.ContainsKey(key))
+                            CustomKeyMappings.Remove(key);
+                        CustomKeyMappings.Add(key, value);
+                    }
+                    else
+                        logger.Debug("Ignoring keymapping: " + map);
+                }
+
+                string message = "Applying the following key overrides specified in " + CustomKeyMapFileName + ":\n";
+                foreach (KeyValuePair<Keys, Keys> kvp in CustomKeyMappings)
+                    message += String.Format("{0} -> {1}\n", kvp.Key, kvp.Value);
+                MessageBox.Show(message);
+            }
         }
 
         private void keepAlive_Tick(object sender, EventArgs e)
