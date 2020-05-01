@@ -1,10 +1,10 @@
-name: .NET Core
+name: msbuild
 
 on:
   push:
     branches: [ master ]
   pull_request:
-    branches: [ drichards2:master ]
+    branches: [ master ]
 
 jobs:
   build:
