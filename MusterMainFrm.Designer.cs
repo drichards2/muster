@@ -32,14 +32,14 @@
             this.Connect = new System.Windows.Forms.Button();
             this.Disconnect = new System.Windows.Forms.Button();
             this.Test = new System.Windows.Forms.Button();
-            this.bandID = new CustomTextBox();
+            this.bandID = new System.Windows.Forms.TextBox();
             this.label2 = new System.Windows.Forms.Label();
             this.JoinBand = new System.Windows.Forms.Button();
             this.MakeNewBand = new System.Windows.Forms.Button();
             this.label3 = new System.Windows.Forms.Label();
-            this.NameInput = new CustomTextBox();
+            this.NameInput = new System.Windows.Forms.TextBox();
             this.label4 = new System.Windows.Forms.Label();
-            this.LocationInput = new CustomTextBox();
+            this.LocationInput = new System.Windows.Forms.TextBox();
             this.abelConnect = new System.Windows.Forms.Timer(this.components);
             this.abelConnectLabel = new System.Windows.Forms.Label();
             this.bandDetails = new System.Windows.Forms.DataGridView();
@@ -105,6 +105,8 @@
             this.bandID.Size = new System.Drawing.Size(76, 20);
             this.bandID.TabIndex = 1;
             this.bandID.TabStop = false;
+            this.bandID.Enter += new System.EventHandler(this.textBox_Enter);
+            this.bandID.Validated += new System.EventHandler(this.textBox_Validated);
             // 
             // label2
             // 
@@ -162,6 +164,8 @@
             this.NameInput.TabIndex = 2;
             this.NameInput.TabStop = false;
             this.NameInput.Text = "Frank";
+            this.NameInput.Enter += new System.EventHandler(this.textBox_Enter);
+            this.NameInput.Validated += new System.EventHandler(this.textBox_Validated);
             // 
             // label4
             // 
@@ -182,6 +186,8 @@
             this.LocationInput.Size = new System.Drawing.Size(76, 20);
             this.LocationInput.TabIndex = 3;
             this.LocationInput.TabStop = false;
+            this.LocationInput.Enter += new System.EventHandler(this.textBox_Enter);
+            this.LocationInput.Validated += new System.EventHandler(this.textBox_Validated);
             // 
             // abelConnect
             // 
@@ -382,6 +388,7 @@
             this.Name = "Muster";
             this.Text = "Muster";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Muster_MouseDown);
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -392,14 +399,14 @@
         private System.Windows.Forms.Button Connect;
         private System.Windows.Forms.Button Disconnect;
         private System.Windows.Forms.Button Test;
-        private CustomTextBox bandID;
+        private System.Windows.Forms.TextBox bandID;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Button JoinBand;
         private System.Windows.Forms.Button MakeNewBand;
         private System.Windows.Forms.Label label3;
-        private CustomTextBox NameInput;
+        private System.Windows.Forms.TextBox NameInput;
         private System.Windows.Forms.Label label4;
-        private CustomTextBox LocationInput;
+        private System.Windows.Forms.TextBox LocationInput;
         private System.Windows.Forms.Timer abelConnect;
         private System.Windows.Forms.Label abelConnectLabel;
         private System.Windows.Forms.DataGridView bandDetails;
