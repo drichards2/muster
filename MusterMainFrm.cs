@@ -19,6 +19,13 @@ namespace Muster
         {
             InitializeComponent();
 
+            // Add in a callback to stop editing a text box when user clicks away
+            foreach (Control control in this.Controls)
+            {
+                if (!(control is TextBox))
+                    control.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Muster_MouseDown);
+            }
+
             logger.Info("Starting up");
 
             NameInput.Text = Environment.UserName;
@@ -220,45 +227,25 @@ namespace Muster
         {
             peerConnectionManager.keepAlive_Tick();
         }
-    }
 
-    internal class CustomTextBox : System.Windows.Forms.TextBox
-    {
-        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        private void textBox_Enter(object sender, EventArgs e)
         {
-            // Prevent main keypress event firing to avoid sending keypresses to Abel when editing a text box
-            
-            // Do some rudimentary processing
-            // TODO: Ideally work out how to invoke the default processing
-            char data = (char)keyData;
-            if (data >= '0' && data <= '9' || data >= 'A' && data <= 'Z')
-            {
-                // Add character if valid
-                // TOOD: Add this where the cursor is.
-                Text += data;
-                SelectionStart = Text.Length;
-                SelectionLength = 0;
-            }
-            if (keyData == Keys.Back)
-            {
-                if (SelectionLength > 0)
-                {
-                    // Remove selection
-                    Text = Text.Remove(SelectionStart, SelectionLength);
-                    SelectionStart = Text.Length;
-                    SelectionLength = 0;
-                }
-                else if (Text.Length > 0)
-                {
-                    // Remove last character
-                    Text = Text.Remove(Text.Length - 1, 1);
-                    SelectionStart = Text.Length;
-                    SelectionLength = 0;
-                }
-            }
+            // Only process keystrokes in the text box, to stop also sending keypresses to Abel
+            KeyDown -= new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
+        }
 
-            // Tell form that we've processed the keystroke here
-            return true;
+        private void textBox_Validated(object sender, EventArgs e)
+        {
+            // Start sending keypresses to Abel again
+            KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
+        }
+
+        private void Muster_MouseDown(object sender, MouseEventArgs e)
+        {
+            // When user clicks away from a text box, move the focus away from the text box
+            // to another (arbitrarily chosen) component
+            if (ActiveControl is TextBox)
+                label1.Focus();
         }
     }
 }
