@@ -33,10 +33,16 @@ namespace Muster
         private int strikeCount = 0;
 
         private CancellationTokenSource stopRobot = new CancellationTokenSource();
+        private bool StartChanges = false;
 
         public bool ReceiveNotification(Tuple<DateTime, RingingEvent, bool> input)
         {
             var strikeTime = input.Item1;
+
+            if (input.Item2.ToString().Equals("Go"))
+            {
+                StartChanges = true;
+            }
 
             bool isBell = input.Item2.ToChar() <= 'P';
             if (isBell)
@@ -119,17 +125,20 @@ namespace Muster
             //TODO: Move this setting to the configuration somehow.
             //  Need to be ensure user is able to reset this to the default if it's diverged
             interbellGap = 300 - (numBells - 6) * 10;
+            StartChanges = false;
 
             stopRobot.Dispose();
             stopRobot = new CancellationTokenSource();
 
             bool isHS = true;
+            bool go = false;
             int index = 0;
+
             while (!stopRobot.IsCancellationRequested)
             {
                 for (int idxBell = 0; idxBell < numBells; idxBell++)
                 {
-                    int bell = bellOrder[index++];
+                    int bell = go ? bellOrder[index++] : idxBell + 1;
                     if (shouldRing[bell - 1])
                     {
                         SendBellStrike(BellStrikes[bell - 1]);
@@ -140,6 +149,9 @@ namespace Muster
 
                 if (!isHS)
                     await Task.Delay((int)(HSGRatio * interbellGap));
+
+                // Start at the handstroke after "Go" command is received
+                go = !go && !isHS && StartChanges || go;
 
                 isHS = !isHS;
 
