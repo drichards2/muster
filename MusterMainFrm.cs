@@ -44,15 +44,15 @@ namespace Muster
 
             robot = new Robot()
             {
-                simulator = abelAPI,
                 SendBellStrike = peerConnectionManager.SendAndRingKeyStroke,
-                bellOrder = { 1, 2, 3, 4, 5, 6 }
+                BellStrikes = new RingingEvent[AbelAPI.numberOfBells]
             };
+            for (int i = 0; i < AbelAPI.numberOfBells; i++)
+            {
+                robot.BellStrikes[i] = abelAPI.FindEventForCommand((i + 1).ToString());
+            }
 
             peerConnectionManager.NotifyBellStrike = robot.ReceiveNotification;
-
-            //robot.LoadRows("C:\\Users\\jagg\\source\\repos\\muster\\Plain Bob Minor.txt");
-            Task.Run(async () => { await robot.Start(); });
 
             RHBell.SelectedIndex = 2;
         }
@@ -273,6 +273,21 @@ namespace Muster
         private void keepAlive_Tick(object sender, EventArgs e)
         {
             peerConnectionManager.keepAlive_Tick();
+        }
+
+        private void enableRobot_CheckedChanged(object sender, EventArgs e)
+        {
+            if (enableRobot.Checked)
+                Task.Run(async () => { await robot.Start(); });
+            else
+                robot.Stop();
+        }
+
+        private void configureRobot_Click(object sender, EventArgs e)
+        {
+            string fileName = "C:\\Users\\jagg\\source\\repos\\muster\\rows.txt";
+            logger.Debug("Reading in robot configuration: " + fileName); 
+            robot.LoadRows(fileName);
         }
     }
 }

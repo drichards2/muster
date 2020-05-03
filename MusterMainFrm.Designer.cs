@@ -55,6 +55,8 @@
             this.KeyInfo = new System.Windows.Forms.TextBox();
             this.About = new System.Windows.Forms.Button();
             this.keepAlive = new System.Windows.Forms.Timer(this.components);
+            this.enableRobot = new System.Windows.Forms.CheckBox();
+            this.configureRobot = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).BeginInit();
             this.SuspendLayout();
             // 
@@ -351,11 +353,34 @@
             this.keepAlive.Interval = 1000;
             this.keepAlive.Tick += new System.EventHandler(this.keepAlive_Tick);
             // 
+            // enableRobot
+            // 
+            this.enableRobot.AutoSize = true;
+            this.enableRobot.Location = new System.Drawing.Point(259, 437);
+            this.enableRobot.Name = "enableRobot";
+            this.enableRobot.Size = new System.Drawing.Size(86, 17);
+            this.enableRobot.TabIndex = 30;
+            this.enableRobot.Text = "Enable robot";
+            this.enableRobot.UseVisualStyleBackColor = true;
+            this.enableRobot.CheckedChanged += new System.EventHandler(this.enableRobot_CheckedChanged);
+            // 
+            // configureRobot
+            // 
+            this.configureRobot.Location = new System.Drawing.Point(351, 433);
+            this.configureRobot.Name = "configureRobot";
+            this.configureRobot.Size = new System.Drawing.Size(102, 23);
+            this.configureRobot.TabIndex = 31;
+            this.configureRobot.Text = "Configure robot";
+            this.configureRobot.UseVisualStyleBackColor = true;
+            this.configureRobot.Click += new System.EventHandler(this.configureRobot_Click);
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(476, 464);
+            this.Controls.Add(this.configureRobot);
+            this.Controls.Add(this.enableRobot);
             this.Controls.Add(this.About);
             this.Controls.Add(this.KeyInfo);
             this.Controls.Add(this.label5);
@@ -415,5 +440,7 @@
         private System.Windows.Forms.TextBox KeyInfo;
         private System.Windows.Forms.Button About;
         private System.Windows.Forms.Timer keepAlive;
+        private System.Windows.Forms.CheckBox enableRobot;
+        private System.Windows.Forms.Button configureRobot;
     }
 }

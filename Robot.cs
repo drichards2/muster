@@ -6,25 +6,33 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace Muster
 {
     class Robot
     {
-        public int numBells = 6;
-        public List<bool> shouldRing = new List<bool> { true, true, false, false, true, true };
+        private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        // An example:
+        public int numBells = 8;
+        public bool[] shouldRing = { true, true, false, false, true, true, false, false };
+        public List<int> bellOrder = new List<int>(8) { 1, 2, 3, 4, 5, 6, 7, 8 };
+
         public double interbellGap = 200;
         public double HSGRatio = 0.9F;
 
-        public List<int> bellOrder = new List<int>();
-
-        private DateTime lastStrike = DateTime.MinValue;
+        public Func<RingingEvent, bool> SendBellStrike { get; set; }
+        public RingingEvent[] BellStrikes;
 
         public static int HISTORY_SIZE = 5;
         public double gain = 0.8F;
 
+        private DateTime lastStrike = DateTime.MinValue;
         private List<double> prevHumanGaps = new List<double>(HISTORY_SIZE);
         private int strikeCount = 0;
+
+        private CancellationTokenSource stopRobot = new CancellationTokenSource();
 
         public bool ReceiveNotification(Tuple<DateTime, RingingEvent, bool> input)
         {
@@ -44,21 +52,26 @@ namespace Muster
                         gap /= (1 + HSGRatio);
 
                     // Don't include large mistakes
-                    //    This doesn't ever trigger as it needs knowledge of the expected strike order
+                    //    TODO: This doesn't ever trigger as it needs knowledge of the expected strike order
                     if (gap < 2 * interbellGap)
                         prevHumanGaps.Insert(0, gap);
 
-                    double average = prevHumanGaps.Average();
-                    var change = gain * (average - interbellGap);
-                    change = Math.Min(50, change);
-                    change = Math.Max(-50, change);
+                    // Start updating once buffer is filled up
+                    if (prevHumanGaps.Count == HISTORY_SIZE)
+                    {
+                        double average = prevHumanGaps.Average();
+                        var change = gain * (average - interbellGap);
+                        change = Math.Min(50, change);
+                        change = Math.Max(-50, change);
 
-                    if (Math.Abs(change) < 10)
-                        change = 0;
+                        if (Math.Abs(change) < 10)
+                            change = 0;
 
-                    interbellGap += change;
-                    Debug.WriteLine($"Change: {change}, interbellgap: {interbellGap}");
+                        interbellGap += change;
+                        Debug.WriteLine($"Change: {change}, interbellgap: {interbellGap}");
+                    }
 
+                    // Update buffer
                     if (prevHumanGaps.Count == HISTORY_SIZE)
                     {
                         prevHumanGaps.RemoveAt(prevHumanGaps.Count - 1);
@@ -67,54 +80,76 @@ namespace Muster
             }
 
             lastStrike = strikeTime;
-            strikeCount = (strikeCount + 1) % (2 * numBells);
+            strikeCount++;
+            strikeCount %= 2 * numBells;
             return true;
         }
 
-    public AbelAPI simulator;
-
-    public void LoadRows(string filename)
-    {
-        bellOrder.Clear();
-        using (StreamReader sr = new StreamReader(filename))
+        public void LoadRows(string filename)
         {
-            // Read the stream to a string, and write the string to the console.
-            while (!sr.EndOfStream)
+            bellOrder.Clear();
+            using (StreamReader sr = new StreamReader(filename))
             {
-                string line = sr.ReadLine();
-                foreach (char c in line)
-                    bellOrder.Add(c - '0');
-            }
-        }
-    }
+                // Read first line which specfies the number of bells
+                string lineBells = sr.ReadLine();
+                numBells = int.Parse(lineBells);
+                if (lineBells.Length > 2)
+                    MessageBox.Show("First line needs to specify number of bells.");
 
-    public Func<RingingEvent, bool> SendBellStrike { get; set; }
+                // Read bells robot should ring
+                shouldRing = new bool[numBells];
+                string robotBells = sr.ReadLine();
+                for (int i = 0; i < robotBells.Length; i++)
+                    shouldRing[i] = robotBells[i] == '1';
+                if (robotBells.Length != numBells)
+                    MessageBox.Show("Second line needs to specify whether each bell is to be rung by the robot.");
 
-    public async Task Start()
-    {
-        bool isHS = true;
-        int index = 0;
-        while (true)
-        {
-            for (int idxBell = 0; idxBell < numBells; idxBell++)
-            {
-                int bell = bellOrder[index++];
-                if (shouldRing[bell - 1])
+                // Read the stream to a string, and write the string to the console.
+                while (!sr.EndOfStream)
                 {
-                    RingingEvent ringingEvent = simulator.FindEventForCommand((bell).ToString());
-                    SendBellStrike(ringingEvent);
-                    Debug.WriteLine($"Ringing bell {bell} at {DateTime.Now}");
+                    string line = sr.ReadLine();
+                    foreach (char c in line)
+                        bellOrder.Add(c - '0');
                 }
-                Thread.Sleep((int)interbellGap);
             }
+        }
 
-            if (!isHS)
-                Thread.Sleep((int)(HSGRatio * interbellGap));
+        public async Task Start()
+        {
+            //TODO: Move this setting to the configuration somehow.
+            //  Need to be ensure user is able to reset this to the default if it's diverged
+            interbellGap = 300 - (numBells - 6) * 10;
 
-            isHS = !isHS;
+            stopRobot.Dispose();
+            stopRobot = new CancellationTokenSource();
 
-            index %= bellOrder.Count;
+            bool isHS = true;
+            int index = 0;
+            while (!stopRobot.IsCancellationRequested)
+            {
+                for (int idxBell = 0; idxBell < numBells; idxBell++)
+                {
+                    int bell = bellOrder[index++];
+                    if (shouldRing[bell - 1])
+                    {
+                        SendBellStrike(BellStrikes[bell - 1]);
+                        logger.Debug("Ringing bell " + bell + " at  " + DateTime.Now);
+                    }
+                    await Task.Delay((int)interbellGap);
+                }
+
+                if (!isHS)
+                    await Task.Delay((int)(HSGRatio * interbellGap));
+
+                isHS = !isHS;
+
+                index %= bellOrder.Count;
+            }
+        }
+
+        public void Stop()
+        {
+            stopRobot.Cancel();
         }
     }
-}
 }
