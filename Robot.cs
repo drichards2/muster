@@ -19,14 +19,15 @@ namespace Muster
         public bool[] shouldRing = { true, true, false, false, true, true, false, false };
         public List<int> bellOrder = new List<int>(8) { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-        public double interbellGap = 200;
+        public double interbellGapIdeal  = 200;
         public double HSGRatio = 0.9F;
 
         public Func<RingingEvent, bool> SendBellStrike { get; set; }
+        public Func<bool, bool> NotifyRobotStopped { get; set; }
         public RingingEvent[] BellStrikes;
 
         public static int HISTORY_SIZE = 5;
-        public double gain = 0.8F;
+        public double gain = 0.1F;
 
         private DateTime lastStrike = DateTime.MinValue;
         private List<double> prevHumanGaps = new List<double>(HISTORY_SIZE);
@@ -34,6 +35,7 @@ namespace Muster
 
         private CancellationTokenSource stopRobot = new CancellationTokenSource();
         private bool StartChanges = false;
+        private double interbellGap = 240;
 
         public bool ReceiveNotification(Tuple<DateTime, RingingEvent, bool> input)
         {
@@ -43,12 +45,16 @@ namespace Muster
             {
                 StartChanges = true;
             }
+            if (input.Item2.ToString().Equals("Stand"))
+            {
+                Stop();
+            }
 
             bool isBell = input.Item2.ToChar() <= 'P';
             if (isBell)
             {
                 int bell = int.Parse(input.Item2.ToString());
-                if (!shouldRing[bell - 1] && lastStrike != DateTime.MinValue)
+                if (bell <= numBells && !shouldRing[bell - 1] && lastStrike != DateTime.MinValue)
                 {
                     var delta = strikeTime - lastStrike;
                     double gap = delta.TotalMilliseconds;
@@ -93,6 +99,12 @@ namespace Muster
 
         public void LoadRows(string filename)
         {
+            if (!File.Exists(filename))
+            {
+                MessageBox.Show("Expecting a file called 'rows.txt' in same directory 'Muster.exe'.");
+                return;
+            }
+
             bellOrder.Clear();
             using (StreamReader sr = new StreamReader(filename))
             {
@@ -100,7 +112,10 @@ namespace Muster
                 string lineBells = sr.ReadLine();
                 numBells = int.Parse(lineBells);
                 if (lineBells.Length > 2)
+                {
                     MessageBox.Show("First line needs to specify number of bells.");
+                    return;
+                }
 
                 // Read bells robot should ring
                 shouldRing = new bool[numBells];
@@ -108,7 +123,20 @@ namespace Muster
                 for (int i = 0; i < robotBells.Length; i++)
                     shouldRing[i] = robotBells[i] == '1';
                 if (robotBells.Length != numBells)
+                {
                     MessageBox.Show("Second line needs to specify whether each bell is to be rung by the robot.");
+                    return;
+                }
+
+                // Read third line which specfies the peal speed in minutes
+                string pealSpeed = sr.ReadLine();
+                int pealSpeedMinutes = int.Parse(pealSpeed);
+                if (pealSpeed.Length > 3)
+                {
+                    MessageBox.Show("Third line needs to specify peal speed in minutes.");
+                    return;
+                }
+                interbellGapIdeal = 1000 * pealSpeedMinutes * 60.0 / (5000 / 2) / (2 * numBells + 1);
 
                 // Read the stream to a string, and write the string to the console.
                 while (!sr.EndOfStream)
@@ -118,13 +146,13 @@ namespace Muster
                         bellOrder.Add(c - '0');
                 }
             }
+
+            MessageBox.Show($"Loaded in {bellOrder.Count / numBells} rows on {numBells} bells.");
         }
 
         public async Task Start()
         {
-            //TODO: Move this setting to the configuration somehow.
-            //  Need to be ensure user is able to reset this to the default if it's diverged
-            interbellGap = 300 - (numBells - 6) * 10;
+            interbellGap = interbellGapIdeal;
             StartChanges = false;
 
             stopRobot.Dispose();
@@ -162,6 +190,7 @@ namespace Muster
         public void Stop()
         {
             stopRobot.Cancel();
+            NotifyRobotStopped(true);
         }
     }
 }

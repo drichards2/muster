@@ -45,7 +45,8 @@ namespace Muster
             robot = new Robot()
             {
                 SendBellStrike = peerConnectionManager.SendAndRingKeyStroke,
-                BellStrikes = new RingingEvent[AbelAPI.numberOfBells]
+                BellStrikes = new RingingEvent[AbelAPI.numberOfBells],
+                NotifyRobotStopped = RobotStopped
             };
             for (int i = 0; i < AbelAPI.numberOfBells; i++)
             {
@@ -285,9 +286,15 @@ namespace Muster
 
         private void configureRobot_Click(object sender, EventArgs e)
         {
-            string fileName = "C:\\Users\\jagg\\source\\repos\\muster\\rows.txt";
+            string fileName = "rows.txt";
             logger.Debug("Reading in robot configuration: " + fileName); 
             robot.LoadRows(fileName);
+        }
+
+        private bool RobotStopped(bool input)
+        {
+            enableRobot.Checked = false;
+            return true;
         }
     }
 }
