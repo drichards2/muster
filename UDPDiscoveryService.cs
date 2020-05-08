@@ -115,7 +115,7 @@ namespace Muster
 
                         }
                     }
-                    catch (SocketException se)
+                    catch (SocketException)
                     {
                         // Probably OK?
                     }

@@ -253,8 +253,7 @@ namespace Muster
                 foreach (string map in mapping)
                 {
                     var tokens = map.Split('\t');
-                    Keys key, value;
-                    if (tokens.Length == 2 && Enum.TryParse(tokens[0], false, out key) && Enum.TryParse(tokens[1], false, out value))
+                    if (tokens.Length == 2 && Enum.TryParse(tokens[0], false, out Keys key) && Enum.TryParse(tokens[1], false, out Keys value))
                     {
                         if (CustomKeyMappings.ContainsKey(key))
                             CustomKeyMappings.Remove(key);

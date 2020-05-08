@@ -270,7 +270,7 @@ namespace Muster
                     {
                         numBytesReceived = _socket.Receive(buffer);
                     }
-                    catch (SocketException se)
+                    catch (SocketException)
                     {
                         logger.Error("Timeout waiting for UDP reply from server");
                     }
@@ -496,7 +496,7 @@ namespace Muster
                             }
                         }
                     }
-                    catch (SocketException se)
+                    catch (SocketException)
                     {
                         // Probably OK?
                     }
@@ -590,7 +590,7 @@ namespace Muster
                 {
                     cancellationToken.Cancel();
                 }
-                catch (ObjectDisposedException se)
+                catch (ObjectDisposedException)
                 {
                     // Do nothing
                 }
