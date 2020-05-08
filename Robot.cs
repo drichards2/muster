@@ -80,7 +80,7 @@ namespace Muster
                             change = 0;
 
                         interbellGap += change;
-                        Debug.WriteLine($"Change: {change}, interbellgap: {interbellGap}");
+                        logger.Debug($"Change: {change}, new interbellgap: {interbellGap}");
                     }
 
                     // Update buffer
