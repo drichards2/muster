@@ -1,4 +1,10 @@
-﻿using System;
+﻿////////////////////////////////////////////////////////////////////////////////////////////////////
+// file:	MusterMainFrm.cs
+//
+// summary:	Implements the muster main Windows Form
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
@@ -8,18 +14,26 @@ using System.Windows.Forms;
 
 namespace Muster
 {
+    /// <summary>   A muster. </summary>
     public partial class Muster : Form
     {
+        /// <summary>   The logger. </summary>
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        /// <summary>   The abel a pi. </summary>
         private readonly AbelAPI abelAPI = new AbelAPI();
+        /// <summary>   Manager for peer connection. </summary>
         private readonly PeerConnectionManager peerConnectionManager;
 
+        /// <summary>   True to enable, false to disable the keep alives. </summary>
         private const bool EnableKeepAlives = true;
 
+        /// <summary>   The custom key mappings. </summary>
         private Dictionary<Keys, Keys> CustomKeyMappings = new Dictionary<Keys, Keys>();
+        /// <summary>   Filename of the custom key map file. </summary>
         private const string CustomKeyMapFileName = "KeyConfig.txt";
 
+        /// <summary>   Default constructor. </summary>
         public Muster()
         {
             InitializeComponent();
@@ -61,35 +75,83 @@ namespace Muster
             });
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by MakeNewBand for click events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private async void MakeNewBand_Click(object sender, EventArgs e)
         {
             await peerConnectionManager.CreateNewBand();
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by JoinBand for click events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private async void JoinBand_Click(object sender, EventArgs e)
         {
             await peerConnectionManager.JoinBandRequest(NameInput.Text, LocationInput.Text);
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by Connect for click events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private async void Connect_Click(object sender, EventArgs e)
         {
             await peerConnectionManager.SendConnectRequest();
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by Disconnect for click events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private async void Disconnect_Click(object sender, EventArgs e)
         {
             await peerConnectionManager.LeaveBand();
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by Test for click events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void Test_Click(object sender, EventArgs e)
         {
             peerConnectionManager.TestConnection();
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by Muster for key down events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Key event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void Muster_KeyDown(object sender, KeyEventArgs e)
         {
             ProcessKeystroke(e);
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Process the keystroke described by e. </summary>
+        ///
+        /// <param name="e">    Key event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void ProcessKeystroke(KeyEventArgs e)
         {
@@ -112,6 +174,14 @@ namespace Muster
                 logger.Debug($"Key press ignored: {e.KeyCode}");
             }
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Applies the mapping described by e. </summary>
+        ///
+        /// <param name="e">    Key event information. </param>
+        ///
+        /// <returns>   A RingingEvent. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private RingingEvent ApplyMapping(KeyEventArgs e)
         {
@@ -159,6 +229,14 @@ namespace Muster
             return res;
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Custom map keypress. </summary>
+        ///
+        /// <param name="e">    The Keys to process. </param>
+        ///
+        /// <returns>   The Keys. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private Keys CustomMapKeypress(Keys e)
         {
             // Override only if user has explicitly specified this in a configuration file
@@ -169,6 +247,7 @@ namespace Muster
             return e;
         }
 
+        /// <summary>   Searches for the first abel. </summary>
         private void FindAbel()
         {
             abelAPI.FindAbel();
@@ -187,10 +266,24 @@ namespace Muster
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by AbelConnect for tick events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void AbelConnect_Tick(object sender, EventArgs e)
         {
             FindAbel();
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by About for click events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void About_Click(object sender, EventArgs e)
         {
@@ -199,6 +292,12 @@ namespace Muster
                 "Visit https://muster.norfolk-st.co.uk/ for more information.\n" +
                 "Written by Dave Richards and Jonathan Agg.", $"Muster (version { ver.ToString()})");
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets running version. </summary>
+        ///
+        /// <returns>   The running version. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private Version getRunningVersion()
         {
@@ -212,6 +311,13 @@ namespace Muster
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by RHBell for selected index changed events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void RHBell_SelectedIndexChanged(object sender, EventArgs e)
         {
             // Set LH bell to one more than selected RH bell
@@ -221,16 +327,38 @@ namespace Muster
             LHBell.SelectedIndex = idx;
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by Suppress for key events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Key event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void Suppress_KeyEvent(object sender, KeyEventArgs e)
         {
             // Prevent key presses changing the selected bell
             e.SuppressKeyPress = true;
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by Suppress for key press events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Key press event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void Suppress_KeyPressEvent(object sender, KeyPressEventArgs e)
         {
             // Prevent key presses changing the selected bell
             e.Handled = true;
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by AdvancedMode for checked changed events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void AdvancedMode_CheckedChanged(object sender, EventArgs e)
         {
@@ -242,6 +370,7 @@ namespace Muster
                 UpdateCustomKeyPressConfiguration();
         }
 
+        /// <summary>   Updates the custom key press configuration. </summary>
         private void UpdateCustomKeyPressConfiguration()
         {
             // Read in tab-separated pairs of overrides in specified file
@@ -274,10 +403,24 @@ namespace Muster
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by keepAlive for tick events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void keepAlive_Tick(object sender, EventArgs e)
         {
             peerConnectionManager.keepAlive_Tick();
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by textBox for enter events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void textBox_Enter(object sender, EventArgs e)
         {
@@ -285,11 +428,25 @@ namespace Muster
             KeyDown -= new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by textBox for validated events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void textBox_Validated(object sender, EventArgs e)
         {
             // Start sending keypresses to Abel again
             KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Event handler. Called by Muster for mouse down events. </summary>
+        ///
+        /// <param name="sender">   Source of the event. </param>
+        /// <param name="e">        Mouse event information. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void Muster_MouseDown(object sender, MouseEventArgs e)
         {
