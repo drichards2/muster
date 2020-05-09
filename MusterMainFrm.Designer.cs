@@ -105,6 +105,8 @@
             this.bandID.Size = new System.Drawing.Size(76, 20);
             this.bandID.TabIndex = 1;
             this.bandID.TabStop = false;
+            this.bandID.Enter += new System.EventHandler(this.textBox_Enter);
+            this.bandID.Validated += new System.EventHandler(this.textBox_Validated);
             // 
             // label2
             // 
@@ -162,6 +164,8 @@
             this.NameInput.TabIndex = 2;
             this.NameInput.TabStop = false;
             this.NameInput.Text = "Frank";
+            this.NameInput.Enter += new System.EventHandler(this.textBox_Enter);
+            this.NameInput.Validated += new System.EventHandler(this.textBox_Validated);
             // 
             // label4
             // 
@@ -182,6 +186,8 @@
             this.LocationInput.Size = new System.Drawing.Size(76, 20);
             this.LocationInput.TabIndex = 3;
             this.LocationInput.TabStop = false;
+            this.LocationInput.Enter += new System.EventHandler(this.textBox_Enter);
+            this.LocationInput.Validated += new System.EventHandler(this.textBox_Validated);
             // 
             // abelConnect
             // 
@@ -382,6 +388,7 @@
             this.Name = "Muster";
             this.Text = "Muster";
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
+            this.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Muster_MouseDown);
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();

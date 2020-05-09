@@ -24,6 +24,13 @@ namespace Muster
         {
             InitializeComponent();
 
+            // Add in a callback to stop editing a text box when user clicks away
+            foreach (Control control in this.Controls)
+            {
+                if (!(control is TextBox))
+                    control.MouseDown += new System.Windows.Forms.MouseEventHandler(this.Muster_MouseDown);
+            }
+
             logger.Info("Starting up");
 
             NameInput.Text = Environment.UserName;
@@ -270,6 +277,26 @@ namespace Muster
         private void keepAlive_Tick(object sender, EventArgs e)
         {
             peerConnectionManager.keepAlive_Tick();
+        }
+
+        private void textBox_Enter(object sender, EventArgs e)
+        {
+            // Only process keystrokes in the text box, to stop also sending keypresses to Abel
+            KeyDown -= new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
+        }
+
+        private void textBox_Validated(object sender, EventArgs e)
+        {
+            // Start sending keypresses to Abel again
+            KeyDown += new System.Windows.Forms.KeyEventHandler(this.Muster_KeyDown);
+        }
+
+        private void Muster_MouseDown(object sender, MouseEventArgs e)
+        {
+            // When user clicks away from a text box, move the focus away from the text box
+            // to another (arbitrarily chosen) component
+            if (ActiveControl is TextBox)
+                label1.Focus();
         }
     }
 }
