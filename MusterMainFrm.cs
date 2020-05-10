@@ -46,12 +46,15 @@ namespace Muster
             {
                 SendBellStrike = peerConnectionManager.SendAndRingKeyStroke,
                 BellStrikes = new RingingEvent[AbelAPI.numberOfBells],
+                ConductingCommands = new RingingEvent[2],
                 NotifyRobotStopped = RobotStopped
             };
             for (int i = 0; i < AbelAPI.numberOfBells; i++)
             {
                 robot.BellStrikes[i] = abelAPI.FindEventForCommand((i + 1).ToString());
             }
+            robot.ConductingCommands[0] = abelAPI.FindEventForCommand("Bob");
+            robot.ConductingCommands[1] = abelAPI.FindEventForCommand("Single");
 
             peerConnectionManager.NotifyBellStrike = robot.ReceiveNotification;
 

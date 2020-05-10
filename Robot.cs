@@ -18,6 +18,7 @@ namespace Muster
         public int numBells = 8;
         public bool[] shouldRing = { true, true, false, false, true, true, false, false };
         public List<int> bellOrder = new List<int>(8) { 1, 2, 3, 4, 5, 6, 7, 8 };
+        public Dictionary<int, RingingEvent> ringingCommands = new Dictionary<int, RingingEvent>();
 
         public double interbellGapIdeal = 200;
         public double HSGRatio = 0.9F;
@@ -25,6 +26,7 @@ namespace Muster
         public Func<RingingEvent, bool> SendBellStrike { get; set; }
         public Func<bool, bool> NotifyRobotStopped { get; set; }
         public RingingEvent[] BellStrikes;
+        public RingingEvent[] ConductingCommands;
 
         public static int HISTORY_SIZE = 10;
         public double gain = 0.1F;
@@ -106,6 +108,7 @@ namespace Muster
             }
 
             bellOrder.Clear();
+            ringingCommands.Clear();
             using (StreamReader sr = new StreamReader(filename))
             {
                 // Read first line which specfies the number of bells
@@ -166,6 +169,12 @@ namespace Muster
                             bellOrder.Add(c - 'A' + 13);
                         else if (c >= 'a' && c <= 'd')
                             bellOrder.Add(c - 'a' + 13);
+                        else if (c == '-')
+                            // Position the call at the start of the backstroke
+                            //    Based on Abel's output where call is shown after the lead end (the HS)
+                            ringingCommands.Add(bellOrder.Count - 2 * numBells, ConductingCommands[0]);
+                        else if (c == 's')
+                            ringingCommands.Add(bellOrder.Count - 2 * numBells, ConductingCommands[1]);
                     }
                 }
             }
@@ -193,6 +202,12 @@ namespace Muster
                     {
                         SendBellStrike(BellStrikes[bell - 1]);
                         logger.Debug("Ringing bell " + bell + " at  " + DateTime.Now);
+                    }
+
+                    if (ringingCommands.ContainsKey(index))
+                    {
+                        SendBellStrike(ringingCommands[index]);
+                        logger.Debug("Sending command " + ringingCommands[index] + " at strike " + index);
                     }
                     await Task.Delay((int)interbellGap);
                 }
