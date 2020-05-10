@@ -19,14 +19,14 @@ namespace Muster
         public bool[] shouldRing = { true, true, false, false, true, true, false, false };
         public List<int> bellOrder = new List<int>(8) { 1, 2, 3, 4, 5, 6, 7, 8 };
 
-        public double interbellGapIdeal  = 200;
+        public double interbellGapIdeal = 200;
         public double HSGRatio = 0.9F;
 
         public Func<RingingEvent, bool> SendBellStrike { get; set; }
         public Func<bool, bool> NotifyRobotStopped { get; set; }
         public RingingEvent[] BellStrikes;
 
-        public static int HISTORY_SIZE = 5;
+        public static int HISTORY_SIZE = 10;
         public double gain = 0.1F;
 
         private DateTime lastStrike = DateTime.MinValue;
@@ -128,7 +128,7 @@ namespace Muster
                     return;
                 }
 
-                // Read third line which specfies the peal speed in minutes
+                // Read third line which specifies the peal speed in minutes
                 string pealSpeed = sr.ReadLine();
                 int pealSpeedMinutes = int.Parse(pealSpeed);
                 if (pealSpeed.Length > 3)
@@ -138,15 +138,37 @@ namespace Muster
                 }
                 interbellGapIdeal = 1000 * pealSpeedMinutes * 60.0 / (5000 / 2) / (2 * numBells + 1);
 
-                // Read the stream to a string, and write the string to the console.
+                // Read fourth line which specifies the "gain"
+                string gainStr = sr.ReadLine();
+                gain = double.Parse(gainStr);
+                gain = Math.Max(Math.Min(gain, 1), 0);
+                if (pealSpeed.Length > 5)
+                {
+                    MessageBox.Show("Fourth line needs to specify how much the robot speed will adjust (0=none, 1=lots).");
+                    return;
+                }
+
+                // Read the rest of the file as changes
                 while (!sr.EndOfStream)
                 {
                     string line = sr.ReadLine();
                     foreach (char c in line)
-                        bellOrder.Add(c - '0');
+                    {
+                        if (c >= '1' && c <= '9')
+                            bellOrder.Add(c - '0');
+                        else if (c == '0')
+                            bellOrder.Add(10);
+                        else if (c == 'E' || c == 'e')
+                            bellOrder.Add(11);
+                        else if (c == 'T' || c == 't')
+                            bellOrder.Add(12);
+                        else if (c >= 'A' && c <= 'D')
+                            bellOrder.Add(c - 'A' + 13);
+                        else if (c >= 'a' && c <= 'd')
+                            bellOrder.Add(c - 'a' + 13);
+                    }
                 }
             }
-
             MessageBox.Show($"Loaded in {bellOrder.Count / numBells} rows on {numBells} bells.");
         }
 
