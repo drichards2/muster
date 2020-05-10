@@ -213,6 +213,7 @@ namespace Muster
         {
             stopRobot.Cancel();
             NotifyRobotStopped(true);
+            prevHumanGaps.Clear();
         }
     }
 }
