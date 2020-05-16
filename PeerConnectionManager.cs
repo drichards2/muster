@@ -41,7 +41,7 @@ namespace Muster
         /// <value> The simulator. </value>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public AbelAPI simulator { get; set; }
+        public BeltowerAPI simulator { get; set; }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Gets or sets a value indicating whether the keep alives is enabled. </summary>
@@ -621,7 +621,7 @@ namespace Muster
 
                         for (int i = 0; i < bytesReceived; i++)
                         {
-                            if (simulator.IsValidAbelKeystroke((char)buffer[i]))
+                            if (simulator.IsValidKeystroke((char)buffer[i]))
                             {
                                 runParameters.BellStrikeEvent?.Invoke((char)buffer[i]);
                             }
@@ -795,7 +795,7 @@ namespace Muster
 
         public void SendAndRingKeyStroke(RingingEvent ringingEvent)
         {
-            if (simulator.IsValidAbelCommand(ringingEvent))
+            if (simulator.IsValidCommand(ringingEvent))
             {
                 var txBytes = Encoding.ASCII.GetBytes($"{ringingEvent.ToChar()}");
                 foreach (var _socket in peerSockets)

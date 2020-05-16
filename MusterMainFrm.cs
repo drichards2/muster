@@ -20,8 +20,8 @@ namespace Muster
         /// <summary>   The logger. </summary>
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        /// <summary>   The abel a pi. </summary>
-        private readonly AbelAPI abelAPI = new AbelAPI();
+        /// <summary>   The Beltower a pi. </summary>
+        private readonly BeltowerAPI simulatorAPI = new BeltowerAPI();
         /// <summary>   Manager for peer connection. </summary>
         private readonly PeerConnectionManager peerConnectionManager;
 
@@ -49,12 +49,12 @@ namespace Muster
 
             NameInput.Text = Environment.UserName;
 
-            FindAbel();
+            FindSimulator();
 
             peerConnectionManager = new PeerConnectionManager()
             {
                 EnableKeepAlives = EnableKeepAlives,
-                simulator = abelAPI,
+                simulator = simulatorAPI,
                 bandDetails = bandDetails,
                 bandIDDisplay = bandID,
             };
@@ -69,7 +69,7 @@ namespace Muster
                 var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
                 foreach (var bell in bellOrder)
                 {
-                    abelAPI.SendRingingEvent(abelAPI.FindEventForCommand(bell.ToString()));
+                    simulatorAPI.SendRingingEvent(simulatorAPI.FindEventForCommand(bell.ToString()));
                     Thread.Sleep(150);
                 }
             });
@@ -188,8 +188,8 @@ namespace Muster
             if (AdvancedMode.Checked)
             {
                 Keys mappedKey = CustomMapKeypress(e.KeyCode);
-                if (abelAPI.IsValidAbelKeystroke((char)mappedKey))
-                    return abelAPI.FindEventForKeystroke((char)mappedKey);
+                if (simulatorAPI.IsValidKeystroke((char)mappedKey))
+                    return simulatorAPI.FindEventForKeystroke((char)mappedKey);
                 else
                     return null;
             }
@@ -198,31 +198,31 @@ namespace Muster
             switch (e.KeyCode)
             {
                 case Keys.F: // LH bell
-                    res = abelAPI.FindEventForCommand((LHBell.SelectedIndex + 1).ToString());
+                    res = simulatorAPI.FindEventForCommand((LHBell.SelectedIndex + 1).ToString());
                     break;
                 case Keys.J: // RH bell
-                    res = abelAPI.FindEventForCommand((RHBell.SelectedIndex + 1).ToString());
+                    res = simulatorAPI.FindEventForCommand((RHBell.SelectedIndex + 1).ToString());
                     break;
                 case Keys.G: // Go
-                    res = abelAPI.FindEventForCommand("Go");
+                    res = simulatorAPI.FindEventForCommand("Go");
                     break;
                 case Keys.A: // Bob
-                    res = abelAPI.FindEventForCommand("Bob");
+                    res = simulatorAPI.FindEventForCommand("Bob");
                     break;
                 case Keys.OemSemicolon: // Single
-                    res = abelAPI.FindEventForCommand("Single");
+                    res = simulatorAPI.FindEventForCommand("Single");
                     break;
                 case Keys.T: // That's all
-                    res = abelAPI.FindEventForCommand("ThatsAll");
+                    res = simulatorAPI.FindEventForCommand("ThatsAll");
                     break;
                 case Keys.R: // Rounds
-                    res = abelAPI.FindEventForCommand("Rounds");
+                    res = simulatorAPI.FindEventForCommand("Rounds");
                     break;
                 case Keys.Q: // Stand
-                    res = abelAPI.FindEventForCommand("Stand");
+                    res = simulatorAPI.FindEventForCommand("Stand");
                     break;
                 case Keys.F4: // Reset all bells
-                    res = abelAPI.FindEventForCommand("ResetBells");
+                    res = simulatorAPI.FindEventForCommand("ResetBells");
                     break;
             }
 
@@ -248,19 +248,19 @@ namespace Muster
         }
 
         /// <summary>   Searches for the first abel. </summary>
-        private void FindAbel()
+        private void FindSimulator()
         {
-            abelAPI.FindAbel();
+            simulatorAPI.FindInstance();
 
-            if (abelAPI.IsAbelConnected())
+            if (simulatorAPI.IsConnected())
             {
-                abelConnectLabel.Text = "Abel status:\nConnected";
+                abelConnectLabel.Text = "Simulator status:\nConnected";
                 abelConnectLabel.ForeColor = Color.CadetBlue;
                 abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Regular);
             }
             else
             {
-                abelConnectLabel.Text = "Abel status:\nNot connected";
+                abelConnectLabel.Text = "Simulator status:\nNot connected";
                 abelConnectLabel.ForeColor = Color.DarkOrange;
                 abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Bold);
             }
@@ -275,7 +275,7 @@ namespace Muster
 
         private void AbelConnect_Tick(object sender, EventArgs e)
         {
-            FindAbel();
+            FindSimulator();
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////

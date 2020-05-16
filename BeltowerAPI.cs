@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-// file:	AbelAPI.cs
+// file:	BeltowerAPI.cs
 //
-// summary:	Implements the abel a pi class
+// summary:	Implements the Beltower a pi class
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using System;
@@ -9,55 +9,57 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
+using System.Text;
 
 namespace Muster
 {
-    /// <summary>   An abel a pi. </summary>
-    internal class AbelAPI
+    /// <summary>   An Beltower a pi. </summary>
+    internal class BeltowerAPI
     {
-        /// <summary>   Handle of the abel. </summary>
-        private IntPtr AbelHandle;
+        /// <summary>   Handle of the Beltower. </summary>
+        private IntPtr BeltowerHandle;
 
         /// <summary>   The ringing commands. </summary>
         private Dictionary<string, char> RingingCommands = new Dictionary<string, char>
         {
-            {"Go", 'S' },
-            {"Bob", 'T' },
-            {"Single", 'U' },
-            {"ThatsAll", 'V' },
-            {"Rounds", 'W' },
-            {"Stand", 'X' },
-            {"ResetBells", 'Y' }
+            {"Bob", 'B' },
+            {"Single", 'S' },
+            {"Omit", 'O' },
+            {"Extreme", 'E' },
+            {"Rounds", 'R' },
+            {"ThatsAll", 'T' },
+            {"10", '0' },
+            {"11", (char)189 },
+            {"12", (char)187 },
+            {"13", (char)219 },
+            {"14", (char)221 },
+            {"15", (char)192 },
+            {"16", (char)222 },
         };
 
         /// <summary>   Number of bells. </summary>
         public const int numberOfBells = 16;
         /// <summary>   The required version. </summary>
-        public static int[] RequiredVersion = { 3, 10, 2 };
+        public static int[] RequiredVersion = { 1, 0, 0 };
 
         /// <summary>   Default constructor. </summary>
-        public AbelAPI()
+        public BeltowerAPI()
         {
-            int command = 0;
-            for (int i = 0; i < numberOfBells; i++)
+            for (int i = 0; i < 9; i++)
             {
-                // Skip F and J
-                if ((char)('A' + command) == 'F' || (char)('A' + command) == 'J')
-                    command++;
-
-                RingingCommands.Add((i + 1).ToString(), (char)('A' + command++));
+                RingingCommands.Add((i + 1).ToString(), (char)('1' + i));
             }
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if this  is abel connected. </summary>
+        /// <summary>   Query if this  is Beltower connected. </summary>
         ///
-        /// <returns>   True if abel connected, false if not. </returns>
+        /// <returns>   True if Beltower connected, false if not. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public bool IsAbelConnected()
+        public bool IsConnected()
         {
-            return AbelHandle != IntPtr.Zero;
+            return BeltowerHandle != IntPtr.Zero;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -74,34 +76,50 @@ namespace Muster
         [DllImport("user32.dll")]
         private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
 
-        /// <summary>   Searches for the first abel. </summary>
-        public void FindAbel()
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetWindow(IntPtr hWnd, uint uCmd);
+
+        [DllImport("user32.dll")]
+        public static extern int GetClassName(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        /// <summary>   Searches for the first Beltower. </summary>
+        public void FindInstance()
         {
             var foundHandle = IntPtr.Zero;
-            // Inspired by the Abel connection in Graham John's Handbell Manager (https://github.com/GACJ/handbellmanager)
+            // Inspired by the Beltower connection in Graham John's Handbell Manager (https://github.com/GACJ/handbellmanager)
             Process[] currentProcesses = Process.GetProcesses();
             foreach (Process p in currentProcesses)
             {
-                if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
+                if (Convert.ToString(p.ProcessName).ToUpper() == "BELTOW95")
                 {
                     foundHandle = p.MainWindowHandle;
-                    var version = p.MainModule.FileVersionInfo.FileVersion;
-                    var IsCompatible = CheckCompatibility(version);
+                    // var version = p.MainModule.FileVersionInfo.FileVersion;
+                    var IsCompatible = true; // CheckCompatibility(version);
 
-                    string ChildWindow = "AfxMDIFrame140s";
-                    string GrandchildWindow = "AfxFrameOrView140s";
+                    while (true)
+                    {
+                        StringBuilder name = new StringBuilder(256);
+                        GetClassName(foundHandle, name, 256);
+                        if (name.ToString() == "ThunderRT6MDIForm")
+                            break;
+                        uint GW_HWNDPREV = 3;
+                        foundHandle = GetWindow(foundHandle, GW_HWNDPREV);
+                    }
+
+                    string ChildWindow = "MDIClient";
+                    string GrandchildWindow = "ThunderRT6FormDC";
 
                     foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, ChildWindow, "");
-                    foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, GrandchildWindow, "");
-                    
+                    foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, GrandchildWindow, "Changes");
+
                     if (IsCompatible && foundHandle != IntPtr.Zero)
                         break;
                 }
             }
 
-            if (foundHandle != AbelHandle)
+            if (foundHandle != BeltowerHandle)
             {
-                AbelHandle = foundHandle;
+                BeltowerHandle = foundHandle;
             }
         }
 
@@ -151,9 +169,9 @@ namespace Muster
 
         public void SendKeystroke(char keyStroke)
         {
-            if (AbelHandle != null)
+            if (BeltowerHandle != null)
             {
-                PostMessage(AbelHandle, WM_CHAR, keyStroke, 0);
+                PostMessage(BeltowerHandle, WM_CHAR, keyStroke, 0);
             }
         }
 
@@ -172,11 +190,11 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if 'ringingEvent' is valid abel command. </summary>
+        /// <summary>   Query if 'ringingEvent' is valid Beltower command. </summary>
         ///
         /// <param name="ringingEvent"> The ringing event. </param>
         ///
-        /// <returns>   True if valid abel command, false if not. </returns>
+        /// <returns>   True if valid Beltower command, false if not. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public bool IsValidCommand(RingingEvent ringingEvent)
@@ -199,11 +217,11 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if 'key' is valid abel keystroke. </summary>
+        /// <summary>   Query if 'key' is valid Beltower keystroke. </summary>
         ///
         /// <param name="key">  The key. </param>
         ///
-        /// <returns>   True if valid abel keystroke, false if not. </returns>
+        /// <returns>   True if valid Beltower keystroke, false if not. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public bool IsValidKeystroke(char key)
