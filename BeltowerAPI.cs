@@ -22,19 +22,13 @@ namespace Muster
         /// <summary>   The ringing commands. </summary>
         private Dictionary<string, char> RingingCommands = new Dictionary<string, char>
         {
-            {"Bob", 'B' },
-            {"Single", 'S' },
-            {"Omit", 'O' },
-            {"Extreme", 'E' },
-            {"Rounds", 'R' },
-            {"ThatsAll", 'T' },
-            {"10", '0' },
-            {"11", (char)189 },
-            {"12", (char)187 },
-            {"13", (char)219 },
-            {"14", (char)221 },
-            {"15", (char)192 },
-            {"16", (char)222 },
+            {"Go", 'S' },
+            {"Bob", 'T' },
+            {"Single", 'U' },
+            {"ThatsAll", 'V' },
+            {"Rounds", 'W' },
+            {"Stand", 'X' },
+            {"ResetBells", 'Y' }
         };
 
         /// <summary>   Number of bells. </summary>
@@ -45,9 +39,14 @@ namespace Muster
         /// <summary>   Default constructor. </summary>
         public BeltowerAPI()
         {
-            for (int i = 0; i < 9; i++)
+            int command = 0;
+            for (int i = 0; i < numberOfBells; i++)
             {
-                RingingCommands.Add((i + 1).ToString(), (char)('1' + i));
+                // Skip F and J
+                if ((char)('A' + command) == 'F' || (char)('A' + command) == 'J')
+                    command++;
+
+                RingingCommands.Add((i + 1).ToString(), (char)('A' + command++));
             }
         }
 
@@ -90,7 +89,7 @@ namespace Muster
             Process[] currentProcesses = Process.GetProcesses();
             foreach (Process p in currentProcesses)
             {
-                if (Convert.ToString(p.ProcessName).ToUpper() == "BELTOW95")
+                if (Convert.ToString(p.ProcessName).ToUpper() == "BELTOW95" || Convert.ToString(p.ProcessName).ToUpper() == "BELTUTOR")
                 {
                     foundHandle = p.MainWindowHandle;
                     // var version = p.MainModule.FileVersionInfo.FileVersion;
