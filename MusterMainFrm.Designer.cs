@@ -41,7 +41,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.LocationInput = new System.Windows.Forms.TextBox();
             this.abelConnect = new System.Windows.Forms.Timer(this.components);
-            this.abelConnectLabel = new System.Windows.Forms.Label();
+            this.simConnectLabel = new System.Windows.Forms.Label();
             this.bandDetails = new System.Windows.Forms.DataGridView();
             this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.LocationColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -193,17 +193,17 @@
             // 
             this.abelConnect.Enabled = true;
             this.abelConnect.Interval = 1000;
-            this.abelConnect.Tick += new System.EventHandler(this.AbelConnect_Tick);
+            this.abelConnect.Tick += new System.EventHandler(this.SimConnect_Tick);
             // 
-            // abelConnectLabel
+            // simConnectLabel
             // 
-            this.abelConnectLabel.AutoSize = true;
-            this.abelConnectLabel.Location = new System.Drawing.Point(166, 56);
-            this.abelConnectLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.abelConnectLabel.Name = "abelConnectLabel";
-            this.abelConnectLabel.Size = new System.Drawing.Size(35, 13);
-            this.abelConnectLabel.TabIndex = 19;
-            this.abelConnectLabel.Text = "label1";
+            this.simConnectLabel.AutoSize = true;
+            this.simConnectLabel.Location = new System.Drawing.Point(166, 56);
+            this.simConnectLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.simConnectLabel.Name = "simConnectLabel";
+            this.simConnectLabel.Size = new System.Drawing.Size(35, 13);
+            this.simConnectLabel.TabIndex = 19;
+            this.simConnectLabel.Text = "label1";
             // 
             // bandDetails
             // 
@@ -371,7 +371,7 @@
             this.Controls.Add(this.LHBell);
             this.Controls.Add(this.aboutText);
             this.Controls.Add(this.bandDetails);
-            this.Controls.Add(this.abelConnectLabel);
+            this.Controls.Add(this.simConnectLabel);
             this.Controls.Add(this.LocationInput);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.NameInput);
@@ -408,7 +408,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox LocationInput;
         private System.Windows.Forms.Timer abelConnect;
-        private System.Windows.Forms.Label abelConnectLabel;
+        private System.Windows.Forms.Label simConnectLabel;
         private System.Windows.Forms.DataGridView bandDetails;
         private System.Windows.Forms.DataGridViewTextBoxColumn NameColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn LocationColumn;

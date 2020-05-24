@@ -20,8 +20,18 @@ namespace Muster
         /// <summary>   The logger. </summary>
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        /// <summary>   The simulator API. </summary>
-        private readonly BeltowerAPI simulatorAPI = new BeltowerAPI();
+        /// <summary>   The simulator. </summary>
+        private SimulatorAPI simulator
+        {
+            get { return simulators[indexSimulator]; }
+        }
+
+        /// <summary>   List of simulators. </summary>
+        private List<SimulatorAPI> simulators = new List<SimulatorAPI>() { new AbelAPI(), new BeltowerAPI() };
+
+        /// <summary>   Index of the active simulator. </summary>
+        private int indexSimulator = 0;
+
         /// <summary>   Manager for peer connection. </summary>
         private readonly PeerConnectionManager peerConnectionManager;
 
@@ -54,7 +64,7 @@ namespace Muster
             peerConnectionManager = new PeerConnectionManager()
             {
                 EnableKeepAlives = EnableKeepAlives,
-                simulator = simulatorAPI,
+                simulator = simulator,
                 bandDetails = bandDetails,
                 bandIDDisplay = bandID,
             };
@@ -69,7 +79,7 @@ namespace Muster
                 var bellOrder = new int[12] { 6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1, 12 };
                 foreach (var bell in bellOrder)
                 {
-                    simulatorAPI.SendRingingEvent(simulatorAPI.FindEventForCommand(bell.ToString()));
+                    simulator.SendRingingEvent(simulator.FindEventForCommand(bell.ToString()));
                     Thread.Sleep(150);
                 }
             });
@@ -188,41 +198,38 @@ namespace Muster
             if (AdvancedMode.Checked)
             {
                 Keys mappedKey = CustomMapKeypress(e.KeyCode);
-                if (simulatorAPI.IsValidKeystroke((char)mappedKey))
-                    return simulatorAPI.FindEventForKeystroke((char)mappedKey);
-                else
-                    return null;
+                return simulator.FindEventForKey(mappedKey.ToString());
             }
 
             RingingEvent res = null;
             switch (e.KeyCode)
             {
                 case Keys.F: // LH bell
-                    res = simulatorAPI.FindEventForCommand((LHBell.SelectedIndex + 1).ToString());
+                    res = simulator.FindEventForCommand((LHBell.SelectedIndex + 1).ToString());
                     break;
                 case Keys.J: // RH bell
-                    res = simulatorAPI.FindEventForCommand((RHBell.SelectedIndex + 1).ToString());
+                    res = simulator.FindEventForCommand((RHBell.SelectedIndex + 1).ToString());
                     break;
                 case Keys.G: // Go
-                    res = simulatorAPI.FindEventForCommand("Go");
+                    res = simulator.FindEventForCommand("Go");
                     break;
                 case Keys.A: // Bob
-                    res = simulatorAPI.FindEventForCommand("Bob");
+                    res = simulator.FindEventForCommand("Bob");
                     break;
                 case Keys.OemSemicolon: // Single
-                    res = simulatorAPI.FindEventForCommand("Single");
+                    res = simulator.FindEventForCommand("Single");
                     break;
                 case Keys.T: // That's all
-                    res = simulatorAPI.FindEventForCommand("ThatsAll");
+                    res = simulator.FindEventForCommand("ThatsAll");
                     break;
                 case Keys.R: // Rounds
-                    res = simulatorAPI.FindEventForCommand("Rounds");
+                    res = simulator.FindEventForCommand("Rounds");
                     break;
                 case Keys.Q: // Stand
-                    res = simulatorAPI.FindEventForCommand("Stand");
+                    res = simulator.FindEventForCommand("Stand");
                     break;
                 case Keys.F4: // Reset all bells
-                    res = simulatorAPI.FindEventForCommand("ResetBells");
+                    res = simulator.FindEventForCommand("ResetBells");
                     break;
             }
 
@@ -250,30 +257,38 @@ namespace Muster
         /// <summary>   Searches for the simulator and update status text. </summary>
         private void FindSimulator()
         {
-            simulatorAPI.FindInstance();
-
-            if (simulatorAPI.IsConnected())
+            for (int i = 0; i < simulators.Count; i++)
             {
-                abelConnectLabel.Text = "Simulator status:\nConnected";
-                abelConnectLabel.ForeColor = Color.CadetBlue;
-                abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Regular);
+                var isFound = simulators[i].FindInstance();
+                if (isFound)
+                {
+                    indexSimulator = i;
+                    continue;
+                };
+            }
+
+            if (simulator.IsConnected())
+            {
+                simConnectLabel.Text = "Simulator status:\nConnected to " + simulator.Name;
+                simConnectLabel.ForeColor = Color.CadetBlue;
+                simConnectLabel.Font = new Font(simConnectLabel.Font, FontStyle.Regular);
             }
             else
             {
-                abelConnectLabel.Text = "Simulator status:\nNot connected";
-                abelConnectLabel.ForeColor = Color.DarkOrange;
-                abelConnectLabel.Font = new Font(abelConnectLabel.Font, FontStyle.Bold);
+                simConnectLabel.Text = "Simulator status:\nNot connected";
+                simConnectLabel.ForeColor = Color.DarkOrange;
+                simConnectLabel.Font = new Font(simConnectLabel.Font, FontStyle.Bold);
             }
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Event handler. Called by AbelConnect for tick events. </summary>
+        /// <summary>   Event handler. Called by a timer. </summary>
         ///
         /// <param name="sender">   Source of the event. </param>
         /// <param name="e">        Event information. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        private void AbelConnect_Tick(object sender, EventArgs e)
+        private void SimConnect_Tick(object sender, EventArgs e)
         {
             FindSimulator();
         }

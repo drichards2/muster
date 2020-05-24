@@ -41,7 +41,7 @@ namespace Muster
         /// <value> The simulator. </value>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public BeltowerAPI simulator { get; set; }
+        public SimulatorAPI simulator { get; set; }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Gets or sets a value indicating whether the keep alive messaging is enabled. </summary>
