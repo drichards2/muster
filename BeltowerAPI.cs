@@ -20,15 +20,21 @@ namespace Muster
         private IntPtr BeltowerHandle;
 
         /// <summary>   The ringing commands. </summary>
-        private Dictionary<string, char> RingingCommands = new Dictionary<string, char>
+        private Dictionary<string, char> RingingCommandToChar = new Dictionary<string, char>
         {
-            {"Go", 'S' },
-            {"Bob", 'T' },
-            {"Single", 'U' },
-            {"ThatsAll", 'V' },
-            {"Rounds", 'W' },
-            {"Stand", 'X' },
-            {"ResetBells", 'Y' }
+            {"10", '0' },
+            {"11", '-' },
+            {"12", '=' },
+            {"13", '[' },
+            {"14", ']' },
+            {"15", '\'' },
+            {"16", '#' },
+            {"Bob", 'B' },
+            {"Single", 'S' },
+            {"Go", 'G' },
+            {"ThatsAll", 'T' },
+            {"Rounds", 'R' },
+            {"Stand", 'X' }
         };
 
         /// <summary>   Number of bells. </summary>
@@ -39,14 +45,9 @@ namespace Muster
         /// <summary>   Default constructor. </summary>
         public BeltowerAPI()
         {
-            int command = 0;
-            for (int i = 0; i < numberOfBells; i++)
+            for (int i = 0; i < 9; i++)
             {
-                // Skip F and J
-                if ((char)('A' + command) == 'F' || (char)('A' + command) == 'J')
-                    command++;
-
-                RingingCommands.Add((i + 1).ToString(), (char)('A' + command++));
+                RingingCommandToChar.Add((i + 1).ToString(), (char)(i + '1'));
             }
         }
 
