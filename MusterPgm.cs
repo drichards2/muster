@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////////////////////
 // file:	MusterPgm.cs
 //
-// summary:	Implements the muster pgm class
+// summary:	Implements the Muster pgm class
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using System;
@@ -12,7 +12,7 @@ using System.Windows.Forms;
 
 namespace Muster
 {
-    /// <summary>   A muster pgm. </summary>
+    /// <summary>   A Muster pgm. </summary>
     static class MusterPgm
     {
         /// <summary>   The main entry point for the application. </summary>

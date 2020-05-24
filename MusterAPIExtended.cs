@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////////////////////
 // file:	MusterAPIExtended.cs
 //
-// summary:	Implements the muster a pi extended class
+// summary:	Implements the extended Muster API class
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using System;
@@ -10,41 +10,41 @@ using System.Threading.Tasks;
 
 namespace Muster
 {
-    /// <summary>   A muster a pi extended. </summary>
+    /// <summary>   An extended Muster API. </summary>
     class MusterAPIExtended : MusterAPI
     {
 
-        /// <summary>   A connection phases. </summary>
+        /// <summary>   Connection phases. </summary>
         public class ConnectionPhases
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// <summary>   Gets the connect. </summary>
+            /// <summary>   Indicate connection phase is complete. </summary>
             ///
-            /// <value> The connect. </value>
+            /// <value> CONNECT </value>
             ////////////////////////////////////////////////////////////////////////////////////////////////////
 
             static public string CONNECT => "connect";
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// <summary>   Gets the endpoints registered. </summary>
+            /// <summary>   Indicate the endpoints are registered. </summary>
             ///
-            /// <value> The endpoints registered. </value>
+            /// <value> ENDPOINTS_REGISTERED </value>
             ////////////////////////////////////////////////////////////////////////////////////////////////////
 
             static public string ENDPOINTS_REGISTERED => "epreg";
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// <summary>   Gets the local discovery done. </summary>
+            /// <summary>   Indicate the local discovery is complete. </summary>
             ///
-            /// <value> The local discovery done. </value>
+            /// <value> LOCAL_DISCOVERY_DONE </value>
             ////////////////////////////////////////////////////////////////////////////////////////////////////
 
             static public string LOCAL_DISCOVERY_DONE => "discdone";
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// <summary>   Gets the binding done. </summary>
+            /// <summary>   Indicate the binding is complete. </summary>
             ///
-            /// <value> The binding done. </value>
+            /// <value> BINDING_DONE </value>
             ////////////////////////////////////////////////////////////////////////////////////////////////////
 
             static public string BINDING_DONE => "binddone";
@@ -93,7 +93,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Connection phase any response. </summary>
+        /// <summary>   Query if one peer has completed a particular connection phase. </summary>
         ///
         /// <param name="bandID">   Identifier for the band. </param>
         /// <param name="phase">    The phase. </param>
@@ -108,7 +108,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Connection phase all responded. </summary>
+        /// <summary>   Query if all peers have completed a particular connection phase. </summary>
         ///
         /// <param name="workingBand">  The working band. </param>
         /// <param name="bandID">       Identifier for the band. </param>

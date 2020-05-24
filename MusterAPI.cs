@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////////////////////
 // file:	MusterAPI.cs
 //
-// summary:	Implements the muster a pi class
+// summary:	Implements the Muster API class
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using Newtonsoft.Json;
@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace Muster
 {
-    /// <summary>   A muster a pi. </summary>
+    /// <summary>   A Muster API. </summary>
     internal class MusterAPI
     {
         /// <summary>   The logger. </summary>
@@ -99,7 +99,7 @@ namespace Muster
             public int port {get; set;}
 
             ////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// <summary>   Gets or sets a value indicating whether the check local. </summary>
+            /// <summary>   Gets or sets a value indicating whether the peer is local. </summary>
             ///
             /// <value> True if check local, false if not. </value>
             ////////////////////////////////////////////////////////////////////////////////////////////////////
