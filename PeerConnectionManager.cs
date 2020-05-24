@@ -44,9 +44,9 @@ namespace Muster
         public AbelAPI simulator { get; set; }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Gets or sets a value indicating whether the keep alives is enabled. </summary>
+        /// <summary>   Gets or sets a value indicating whether the keep alive messaging is enabled. </summary>
         ///
-        /// <value> True if enable keep alives, false if not. </value>
+        /// <value> True if keep alives are enabled, false if not. </value>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public bool EnableKeepAlives { get; set; }
@@ -67,23 +67,23 @@ namespace Muster
 
         public TextBox bandIDDisplay { get; set; }
 
-        /// <summary>   The maximum peers. </summary>
+        /// <summary>   The maximum number of peers. </summary>
         private const int MAX_PEERS = 6;
         /// <summary>   Size of the UDP block. </summary>
         private const int UDP_BLOCK_SIZE = 1024;
 
-        /// <summary>   The server a pi. </summary>
+        /// <summary>   The server API. </summary>
         private readonly MusterAPIExtended serverAPI = new MusterAPIExtended();
 
         /// <summary>   The peer sockets. </summary>
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
         /// <summary>   The peer listeners. </summary>
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
-        /// <summary>   The peer cancellation. </summary>
+        /// <summary>   The peer cancellation token source. </summary>
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
         /// <summary>   The local client details. </summary>
         private List<UDPDiscoveryService.LocalNetworkClientDetail> localClientDetails = new List<UDPDiscoveryService.LocalNetworkClientDetail>(MAX_PEERS);
-        /// <summary>   The join band cancellation. </summary>
+        /// <summary>   The join band cancellation token source. </summary>
         private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
 
         /// <summary>   Identifier for the client. </summary>
@@ -99,9 +99,9 @@ namespace Muster
         /// <summary>   The endpoint address. </summary>
         private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
-        /// <summary>   The time since last transmit. </summary>
+        /// <summary>   The time since the last transmission. </summary>
         private Stopwatch TimeSinceLastTX = new Stopwatch();
-        /// <summary>   True to send keep alives. </summary>
+        /// <summary>   Specifying whether to send keep alives. </summary>
         private bool SendKeepAlives = false;
         /// <summary>   The transmit threshold. </summary>
         private float TXThreshold = 5000;
@@ -259,7 +259,7 @@ namespace Muster
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Gets the band back together. </summary>
         ///
-        /// <returns>   An asynchronous result that yields the band back together. </returns>
+        /// <returns>   An asynchronous result that returns the band members. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private async Task<MusterAPI.Band> GetTheBandBackTogether()
@@ -324,7 +324,7 @@ namespace Muster
             TestConnection();
         }
 
-        /// <summary>   Sends the UDP messages to server. </summary>
+        /// <summary>   Sends the UDP messages to the server. </summary>
         private async void SendUDPMessagesToServer()
         {
             DisconnectAll();
@@ -401,7 +401,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   All clients finished local discovery. </summary>
+        /// <summary>   Wait for all clients to finish local discovery. </summary>
         ///
         /// <returns>   An asynchronous result. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -460,7 +460,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   All clients received local details. </summary>
+        /// <summary>   Wait for all clients to have received local details. </summary>
         ///
         /// <returns>   An asynchronous result. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -587,7 +587,7 @@ namespace Muster
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Adds a listener to socket. </summary>
         ///
-        /// <param name="idx">  Zero-based index of the. </param>
+        /// <param name="idx">  Zero-based index of the socket. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void AddListenerToSocket(int idx)
@@ -646,7 +646,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Socket echo. </summary>
+        /// <summary>   Socket echo callback. </summary>
         ///
         /// <param name="peerChannel">  The peer channel. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -672,7 +672,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Bell strike. </summary>
+        /// <summary>   Process a received bell strike. </summary>
         ///
         /// <param name="keyStroke">    The key stroke. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -741,7 +741,7 @@ namespace Muster
             peerSockets.Clear();
         }
 
-        /// <summary>   Disconnects all. </summary>
+        /// <summary>   Disconnects all open sockets. </summary>
         private void DisconnectAll()
         {
             foreach (var cancellationToken in peerCancellation)
@@ -788,7 +788,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Sends an and ring key stroke. </summary>
+        /// <summary>   Sends and rings a key stroke. </summary>
         ///
         /// <param name="ringingEvent"> The ringing event. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // file:	AbelAPI.cs
 //
-// summary:	Implements the abel a pi class
+// summary:	Implements the Abel API class
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using System;
@@ -12,10 +12,10 @@ using System.Runtime.InteropServices;
 
 namespace Muster
 {
-    /// <summary>   An abel a pi. </summary>
+    /// <summary>   An Abel API. </summary>
     internal class AbelAPI
     {
-        /// <summary>   Handle of the abel. </summary>
+        /// <summary>   Handle of the Abel process. </summary>
         private IntPtr AbelHandle;
 
         /// <summary>   The ringing commands. </summary>
@@ -50,9 +50,9 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if this  is abel connected. </summary>
+        /// <summary>   Query if Abel process is connected. </summary>
         ///
-        /// <returns>   True if abel connected, false if not. </returns>
+        /// <returns>   True if Abel is connected, false if not. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public bool IsAbelConnected()
@@ -61,20 +61,20 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Searches for the first window exception. </summary>
+        /// <summary>   Searches for the window. </summary>
         ///
         /// <param name="hWndParent">       The window parent. </param>
         /// <param name="hWndChildAfter">   The window child after. </param>
         /// <param name="lpszClass">        The class. </param>
         /// <param name="lpszWindow">       The window. </param>
         ///
-        /// <returns>   The found window exception. </returns>
+        /// <returns>   The found window. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         [DllImport("user32.dll")]
         private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
 
-        /// <summary>   Searches for the first abel. </summary>
+        /// <summary>   Searches for an Abel process. </summary>
         public void FindAbel()
         {
             var foundHandle = IntPtr.Zero;
@@ -172,7 +172,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if 'ringingEvent' is valid abel command. </summary>
+        /// <summary>   Query if 'ringingEvent' is a valid simulator command. </summary>
         ///
         /// <param name="ringingEvent"> The ringing event. </param>
         ///
@@ -199,7 +199,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if 'key' is valid abel keystroke. </summary>
+        /// <summary>   Query if 'key' is a valid simulator keystroke. </summary>
         ///
         /// <param name="key">  The key. </param>
         ///
@@ -212,7 +212,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Searches for the first event for command. </summary>
+        /// <summary>   Searches for the corresponding ringing event for a command. </summary>
         ///
         /// <param name="command">  The command. </param>
         ///
@@ -230,7 +230,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Searches for the first event for keystroke. </summary>
+        /// <summary>   Searches for the corresponding ringing event for a keystroke. </summary>
         ///
         /// <param name="keyStroke">    The key stroke. </param>
         ///

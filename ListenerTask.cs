@@ -21,7 +21,7 @@ namespace Muster
         internal class ListenerConfig
         {
             ////////////////////////////////////////////////////////////////////////////////////////////////////
-            /// <summary>   Broadcasts an alive. </summary>
+            /// <summary>   Method to call to broadcast that socket is alive. </summary>
             ///
             /// <param name="peerChannel">  The peer channel. </param>
             ////////////////////////////////////////////////////////////////////////////////////////////////////

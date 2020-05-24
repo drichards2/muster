@@ -1,7 +1,7 @@
 ﻿////////////////////////////////////////////////////////////////////////////////////////////////////
 // file:	MusterMainFrm.cs
 //
-// summary:	Implements the muster main Windows Form
+// summary:	Implements the main Muster Windows Form
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
 using System;
@@ -14,21 +14,21 @@ using System.Windows.Forms;
 
 namespace Muster
 {
-    /// <summary>   A muster. </summary>
+    /// <summary>   Muster. </summary>
     public partial class Muster : Form
     {
         /// <summary>   The logger. </summary>
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
-        /// <summary>   The abel a pi. </summary>
+        /// <summary>   The simulator API. </summary>
         private readonly AbelAPI abelAPI = new AbelAPI();
         /// <summary>   Manager for peer connection. </summary>
         private readonly PeerConnectionManager peerConnectionManager;
 
-        /// <summary>   True to enable, false to disable the keep alives. </summary>
+        /// <summary>   Enable keep-alive messages. </summary>
         private const bool EnableKeepAlives = true;
 
-        /// <summary>   The custom key mappings. </summary>
+        /// <summary>   Custom key mapping dictionary. </summary>
         private Dictionary<Keys, Keys> CustomKeyMappings = new Dictionary<Keys, Keys>();
         /// <summary>   Filename of the custom key map file. </summary>
         private const string CustomKeyMapFileName = "KeyConfig.txt";
@@ -148,7 +148,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Process the keystroke described by e. </summary>
+        /// <summary>   Process the keystroke. </summary>
         ///
         /// <param name="e">    Key event information. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +176,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Applies the mapping described by e. </summary>
+        /// <summary>   Applies the mapping from keypress to ringing event. </summary>
         ///
         /// <param name="e">    Key event information. </param>
         ///
@@ -230,7 +230,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Custom map keypress. </summary>
+        /// <summary>   Apply custom mapping to keypress. </summary>
         ///
         /// <param name="e">    The Keys to process. </param>
         ///
@@ -247,7 +247,7 @@ namespace Muster
             return e;
         }
 
-        /// <summary>   Searches for the first abel. </summary>
+        /// <summary>   Searches for the simulator and update status text. </summary>
         private void FindAbel()
         {
             abelAPI.FindAbel();
@@ -294,7 +294,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Gets running version. </summary>
+        /// <summary>   Gets running version of Muster. </summary>
         ///
         /// <returns>   The running version. </returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -328,7 +328,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Event handler. Called by Suppress for key events. </summary>
+        /// <summary>   Event handler. Suppress key events. </summary>
         ///
         /// <param name="sender">   Source of the event. </param>
         /// <param name="e">        Key event information. </param>
@@ -341,7 +341,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Event handler. Called by Suppress for key press events. </summary>
+        /// <summary>   Event handler. Suppress key press events. </summary>
         ///
         /// <param name="sender">   Source of the event. </param>
         /// <param name="e">        Key press event information. </param>
@@ -354,7 +354,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Event handler. Called by AdvancedMode for checked changed events. </summary>
+        /// <summary>   Event handler. Callback when Advanced Mode checkbox changes. </summary>
         ///
         /// <param name="sender">   Source of the event. </param>
         /// <param name="e">        Event information. </param>
@@ -385,8 +385,8 @@ namespace Muster
                 foreach (string map in mapping)
                 {
                     var tokens = map.Split('\t');
-                    Keys key, value;
-                    if (tokens.Length == 2 && Enum.TryParse(tokens[0], false, out key) && Enum.TryParse(tokens[1], false, out value))
+                    Keys value;
+                    if (tokens.Length == 2 && Enum.TryParse(tokens[0], false, out Keys key) && Enum.TryParse(tokens[1], false, out value))
                     {
                         if (CustomKeyMappings.ContainsKey(key))
                             CustomKeyMappings.Remove(key);
@@ -404,7 +404,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Event handler. Called by keepAlive for tick events. </summary>
+        /// <summary>   Event handler. Called by keep-alive timer. </summary>
         ///
         /// <param name="sender">   Source of the event. </param>
         /// <param name="e">        Event information. </param>
@@ -416,7 +416,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Event handler. Called by textBox for enter events. </summary>
+        /// <summary>   Event handler. Called by textBox when in focus during typing. </summary>
         ///
         /// <param name="sender">   Source of the event. </param>
         /// <param name="e">        Event information. </param>
@@ -429,7 +429,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Event handler. Called by textBox for validated events. </summary>
+        /// <summary>   Event handler. Called by textBox when typing stops. </summary>
         ///
         /// <param name="sender">   Source of the event. </param>
         /// <param name="e">        Event information. </param>

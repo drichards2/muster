@@ -18,7 +18,7 @@ using System.Threading.Tasks;
 
 namespace Muster
 {
-    /// <summary>   A service for accessing UDP discoveries information. </summary>
+    /// <summary>   A service for accessing UDP discovery information. </summary>
     internal class UDPDiscoveryService : IDisposable
     {
         /// <summary>   The logger. </summary>
@@ -50,10 +50,10 @@ namespace Muster
 
         /// <summary>   The listener. </summary>
         private Socket listener;
-        /// <summary>   The ctoken source. </summary>
+        /// <summary>   The cancellation token source. </summary>
         CancellationTokenSource ctokenSource = new CancellationTokenSource();
 
-        /// <summary>   The network listen port. </summary>
+        /// <summary>   The network port to listen on. </summary>
         public const int NETWORK_LISTEN_PORT = 55115;
 
         /// <summary>   The clients. </summary>
@@ -79,7 +79,7 @@ namespace Muster
             } }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Check detail received for. </summary>
+        /// <summary>   Check details are received for a client. </summary>
         ///
         /// <param name="clientID"> Identifier for the client. </param>
         ///
@@ -101,7 +101,7 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Broadcasts a client available. </summary>
+        /// <summary>   Broadcast endpoint information to local peers. </summary>
         ///
         /// <param name="clientDetail"> The client detail. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
