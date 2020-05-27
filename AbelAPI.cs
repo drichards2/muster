@@ -80,6 +80,8 @@ namespace Muster
                 if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
                 {
                     foundHandle = p.MainWindowHandle;
+                    if (foundHandle == IntPtr.Zero)
+                        break;
                     var version = p.MainModule.FileVersionInfo.FileVersion;
                     var IsCompatible = CheckCompatibility(version);
 

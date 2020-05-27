@@ -59,8 +59,6 @@ namespace Muster
 
             NameInput.Text = Environment.UserName;
 
-            FindSimulator();
-
             peerConnectionManager = new PeerConnectionManager()
             {
                 EnableKeepAlives = EnableKeepAlives,
@@ -71,6 +69,9 @@ namespace Muster
 
             if (EnableKeepAlives)
                 keepAlive.Start();
+
+            FindSimulator();
+            ToggleKeyInfo();
 
             RHBell.SelectedIndex = 0;
 
@@ -262,7 +263,17 @@ namespace Muster
                 var isFound = simulators[i].FindInstance();
                 if (isFound)
                 {
+                    // Come up with better approach if more simulators needed
+                    if (indexSimulator != i)
+                    {
+                        indexSimulator = i;
+                        ToggleKeyInfo();
+                        AdvancedMode.Checked = false;
+                    }
+
                     indexSimulator = i;
+                    peerConnectionManager.simulator = simulator;
+
                     continue;
                 };
             }
@@ -278,6 +289,21 @@ namespace Muster
                 simConnectLabel.Text = "Simulator status:\nNot connected";
                 simConnectLabel.ForeColor = Color.DarkOrange;
                 simConnectLabel.Font = new Font(simConnectLabel.Font, FontStyle.Bold);
+            }
+        }
+
+        /// <summary>   Show the relevant key information. </summary>
+        private void ToggleKeyInfo()
+        {
+            if (indexSimulator == 0)
+            {
+                KeyInfo_Abel.Visible = true;
+                KeyInfo_Beltower.Visible = false;
+            }
+            else
+            {
+                KeyInfo_Abel.Visible = false;
+                KeyInfo_Beltower.Visible = true;
             }
         }
 
@@ -379,7 +405,8 @@ namespace Muster
         {
             LHBell.Enabled = !AdvancedMode.Checked;
             RHBell.Enabled = !AdvancedMode.Checked;
-            KeyInfo.Visible = !AdvancedMode.Checked;
+            KeyInfo_Abel.Visible = indexSimulator == 0 && !AdvancedMode.Checked;
+            KeyInfo_Beltower.Visible = indexSimulator == 1 && !AdvancedMode.Checked;
 
             if (AdvancedMode.Checked)
                 UpdateCustomKeyPressConfiguration();
