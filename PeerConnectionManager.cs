@@ -497,7 +497,8 @@ namespace Muster
                 if (timeOutCancellation.Token.IsCancellationRequested)
                 {
                     logger.Error($"Timed out joining band {bandID} while waiting for everyone to confirm local discovery worked.");
-                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
+                    MessageBox.Show("Attempting to continue connecting to the other ringers. " + 
+                        "This band connection may not work if any ringers share an internet connection.");
                     return;
                 }
 
@@ -579,7 +580,8 @@ namespace Muster
                 foreach (var localEP in localClientsReceived)
                     if ((localEP.socket_owner_id == _relevantEP.target_id) && (localEP.required_destination_id == clientId))
                     {
-                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _relevantEP.target_id, localEP.address, localEP.port);
+                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", 
+                            _relevantEP.target_id, localEP.address, localEP.port);
                         _socket.Connect(localEP.address, localEP.port);
                         break;
                     }
@@ -593,7 +595,8 @@ namespace Muster
             }
             else // Otherwise, connect over the internet
             {
-                logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
+                logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", 
+                    _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
                 _socket.Connect(_relevantEP.ip, _relevantEP.port);
             }
         }
@@ -645,7 +648,8 @@ namespace Muster
                             }
                             else if (buffer[i] == '#')
                             {
-                                logger.Debug("Received reply to test from peer #{peerID} at {peerAddress}.", runParameters.peerChannel, runParameters.srcSocket.RemoteEndPoint.ToString());
+                                logger.Debug("Received reply to test from peer #{peerID} at {peerAddress}.", 
+                                    runParameters.peerChannel, runParameters.srcSocket.RemoteEndPoint.ToString());
                                 runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
                             }
                         }
