@@ -56,14 +56,14 @@ namespace Muster
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         [DllImport("user32.dll")]
-        static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
+        protected static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
 
         /// <summary>   The Windows message keydown. </summary>
-        const int WM_KEYDOWN = 0x100;
+        protected const int WM_KEYDOWN = 0x100;
         /// <summary>   The Windows message keyup. </summary>
-        const int WM_KEYUP = 0x101;
+        protected const int WM_KEYUP = 0x101;
         /// <summary>   The Windows message character. </summary>
-        const int WM_CHAR = 0x102;
+        protected const int WM_CHAR = 0x102;
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Sends a keystroke. </summary>
@@ -71,13 +71,7 @@ namespace Muster
         /// <param name="keyStroke">    The key stroke. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public void SendKeystroke(char keyStroke)
-        {
-            if (SimulatorHandle != null)
-            {
-                PostMessage(SimulatorHandle, WM_CHAR, keyStroke, 0);
-            }
-        }
+        protected abstract void SendKeystroke(char keyStroke);
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Sends a ringing event. </summary>

@@ -376,7 +376,7 @@
             this.KeyInfo_Beltower.Name = "KeyInfo_Beltower";
             this.KeyInfo_Beltower.Size = new System.Drawing.Size(186, 57);
             this.KeyInfo_Beltower.TabIndex = 30;
-            this.KeyInfo_Beltower.Text = "Bob    A   Single     ;\r\nGo     G   That\'s all T\r\nRounds R";
+            this.KeyInfo_Beltower.Text = "Bob    A   Single     ;\r\nGo     G   That\'s all T\r\nRounds R   Stand      Q\r\n";
             this.KeyInfo_Beltower.Visible = false;
             // 
             // Muster

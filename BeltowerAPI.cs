@@ -133,5 +133,22 @@ namespace Muster
 
             return SimulatorHandle != IntPtr.Zero;
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Sends a keystroke. </summary>
+        ///
+        /// <param name="keyStroke">    The key stroke. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        protected override void SendKeystroke(char keyStroke)
+        {
+            if (SimulatorHandle != null)
+            {
+                if (keyStroke != 'X')
+                    PostMessage(SimulatorHandle, WM_CHAR, keyStroke, 0);
+                else
+                    PostMessage(SimulatorHandle, WM_KEYDOWN, keyStroke, 0);
+            }
+        }
     }
 }

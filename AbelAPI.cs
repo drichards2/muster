@@ -120,5 +120,19 @@ namespace Muster
                 int.Parse(verParts[0]) == RequiredVersion[0] && int.Parse(verParts[1]) > RequiredVersion[1] ||
                 int.Parse(verParts[0]) == RequiredVersion[0] && int.Parse(verParts[1]) == RequiredVersion[1] && int.Parse(verParts[2]) >= RequiredVersion[2];
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Sends a keystroke. </summary>
+        ///
+        /// <param name="keyStroke">    The key stroke. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        protected override void SendKeystroke(char keyStroke)
+        {
+            if (SimulatorHandle != null)
+            {
+                PostMessage(SimulatorHandle, WM_CHAR, keyStroke, 0);
+            }
+        }
     }
 }
