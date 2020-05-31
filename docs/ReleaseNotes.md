@@ -8,7 +8,7 @@ First version. Supports Abel (version 3.10.2 or later).
 
 ### Muster v1.1 [download](releases/Muster 1.1.0.0.zip)
 * Adds Beltower and Beltutor support.
-* Supports [custom keypress mappings](CustomMappings).
+* Supports [custom keypress mappings](CustomKeypresses).
 * Prevents sending keypresses to a simulator when typing in text boxes.
 
 This version should be compatible with v1.0 (when a band is using Abel).
