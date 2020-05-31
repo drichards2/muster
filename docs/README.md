@@ -23,7 +23,7 @@ Abel is available for purchase at <http://abelsim.co.uk/>. Version 3.10.2 or lat
 Beltower and Beltutor, a cutdown version, are available for purchase at <http://www.beltower.co.uk/>.
 
 ### Muster
-The latest version of Muster is available for download from [here](releases/Muster 1.1.0.0.zip). See the [release notes] for more information.
+The latest version of Muster is available for download from [here](releases/Muster 1.1.0.0.zip). See the [release notes](ReleaseNotes) for more information.
 
 When it's downloaded, extract the files and run muster.exe. Make sure you sufficiently appease any anti-virus software, and ensure you give permission for Muster to communicate on public and private networks, otherwise the ringing won't go too well.
 
