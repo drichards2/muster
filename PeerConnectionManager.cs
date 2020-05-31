@@ -86,7 +86,7 @@ namespace Muster
         /// <summary>   The join band cancellation token source. </summary>
         private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
         /// <summary>   Specifying whether this client is currently joining a band. </summary>
-        private bool joiningBand = false;
+        private volatile bool joiningBand = false;
 
         /// <summary>   Identifier for the client. </summary>
         private string clientId;
