@@ -1,4 +1,10 @@
-﻿using Newtonsoft.Json;
+﻿////////////////////////////////////////////////////////////////////////////////////////////////////
+// file:	UDPDiscoveryService.cs
+//
+// summary:	Implements the UDP discovery service class
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using Newtonsoft.Json;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
@@ -12,16 +18,29 @@ using System.Threading.Tasks;
 
 namespace Muster
 {
+    /// <summary>   A service for accessing UDP discovery information. </summary>
     internal class UDPDiscoveryService : IDisposable
     {
+        /// <summary>   The logger. </summary>
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
 
+        /// <summary>   A local network client detail. </summary>
         internal class LocalNetworkClientDetail
         {
+            /// <summary>   Identifier for the socket owner. </summary>
             public string socket_owner_id;
+            /// <summary>   The address. </summary>
             public string address;
+            /// <summary>   The port. </summary>
             public int port;
+            /// <summary>   Identifier for the required destination. </summary>
             public string required_destination_id;
+
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
+            /// <summary>   Returns a string that represents the current object. </summary>
+            ///
+            /// <returns>   A string that represents the current object. </returns>
+            ////////////////////////////////////////////////////////////////////////////////////////////////////
 
             public override string ToString()
             {
@@ -29,14 +48,26 @@ namespace Muster
             }
         }
 
+        /// <summary>   The listener. </summary>
         private Socket listener;
+        /// <summary>   The cancellation token source. </summary>
         CancellationTokenSource ctokenSource = new CancellationTokenSource();
 
+        /// <summary>   The network port to listen on. </summary>
         public const int NETWORK_LISTEN_PORT = 55115;
 
+        /// <summary>   The clients. </summary>
         private List<LocalNetworkClientDetail> _clients = new List<LocalNetworkClientDetail>();
 
+        /// <summary>   The queue. </summary>
         private ConcurrentQueue<LocalNetworkClientDetail> queue = new ConcurrentQueue<LocalNetworkClientDetail>();
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets the local clients. </summary>
+        ///
+        /// <value> The local clients. </value>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public List<LocalNetworkClientDetail> LocalClients { get
             {
                 while (queue.TryDequeue(out var newClient))
@@ -46,6 +77,14 @@ namespace Muster
                 }
                 return _clients;
             } }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Check details are received for a client. </summary>
+        ///
+        /// <param name="clientID"> Identifier for the client. </param>
+        ///
+        /// <returns>   True if it succeeds, false if it fails. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public bool CheckDetailReceivedFor(string clientID)
         {
@@ -61,6 +100,12 @@ namespace Muster
             return isSeen;
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Broadcast endpoint information to local peers. </summary>
+        ///
+        /// <param name="clientDetail"> The client detail. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public void BroadcastClientAvailable(LocalNetworkClientDetail clientDetail)
         {
             logger.Debug($"Broadcasting local detail {clientDetail.address}:{clientDetail.port}");
@@ -70,6 +115,7 @@ namespace Muster
             listener.SendTo(broadcastPacket, broadcastAddress);
         }
 
+        /// <summary>   Clears the local clients. </summary>
         public void ClearLocalClients()
         {
             logger.Debug("Clear local clients");
@@ -79,6 +125,7 @@ namespace Muster
             _clients.Clear();
         }
 
+        /// <summary>   Default constructor. </summary>
         public UDPDiscoveryService()
         {
             listener = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
@@ -125,7 +172,16 @@ namespace Muster
         }
 
         #region IDisposable Support
-        private bool disposedValue = false; // To detect redundant calls
+        /// <summary>   To detect redundant calls. </summary>
+        private bool disposedValue = false;
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   This code added to correctly implement the disposable pattern. </summary>
+        ///
+        /// <param name="disposing">    True to release both managed and unmanaged resources; false to
+        ///                             release only unmanaged resources.
+        /// </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         protected virtual void Dispose(bool disposing)
         {
@@ -151,7 +207,7 @@ namespace Muster
         //   Dispose(false);
         // }
 
-        // This code added to correctly implement the disposable pattern.
+        /// <summary>   This code added to correctly implement the disposable pattern. </summary>
         public void Dispose()
         {
             // Do not change this code. Put cleanup code in Dispose(bool disposing) above.

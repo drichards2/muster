@@ -1,4 +1,10 @@
-﻿using System;
+﻿////////////////////////////////////////////////////////////////////////////////////////////////////
+// file:	PeerConnectionManager.cs
+//
+// summary:	Implements the peer connection manager class
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -11,51 +17,117 @@ using System.Windows.Forms;
 
 namespace Muster
 {
+    /// <summary>   Manager for peer connections. </summary>
     internal class PeerConnectionManager
     {
+        /// <summary>   The logger. </summary>
         private static readonly NLog.Logger logger = NLog.LogManager.GetCurrentClassLogger();
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets or sets the identifier of the band. </summary>
+        ///
+        /// <value> The identifier of the band. </value>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public string bandID
         {
             get { return bandIDDisplay.Text; }
             internal set { bandIDDisplay.Text = value; }
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets or sets the simulator. </summary>
+        ///
+        /// <value> The simulator. </value>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public AbelAPI simulator { get; set; }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets or sets a value indicating whether the keep alive messaging is enabled. </summary>
+        ///
+        /// <value> True if keep alives are enabled, false if not. </value>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public bool EnableKeepAlives { get; set; }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets or sets the band details. </summary>
+        ///
+        /// <value> The band details. </value>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public DataGridView bandDetails { get; set; }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets or sets the band identifier display. </summary>
+        ///
+        /// <value> The band identifier display. </value>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public TextBox bandIDDisplay { get; set; }
 
+        /// <summary>   The maximum number of peers. </summary>
         private const int MAX_PEERS = 6;
+        /// <summary>   Size of the UDP block. </summary>
         private const int UDP_BLOCK_SIZE = 1024;
 
+        /// <summary>   The server API. </summary>
         private readonly MusterAPIExtended serverAPI = new MusterAPIExtended();
 
+        /// <summary>   The peer sockets. </summary>
         private List<Socket> peerSockets = new List<Socket>(MAX_PEERS);
+        /// <summary>   The peer listeners. </summary>
         private List<Task> peerListeners = new List<Task>(MAX_PEERS);
+        /// <summary>   The peer cancellation token source. </summary>
         private List<CancellationTokenSource> peerCancellation = new List<CancellationTokenSource>(MAX_PEERS);
+        /// <summary>   The local client details. </summary>
         private List<UDPDiscoveryService.LocalNetworkClientDetail> localClientDetails = new List<UDPDiscoveryService.LocalNetworkClientDetail>(MAX_PEERS);
+        /// <summary>   The join band cancellation token source. </summary>
         private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
 
+        /// <summary>   Identifier for the client. </summary>
         private string clientId;
+        /// <summary>   The current band. </summary>
         private MusterAPI.Band currentBand;
+        /// <summary>   The peer endpoints. </summary>
         private List<MusterAPI.Endpoint> peerEndpoints = new List<MusterAPI.Endpoint>(MAX_PEERS);
+        /// <summary>   The local UDP discovery service. </summary>
         private UDPDiscoveryService localUDPDiscoveryService = new UDPDiscoveryService();
 
         //private string endpointAddress = "http://virtserver.swaggerhub.com/drichards2/muster/1.0.0/";
+        /// <summary>   The endpoint address. </summary>
         private string endpointAddress = "https://muster.norfolk-st.co.uk/v1/";
 
+        /// <summary>   The time since the last transmission. </summary>
         private Stopwatch TimeSinceLastTX = new Stopwatch();
+        /// <summary>   Specifying whether to send keep alives. </summary>
         private bool SendKeepAlives = false;
+        /// <summary>   The transmit threshold. </summary>
         private float TXThreshold = 5000;
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets the server UDP end point. </summary>
+        ///
+        /// <value> The server UDP end point. </value>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private IPEndPoint ServerUdpEndPoint => UdpEndPointResolver.Result;
+        /// <summary>   The UDP end point resolver. </summary>
         private Task<IPEndPoint> UdpEndPointResolver;
 
+        /// <summary>   Default constructor. </summary>
         public PeerConnectionManager()
         {
             serverAPI.APIEndpoint = endpointAddress;
             UdpEndPointResolver = serverAPI.GetUDPEndPoint();
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Creates a new band. </summary>
+        ///
+        /// <returns>   An asynchronous result. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public async Task CreateNewBand()
         {
@@ -71,6 +143,12 @@ namespace Muster
             bandID = newBandID;
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Determine if connected. </summary>
+        ///
+        /// <returns>   True if it succeeds, false if it fails. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private bool CheckIfConnected()
         {
             bool isAlreadyConnected = false;
@@ -79,6 +157,15 @@ namespace Muster
                     isAlreadyConnected = true;
             return isAlreadyConnected;
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Join band request. </summary>
+        ///
+        /// <param name="name">     The name. </param>
+        /// <param name="location"> The location. </param>
+        ///
+        /// <returns>   An asynchronous result. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public async Task JoinBandRequest(string name, string location)
         {
@@ -168,10 +255,24 @@ namespace Muster
                 SetupPeerSockets();
             }
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets the band back together. </summary>
+        ///
+        /// <returns>   An asynchronous result that returns the band members. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private async Task<MusterAPI.Band> GetTheBandBackTogether()
         {
             return await serverAPI.GetBand(bandID);
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Sends the connect request. </summary>
+        ///
+        /// <returns>   An asynchronous result. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         public async Task SendConnectRequest()
         {
             if (currentBand == null || clientId == null)
@@ -188,6 +289,7 @@ namespace Muster
             }
         }
 
+        /// <summary>   Sets up the peer sockets. </summary>
         private async void SetupPeerSockets()
         {
             SendUDPMessagesToServer();
@@ -222,6 +324,7 @@ namespace Muster
             TestConnection();
         }
 
+        /// <summary>   Sends the UDP messages to the server. </summary>
         private async void SendUDPMessagesToServer()
         {
             DisconnectAll();
@@ -297,6 +400,12 @@ namespace Muster
             var success = await serverAPI.SetConnectionStatus(bandID, MusterAPIExtended.ConnectionPhases.LOCAL_DISCOVERY_DONE, clientId);
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Wait for all clients to finish local discovery. </summary>
+        ///
+        /// <returns>   An asynchronous result. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private async Task AllClientsFinishedLocalDiscovery()
         {
             bool ready = false;
@@ -329,6 +438,12 @@ namespace Muster
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets endpoints from server. </summary>
+        ///
+        /// <returns>   An asynchronous result. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private async Task GetEndpointsFromServer()
         {
             peerEndpoints = await serverAPI.GetEndpointsForBand(bandID, clientId);
@@ -343,6 +458,12 @@ namespace Muster
                 return;
             }
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Wait for all clients to have received local details. </summary>
+        ///
+        /// <returns>   An asynchronous result. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private async Task AllClientsReceivedLocalDetails()
         {
@@ -362,7 +483,8 @@ namespace Muster
                 if (timeOutCancellation.Token.IsCancellationRequested)
                 {
                     logger.Error($"Timed out joining band {bandID} while waiting for everyone to confirm local discovery worked.");
-                    MessageBox.Show("Error connecting to other ringers. Ask everyone to join a new band and try again.");
+                    MessageBox.Show("Attempting to continue connecting to the other ringers. " + 
+                        "This band connection may not work if any ringers share an internet connection.");
                     return;
                 }
 
@@ -389,6 +511,12 @@ namespace Muster
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Gets other band members. </summary>
+        ///
+        /// <returns>   The other band members. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private List<MusterAPI.Member> GetOtherBandMembers()
         {
             var members = currentBand.members;
@@ -400,6 +528,14 @@ namespace Muster
             }
             return peers;
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Bind socket. </summary>
+        ///
+        /// <param name="idx">                  Zero-based index of the. </param>
+        /// <param name="target_id">            Identifier for the target. </param>
+        /// <param name="localClientsReceived"> The local clients received. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void BindSocket(int idx, string target_id, List<UDPDiscoveryService.LocalNetworkClientDetail> localClientsReceived)
         {
@@ -430,7 +566,8 @@ namespace Muster
                 foreach (var localEP in localClientsReceived)
                     if ((localEP.socket_owner_id == _relevantEP.target_id) && (localEP.required_destination_id == clientId))
                     {
-                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", _relevantEP.target_id, localEP.address, localEP.port);
+                        logger.Debug("Connecting to {targetId} over local network using address {address}:{port}", 
+                            _relevantEP.target_id, localEP.address, localEP.port);
                         _socket.Connect(localEP.address, localEP.port);
                         break;
                     }
@@ -444,10 +581,17 @@ namespace Muster
             }
             else // Otherwise, connect over the internet
             {
-                logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
+                logger.Debug("Connecting to {targetId} over internet using address {address}:{port}", 
+                    _relevantEP.target_id, _relevantEP.ip, _relevantEP.port);
                 _socket.Connect(_relevantEP.ip, _relevantEP.port);
             }
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Adds a listener to socket. </summary>
+        ///
+        /// <param name="idx">  Zero-based index of the socket. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void AddListenerToSocket(int idx)
         {
@@ -490,7 +634,8 @@ namespace Muster
                             }
                             else if (buffer[i] == '#')
                             {
-                                logger.Debug("Received reply to test from peer #{peerID} at {peerAddress}.", runParameters.peerChannel, runParameters.srcSocket.RemoteEndPoint.ToString());
+                                logger.Debug("Received reply to test from peer #{peerID} at {peerAddress}.", 
+                                    runParameters.peerChannel, runParameters.srcSocket.RemoteEndPoint.ToString());
                                 runParameters.EchoBackEvent?.Invoke(runParameters.peerChannel);
                             }
                         }
@@ -503,6 +648,12 @@ namespace Muster
             });
             listenerTask.Start();
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Socket echo callback. </summary>
+        ///
+        /// <param name="peerChannel">  The peer channel. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         private void SocketEcho(int peerChannel)
         {
@@ -524,10 +675,22 @@ namespace Muster
             }
         }
 
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Process a received bell strike. </summary>
+        ///
+        /// <param name="keyStroke">    The key stroke. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+
         private void BellStrike(char keyStroke)
         {
             simulator.RingBell(keyStroke);
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Leave band. </summary>
+        ///
+        /// <returns>   An asynchronous result. </returns>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public async Task LeaveBand()
         {
@@ -542,6 +705,7 @@ namespace Muster
             TimeSinceLastTX.Reset();
         }
 
+        /// <summary>   Tests connection. </summary>
         public void TestConnection()
         {
             if (clientId == null || currentBand == null)
@@ -571,6 +735,7 @@ namespace Muster
                 TimeSinceLastTX.Restart();
         }
 
+        /// <summary>   Closes peer sockets. </summary>
         private void ClosePeerSockets()
         {
             foreach (var peerSocket in peerSockets)
@@ -580,6 +745,7 @@ namespace Muster
             peerSockets.Clear();
         }
 
+        /// <summary>   Disconnects all open sockets. </summary>
         private void DisconnectAll()
         {
             foreach (var cancellationToken in peerCancellation)
@@ -615,6 +781,7 @@ namespace Muster
             }
         }
 
+        /// <summary>   Keep alive tick. </summary>
         public void keepAlive_Tick()
         {
             if (SendKeepAlives)
@@ -623,6 +790,12 @@ namespace Muster
                     TestConnection();
                 }
         }
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>   Sends and rings a key stroke. </summary>
+        ///
+        /// <param name="ringingEvent"> The ringing event. </param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
 
         public void SendAndRingKeyStroke(RingingEvent ringingEvent)
         {
