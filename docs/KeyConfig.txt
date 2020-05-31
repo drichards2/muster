@@ -1,0 +1,8 @@
+A	B
+D	A
+J	G
+L	E
+D1	D
+D3	C
+OemQuestion	H
+Oemcomma	I

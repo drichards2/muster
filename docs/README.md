@@ -3,7 +3,7 @@ Join ringers together using the power of the Internet
 
 ## Architecture 
 
-Muster works by connecting copies of Abel by UDP in a peer-to-peer framework.
+Muster works by connecting copies of ringing simulators by UDP in a peer-to-peer framework.
 
 ## What does the name mean? 
 
@@ -14,19 +14,25 @@ also
 1. _to gather... in preparation for battle_
 
 ## Installation
+Everyone ringing needs a copy of Abel, Beltower or Beltutor, and also Muster on a Windows machine. A band should agree on a simulator to use!
 
-Everyone ringing needs a copy of Abel and Muster on a Windows machine. 
 ### Abel
 Abel is available for purchase at <http://abelsim.co.uk/>. Version 3.10.2 or later of the Windows version is required.
 
+### Beltower and Beltutor
+Beltower and Beltutor, a cutdown version, are available for purchase at <http://www.beltower.co.uk/>.
+
 ### Muster
-Muster is available for download from [here](releases/Muster 1.0.0.0.zip). When it's downloaded, extract the files and run muster.exe. Make sure you sufficiently appease any anti-virus software, and ensure you give permission for Muster to communicate on public and private networks, otherwise the ringing won't go too well.
+The latest version of Muster is available for download from [here](releases/Muster 1.1.0.0.zip). See the [release notes] for more information.
+
+When it's downloaded, extract the files and run muster.exe. Make sure you sufficiently appease any anti-virus software, and ensure you give permission for Muster to communicate on public and private networks, otherwise the ringing won't go too well.
 
 There is no charge for Muster, though please do consider making a donation to one of the following charities:
 * Trussel Trust: [https://www.trusselltrust.org/](https://www.trusselltrust.org/)
 * CARE: [https://www.careinternational.org.uk/](https://www.careinternational.org.uk/)
 
 ## Ringing
+Each ringer should start Muster and the simulator of choice. This can be done in either order.
 Each time a band wants to ring:
 * One ringer clicks "Make a new band", and shares the generated band ID with everyone else in the band, who type it in the band ID text box.
 * Everyone clicks "Join/refresh a band".
@@ -36,9 +42,9 @@ Each time a band wants to ring:
 You can then agree which each other which bells to ring, and each choose which bells the F and J keys ring. There are some conducting commands shown too which everyone will hear.
 
 ## Debugging
-* Make sure Abel is configured to have sufficient bells for what you're trying to ring.
-* Make sure you don't click away from Muster - a keypress when it's in focus will be sent to everyone else and also ring your local Abel.
-* Don't click "Start" in Abel. All the bells need to be controlled by key-presses from within Muster.
+* Make sure Abel or Beltower is configured to have sufficient bells for what you're trying to ring.
+* Make sure you don't click away from Muster - a keypress when it's in focus will be sent to everyone else and also ring a bell in your local simulator.
+* Don't click "Start" in the simulator. All the bells need to be controlled by key-presses from within Muster.
 
 If you run into any issues, please gather up the muster-debug-log.txt files generated in the same directory as Muster and send them to us so we can investigate.
 
