@@ -85,6 +85,8 @@ namespace Muster
         private List<UDPDiscoveryService.LocalNetworkClientDetail> localClientDetails = new List<UDPDiscoveryService.LocalNetworkClientDetail>(MAX_PEERS);
         /// <summary>   The join band cancellation token source. </summary>
         private CancellationTokenSource joinBandCancellation = new CancellationTokenSource();
+        /// <summary>   Specifying whether this client is currently joining a band. </summary>
+        private volatile bool joiningBand = false;
 
         /// <summary>   Identifier for the client. </summary>
         private string clientId;
@@ -209,6 +211,15 @@ namespace Muster
 
             if (clientId != null)
             {
+                // Aim to ensure we only start this loop once
+                if (joiningBand)
+                {
+                    logger.Debug($"Ignoring request to join band - already joining band {bandID}.");
+                    return;
+                }
+
+                joiningBand = true;
+
                 bool timeToConnect = false;
                 joinBandCancellation.Dispose();
                 joinBandCancellation = new CancellationTokenSource();
@@ -222,12 +233,14 @@ namespace Muster
                     {
                         logger.Debug($"Timed out joining band ID {bandID} while waiting to start.");
                         MessageBox.Show("Communication error while waiting to start ringing. Ask everyone to click 'Join/refresh band' again.");
+                        joiningBand = false;
                         return;
                     }
 
                     if (joinBandCancellation.Token.IsCancellationRequested)
                     {
                         logger.Debug($"Cancelled joining band ID {bandID} while waiting to start.");
+                        joiningBand = false;
                         return;
                     }
 
@@ -253,6 +266,7 @@ namespace Muster
                 }
 
                 SetupPeerSockets();
+                joiningBand = false;
             }
         }
 
