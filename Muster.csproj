@@ -58,6 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbelAPI.cs" />
+    <Compile Include="BeltowerAPI.cs" />
     <Compile Include="ListenerTask.cs" />
     <Compile Include="MusterAPI.cs" />
     <Compile Include="MusterAPIExtended.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="PeerConnectionManager.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RingingEvent.cs" />
+    <Compile Include="SimulatorAPI.cs" />
     <Compile Include="UDPDiscoveryService.cs" />
     <EmbeddedResource Include="MusterMainFrm.resx">
       <DependentUpon>MusterMainFrm.cs</DependentUpon>

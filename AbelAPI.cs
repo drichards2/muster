@@ -13,13 +13,10 @@ using System.Runtime.InteropServices;
 namespace Muster
 {
     /// <summary>   An Abel API. </summary>
-    internal class AbelAPI
+    internal class AbelAPI : SimulatorAPI
     {
-        /// <summary>   Handle of the Abel process. </summary>
-        private IntPtr AbelHandle;
-
-        /// <summary>   The ringing commands. </summary>
-        private Dictionary<string, char> RingingCommands = new Dictionary<string, char>
+        /// <summary>   Abel specific map from ringing events to characters. </summary>
+        private Dictionary<string, char> Abel_RingingCommandToChar = new Dictionary<string, char>
         {
             {"Go", 'S' },
             {"Bob", 'T' },
@@ -30,14 +27,16 @@ namespace Muster
             {"ResetBells", 'Y' }
         };
 
-        /// <summary>   Number of bells. </summary>
-        public const int numberOfBells = 16;
         /// <summary>   The required version. </summary>
         public static int[] RequiredVersion = { 3, 10, 2 };
 
         /// <summary>   Default constructor. </summary>
         public AbelAPI()
         {
+            Name = "Abel";
+
+            // Map ringing events to A-Y missing out F and J
+            // Add bells 1-16
             int command = 0;
             for (int i = 0; i < numberOfBells; i++)
             {
@@ -45,19 +44,15 @@ namespace Muster
                 if ((char)('A' + command) == 'F' || (char)('A' + command) == 'J')
                     command++;
 
-                RingingCommands.Add((i + 1).ToString(), (char)('A' + command++));
+                RingingCommandToChar.Add((i + 1).ToString(), (char)('A' + command++));
             }
-        }
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if Abel process is connected. </summary>
-        ///
-        /// <returns>   True if Abel is connected, false if not. </returns>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
+            // Add remaining commands
+            foreach (string key in Abel_RingingCommandToChar.Keys)
+                RingingCommandToChar.Add(key, Abel_RingingCommandToChar[key]);
 
-        public bool IsAbelConnected()
-        {
-            return AbelHandle != IntPtr.Zero;
+            // For all these commands, key.ToString()[0] matches the desired character.
+            // Therefore, there's no need to add keys to KeypressToRingingCommand.
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -75,7 +70,7 @@ namespace Muster
         private static extern IntPtr FindWindowEx(IntPtr hWndParent, IntPtr hWndChildAfter, string lpszClass, string lpszWindow);
 
         /// <summary>   Searches for an Abel process. </summary>
-        public void FindAbel()
+        public override bool FindInstance()
         {
             var foundHandle = IntPtr.Zero;
             // Inspired by the Abel connection in Graham John's Handbell Manager (https://github.com/GACJ/handbellmanager)
@@ -85,6 +80,8 @@ namespace Muster
                 if (Convert.ToString(p.ProcessName).ToUpper() == "ABEL3")
                 {
                     foundHandle = p.MainWindowHandle;
+                    if (foundHandle == IntPtr.Zero)
+                        break;
                     var version = p.MainModule.FileVersionInfo.FileVersion;
                     var IsCompatible = CheckCompatibility(version);
 
@@ -93,16 +90,18 @@ namespace Muster
 
                     foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, ChildWindow, "");
                     foundHandle = FindWindowEx(foundHandle, IntPtr.Zero, GrandchildWindow, "");
-                    
+
                     if (IsCompatible && foundHandle != IntPtr.Zero)
                         break;
                 }
             }
 
-            if (foundHandle != AbelHandle)
+            if (foundHandle != SimulatorHandle)
             {
-                AbelHandle = foundHandle;
+                SimulatorHandle = foundHandle;
             }
+
+            return SimulatorHandle != IntPtr.Zero;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -123,129 +122,17 @@ namespace Muster
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Posts a message. </summary>
-        ///
-        /// <param name="hWnd">     The window. </param>
-        /// <param name="Msg">      The message. </param>
-        /// <param name="wParam">   The parameter. </param>
-        /// <param name="lParam">   The parameter. </param>
-        ///
-        /// <returns>   True if it succeeds, false if it fails. </returns>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        [DllImport("user32.dll")]
-        static extern bool PostMessage(IntPtr hWnd, int Msg, int wParam, int lParam);
-
-        /// <summary>   The windows message keydown. </summary>
-        const int WM_KEYDOWN = 0x100;
-        /// <summary>   The windows message keyup. </summary>
-        const int WM_KEYUP = 0x101;
-        /// <summary>   The windows message character. </summary>
-        const int WM_CHAR = 0x102;
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>   Sends a keystroke. </summary>
         ///
         /// <param name="keyStroke">    The key stroke. </param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        public void SendKeystroke(char keyStroke)
+        protected override void SendKeystroke(char keyStroke)
         {
-            if (AbelHandle != null)
+            if (SimulatorHandle != null)
             {
-                PostMessage(AbelHandle, WM_CHAR, keyStroke, 0);
+                PostMessage(SimulatorHandle, WM_CHAR, keyStroke, 0);
             }
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Sends a ringing event. </summary>
-        ///
-        /// <param name="evt">  The event. </param>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        public void SendRingingEvent(RingingEvent evt)
-        {
-            if (IsValidAbelCommand(evt))
-            {
-                SendKeystroke(evt.ToChar());
-            }
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if 'ringingEvent' is a valid simulator command. </summary>
-        ///
-        /// <param name="ringingEvent"> The ringing event. </param>
-        ///
-        /// <returns>   True if valid abel command, false if not. </returns>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        public bool IsValidAbelCommand(RingingEvent ringingEvent)
-        {
-            return RingingCommands.ContainsKey(ringingEvent.ToString());
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Ring bell. </summary>
-        ///
-        /// <param name="keyStroke">    The key stroke. </param>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        public void RingBell(char keyStroke)
-        {
-            if (IsValidAbelKeystroke(keyStroke))
-            {
-                SendKeystroke(keyStroke);
-            }
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Query if 'key' is a valid simulator keystroke. </summary>
-        ///
-        /// <param name="key">  The key. </param>
-        ///
-        /// <returns>   True if valid abel keystroke, false if not. </returns>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        public bool IsValidAbelKeystroke(char key)
-        {
-            return RingingCommands.ContainsValue(key);
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Searches for the corresponding ringing event for a command. </summary>
-        ///
-        /// <param name="command">  The command. </param>
-        ///
-        /// <returns>   The found event for command. </returns>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        public RingingEvent FindEventForCommand(string command)
-        {
-            if (RingingCommands.ContainsKey(command))
-            {
-                return new RingingEvent(command, RingingCommands[command]);
-            }
-            else
-                return null;
-        }
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-        /// <summary>   Searches for the corresponding ringing event for a keystroke. </summary>
-        ///
-        /// <param name="keyStroke">    The key stroke. </param>
-        ///
-        /// <returns>   The found event for keystroke. </returns>
-        ////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        public RingingEvent FindEventForKeystroke(char keyStroke)
-        {
-            var reversed = RingingCommands.ToDictionary(x => x.Value, x => x.Key);
-            if (reversed.ContainsKey(keyStroke))
-            {
-                return new RingingEvent(reversed[keyStroke], keyStroke);
-            }
-            else
-                return null;
         }
     }
 }

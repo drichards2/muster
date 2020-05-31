@@ -41,7 +41,7 @@
             this.label4 = new System.Windows.Forms.Label();
             this.LocationInput = new System.Windows.Forms.TextBox();
             this.abelConnect = new System.Windows.Forms.Timer(this.components);
-            this.abelConnectLabel = new System.Windows.Forms.Label();
+            this.simConnectLabel = new System.Windows.Forms.Label();
             this.bandDetails = new System.Windows.Forms.DataGridView();
             this.NameColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.LocationColumn = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -52,9 +52,10 @@
             this.AdvancedMode = new System.Windows.Forms.CheckBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label5 = new System.Windows.Forms.Label();
-            this.KeyInfo = new System.Windows.Forms.TextBox();
+            this.KeyInfo_Abel = new System.Windows.Forms.TextBox();
             this.About = new System.Windows.Forms.Button();
             this.keepAlive = new System.Windows.Forms.Timer(this.components);
+            this.KeyInfo_Beltower = new System.Windows.Forms.TextBox();
             ((System.ComponentModel.ISupportInitialize)(this.bandDetails)).BeginInit();
             this.SuspendLayout();
             // 
@@ -193,17 +194,17 @@
             // 
             this.abelConnect.Enabled = true;
             this.abelConnect.Interval = 1000;
-            this.abelConnect.Tick += new System.EventHandler(this.AbelConnect_Tick);
+            this.abelConnect.Tick += new System.EventHandler(this.SimConnect_Tick);
             // 
-            // abelConnectLabel
+            // simConnectLabel
             // 
-            this.abelConnectLabel.AutoSize = true;
-            this.abelConnectLabel.Location = new System.Drawing.Point(166, 56);
-            this.abelConnectLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
-            this.abelConnectLabel.Name = "abelConnectLabel";
-            this.abelConnectLabel.Size = new System.Drawing.Size(35, 13);
-            this.abelConnectLabel.TabIndex = 19;
-            this.abelConnectLabel.Text = "label1";
+            this.simConnectLabel.AutoSize = true;
+            this.simConnectLabel.Location = new System.Drawing.Point(160, 56);
+            this.simConnectLabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            this.simConnectLabel.Name = "simConnectLabel";
+            this.simConnectLabel.Size = new System.Drawing.Size(35, 13);
+            this.simConnectLabel.TabIndex = 19;
+            this.simConnectLabel.Text = "label1";
             // 
             // bandDetails
             // 
@@ -266,7 +267,11 @@
             "9",
             "0",
             "E",
-            "T"});
+            "T",
+            "A",
+            "B",
+            "C",
+            "D"});
             this.LHBell.Location = new System.Drawing.Point(123, 129);
             this.LHBell.Name = "LHBell";
             this.LHBell.Size = new System.Drawing.Size(64, 21);
@@ -290,7 +295,11 @@
             "9",
             "0",
             "E",
-            "T"});
+            "T",
+            "A",
+            "B",
+            "C",
+            "D"});
             this.RHBell.Location = new System.Drawing.Point(212, 129);
             this.RHBell.Name = "RHBell";
             this.RHBell.Size = new System.Drawing.Size(64, 21);
@@ -330,17 +339,18 @@
             this.label5.TabIndex = 26;
             this.label5.Text = "Key J";
             // 
-            // KeyInfo
+            // KeyInfo_Abel
             // 
-            this.KeyInfo.Enabled = false;
-            this.KeyInfo.Font = new System.Drawing.Font("Courier New", 8.25F);
-            this.KeyInfo.Location = new System.Drawing.Point(278, 51);
-            this.KeyInfo.Multiline = true;
-            this.KeyInfo.Name = "KeyInfo";
-            this.KeyInfo.Size = new System.Drawing.Size(186, 66);
-            this.KeyInfo.TabIndex = 27;
-            this.KeyInfo.Text = "Bob    A   Single     ;\r\nGo     G   That\'s all T\r\nRounds R   Stand      Q\r\nReset " +
+            this.KeyInfo_Abel.Enabled = false;
+            this.KeyInfo_Abel.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.KeyInfo_Abel.Location = new System.Drawing.Point(278, 51);
+            this.KeyInfo_Abel.Multiline = true;
+            this.KeyInfo_Abel.Name = "KeyInfo_Abel";
+            this.KeyInfo_Abel.Size = new System.Drawing.Size(186, 66);
+            this.KeyInfo_Abel.TabIndex = 27;
+            this.KeyInfo_Abel.Text = "Bob    A   Single     ;\r\nGo     G   That\'s all T\r\nRounds R   Stand      Q\r\nReset " +
     "bells F4";
+            this.KeyInfo_Abel.Visible = false;
             // 
             // About
             // 
@@ -357,13 +367,26 @@
             this.keepAlive.Interval = 1000;
             this.keepAlive.Tick += new System.EventHandler(this.keepAlive_Tick);
             // 
+            // KeyInfo_Beltower
+            // 
+            this.KeyInfo_Beltower.Enabled = false;
+            this.KeyInfo_Beltower.Font = new System.Drawing.Font("Courier New", 8.25F);
+            this.KeyInfo_Beltower.Location = new System.Drawing.Point(278, 51);
+            this.KeyInfo_Beltower.Multiline = true;
+            this.KeyInfo_Beltower.Name = "KeyInfo_Beltower";
+            this.KeyInfo_Beltower.Size = new System.Drawing.Size(186, 57);
+            this.KeyInfo_Beltower.TabIndex = 30;
+            this.KeyInfo_Beltower.Text = "Bob    A   Single     ;\r\nGo     G   That\'s all T\r\nRounds R   Stand      Q\r\n";
+            this.KeyInfo_Beltower.Visible = false;
+            // 
             // Muster
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(476, 464);
+            this.Controls.Add(this.KeyInfo_Beltower);
             this.Controls.Add(this.About);
-            this.Controls.Add(this.KeyInfo);
+            this.Controls.Add(this.KeyInfo_Abel);
             this.Controls.Add(this.label5);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.AdvancedMode);
@@ -371,7 +394,7 @@
             this.Controls.Add(this.LHBell);
             this.Controls.Add(this.aboutText);
             this.Controls.Add(this.bandDetails);
-            this.Controls.Add(this.abelConnectLabel);
+            this.Controls.Add(this.simConnectLabel);
             this.Controls.Add(this.LocationInput);
             this.Controls.Add(this.label4);
             this.Controls.Add(this.NameInput);
@@ -408,7 +431,7 @@
         private System.Windows.Forms.Label label4;
         private System.Windows.Forms.TextBox LocationInput;
         private System.Windows.Forms.Timer abelConnect;
-        private System.Windows.Forms.Label abelConnectLabel;
+        private System.Windows.Forms.Label simConnectLabel;
         private System.Windows.Forms.DataGridView bandDetails;
         private System.Windows.Forms.DataGridViewTextBoxColumn NameColumn;
         private System.Windows.Forms.DataGridViewTextBoxColumn LocationColumn;
@@ -419,8 +442,9 @@
         private System.Windows.Forms.CheckBox AdvancedMode;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label label5;
-        private System.Windows.Forms.TextBox KeyInfo;
+        private System.Windows.Forms.TextBox KeyInfo_Abel;
         private System.Windows.Forms.Button About;
         private System.Windows.Forms.Timer keepAlive;
+        private System.Windows.Forms.TextBox KeyInfo_Beltower;
     }
 }
